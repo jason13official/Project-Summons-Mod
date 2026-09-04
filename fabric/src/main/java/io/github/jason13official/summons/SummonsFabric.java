@@ -10,6 +10,7 @@ import io.github.jason13official.summons.impl.common.registry.ModTiles;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
 import net.minecraft.core.Registry;
@@ -17,6 +18,9 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.PackType;
 import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 
 public class SummonsFabric implements ModInitializer {
 
@@ -33,7 +37,15 @@ public class SummonsFabric implements ModInitializer {
 
     Summons.init();
 
+    // FabricDefaultAttributeRegistry.register(ModEntities.CUBE, Mob.createMobAttributes());
+    this.createDefaultAttributes(Summons::createDefaultAttributes);
+
     ResourceManagerHelper.get(PackType.SERVER_DATA).registerReloadListener(new ResourceReloadListener());
+  }
+
+  public void createDefaultAttributes(Consumer<BiConsumer<EntityType, AttributeSupplier>> source) {
+
+    source.accept(FabricDefaultAttributeRegistry::register);
   }
 
   public <T> void bind(Registry<T> registry, Consumer<BiConsumer<T, ResourceLocation>> source) {

@@ -1,7 +1,27 @@
 package io.github.jason13official.summons;
 
+import io.github.jason13official.summons.impl.client.model.CompanionCubeModel;
+import io.github.jason13official.summons.impl.client.renderer.CompanionCubeRenderer;
+import io.github.jason13official.summons.impl.common.registry.ModEntities;
+import java.util.function.BiConsumer;
+import java.util.function.Supplier;
+import net.minecraft.client.model.geom.ModelLayerLocation;
+import net.minecraft.client.model.geom.builders.LayerDefinition;
+import net.minecraft.client.renderer.entity.EntityRendererProvider;
+import net.minecraft.world.entity.EntityType;
+
 public class SummonsClient {
 
   public static void init() {
+  }
+
+  public static void registerEntityRenderers(BiConsumer<EntityType, EntityRendererProvider> consumer) {
+
+    consumer.accept(ModEntities.CUBE, CompanionCubeRenderer::new);
+  }
+
+  public static void registerEntityModels(BiConsumer<ModelLayerLocation, Supplier<LayerDefinition>> consumer) {
+
+    consumer.accept(CompanionCubeModel.LAYER_LOCATION, CompanionCubeModel::createBodyLayer);
   }
 }

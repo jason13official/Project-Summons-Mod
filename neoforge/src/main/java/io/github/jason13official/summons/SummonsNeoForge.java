@@ -16,6 +16,9 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.SimplePreparableReloadListener;
 import net.minecraft.util.profiling.ProfilerFiller;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
@@ -23,6 +26,7 @@ import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.fml.loading.FMLLoader;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.AddReloadListenerEvent;
+import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
 import net.neoforged.neoforge.registries.RegisterEvent;
 
 @Mod(Constants.MOD_ID)
@@ -44,6 +48,8 @@ public class SummonsNeoForge {
 
     EVENT_BUS.addListener((Consumer<FMLCommonSetupEvent>) event -> Summons.init());
 
+    this.createDefaultAttributes(Summons::createDefaultAttributes);
+
     NeoForge.EVENT_BUS.addListener((Consumer<AddReloadListenerEvent>) event -> {
       event.addListener(new ResourceReloadListener());
     });
@@ -51,6 +57,14 @@ public class SummonsNeoForge {
     if (FMLLoader.getDist() == Dist.CLIENT) {
       new SummonsClientNeoForge(EVENT_BUS);
     }
+  }
+
+  public void createDefaultAttributes(Consumer<BiConsumer<EntityType, AttributeSupplier>> source) {
+
+    EVENT_BUS.addListener((EntityAttributeCreationEvent event) -> {
+
+      source.accept(event::put);
+    });
   }
 
   public <T> void bind(ResourceKey<Registry<T>> registryKey, Consumer<BiConsumer<T, ResourceLocation>> source) {
