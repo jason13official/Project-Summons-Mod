@@ -3,7 +3,8 @@ package io.github.jason13official.summons.impl.client.model;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import io.github.jason13official.summons.Summons;
-import io.github.jason13official.summons.impl.common.entity.CompanionCube;
+import io.github.jason13official.summons.impl.common.entity.AbstractCompanion;
+import io.github.jason13official.summons.impl.common.entity.ground.CompanionCube;
 import net.minecraft.client.model.EntityModel;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
@@ -14,7 +15,7 @@ import net.minecraft.client.model.geom.builders.LayerDefinition;
 import net.minecraft.client.model.geom.builders.MeshDefinition;
 import net.minecraft.client.model.geom.builders.PartDefinition;
 
-public class CompanionCubeModel extends EntityModel<CompanionCube> {
+public class CompanionCubeModel extends EntityModel<AbstractCompanion> {
 
   // This layer location should be baked with EntityRendererProvider.Context in the entity renderer and passed into this model's constructor
 	public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(Summons.identifier("cube"), "main");
@@ -53,7 +54,7 @@ public class CompanionCubeModel extends EntityModel<CompanionCube> {
 //	}
 
   @Override
-  public void setupAnim(CompanionCube companionCube, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
+  public void setupAnim(AbstractCompanion companionCube, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
   }
 
   @Override

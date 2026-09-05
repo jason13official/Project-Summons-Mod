@@ -2,12 +2,12 @@ package io.github.jason13official.summons;
 
 import io.github.jason13official.monolib.MonoLib;
 import io.github.jason13official.monolib.impl.common.sailing.Sailing;
-import io.github.jason13official.summons.impl.common.entity.AbstractCompanionEntity;
+import io.github.jason13official.summons.impl.common.entity.AbstractCompanion;
+import io.github.jason13official.summons.impl.common.entity.flying.FlyingCompanion;
 import io.github.jason13official.summons.impl.common.registry.ModEntities;
 import java.util.function.BiConsumer;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 
 public class Summons {
@@ -23,7 +23,10 @@ public class Summons {
 
   public static void createDefaultAttributes(BiConsumer<EntityType, AttributeSupplier> consumer) {
 
-    consumer.accept(ModEntities.CUBE, AbstractCompanionEntity.createAttributes().build());
-    consumer.accept(ModEntities.PRISM, AbstractCompanionEntity.createAttributes().build());
+    consumer.accept(ModEntities.CUBE, AbstractCompanion.createAttributes().build());
+    consumer.accept(ModEntities.PRISM, AbstractCompanion.createAttributes().build());
+
+    consumer.accept(ModEntities.FLYING_CUBE, FlyingCompanion.createAttributes().build());
+    consumer.accept(ModEntities.FLYING_PRISM, FlyingCompanion.createAttributes().build());
   }
 }

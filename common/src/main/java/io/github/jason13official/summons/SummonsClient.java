@@ -21,6 +21,9 @@ public class SummonsClient {
 
     consumer.accept(ModEntities.CUBE, CompanionCubeRenderer::new);
     consumer.accept(ModEntities.PRISM, CompanionPrismRenderer::new);
+
+    consumer.accept(ModEntities.FLYING_CUBE, CompanionCubeRenderer::new);
+    consumer.accept(ModEntities.FLYING_PRISM, CompanionPrismRenderer::new);
   }
 
   public static void registerEntityModels(BiConsumer<ModelLayerLocation, Supplier<LayerDefinition>> consumer) {

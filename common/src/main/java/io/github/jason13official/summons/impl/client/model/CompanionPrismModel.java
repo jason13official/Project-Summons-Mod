@@ -3,8 +3,8 @@ package io.github.jason13official.summons.impl.client.model;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import io.github.jason13official.summons.Summons;
-import io.github.jason13official.summons.impl.common.entity.CompanionCube;
-import io.github.jason13official.summons.impl.common.entity.CompanionPrism;
+import io.github.jason13official.summons.impl.common.entity.AbstractCompanion;
+import io.github.jason13official.summons.impl.common.entity.ground.CompanionPrism;
 import net.minecraft.client.model.EntityModel;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
@@ -15,7 +15,7 @@ import net.minecraft.client.model.geom.builders.LayerDefinition;
 import net.minecraft.client.model.geom.builders.MeshDefinition;
 import net.minecraft.client.model.geom.builders.PartDefinition;
 
-public class CompanionPrismModel extends EntityModel<CompanionPrism> {
+public class CompanionPrismModel extends EntityModel<AbstractCompanion> {
 	// This layer location should be baked with EntityRendererProvider.Context in the entity renderer and passed into this model's constructor
   public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(Summons.identifier("prism"), "main");
 
@@ -41,7 +41,7 @@ public class CompanionPrismModel extends EntityModel<CompanionPrism> {
 	}
 
   @Override
-  public void setupAnim(CompanionPrism companionPrism, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
+  public void setupAnim(AbstractCompanion companionPrism, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
   }
 
   @Override

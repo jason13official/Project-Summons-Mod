@@ -4,16 +4,16 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import io.github.jason13official.summons.Summons;
 import io.github.jason13official.summons.impl.client.model.CompanionCubeModel;
-import io.github.jason13official.summons.impl.common.entity.CompanionCube;
+import io.github.jason13official.summons.impl.common.entity.AbstractCompanion;
+import io.github.jason13official.summons.impl.common.entity.ground.CompanionCube;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider.Context;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.FastColor.ARGB32;
 
-public class CompanionCubeRenderer extends EntityRenderer<CompanionCube> {
+public class CompanionCubeRenderer extends EntityRenderer<AbstractCompanion> {
 
   public static final ResourceLocation CUBE_LOCATION = Summons.identifier("textures/entity/companion/companion_cube.png");
 
@@ -25,13 +25,13 @@ public class CompanionCubeRenderer extends EntityRenderer<CompanionCube> {
   }
 
   @Override
-  public ResourceLocation getTextureLocation(CompanionCube companionCube) {
+  public ResourceLocation getTextureLocation(AbstractCompanion companionCube) {
 
     return CUBE_LOCATION;
   }
 
   @Override
-  public void render(CompanionCube cube, float entityYaw, float partialTick, PoseStack poseStack, MultiBufferSource bufferSource, int packedLight) {
+  public void render(AbstractCompanion cube, float entityYaw, float partialTick, PoseStack poseStack, MultiBufferSource bufferSource, int packedLight) {
 
     poseStack.pushPose();
     poseStack.translate(0, 0.0625f * 4, 0); // translate up by half the model height
