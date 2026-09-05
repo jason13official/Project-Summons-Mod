@@ -2,6 +2,7 @@ package io.github.jason13official.summons;
 
 import io.github.jason13official.monolib.MonoLib;
 import io.github.jason13official.monolib.impl.common.sailing.Sailing;
+import io.github.jason13official.summons.impl.common.entity.AbstractCompanionEntity;
 import io.github.jason13official.summons.impl.common.registry.ModEntities;
 import java.util.function.BiConsumer;
 import net.minecraft.resources.ResourceLocation;
@@ -22,7 +23,7 @@ public class Summons {
 
   public static void createDefaultAttributes(BiConsumer<EntityType, AttributeSupplier> consumer) {
 
-    consumer.accept(ModEntities.CUBE, Mob.createMobAttributes().build());
-    consumer.accept(ModEntities.PRISM, Mob.createMobAttributes().build());
+    consumer.accept(ModEntities.CUBE, AbstractCompanionEntity.createAttributes().build());
+    consumer.accept(ModEntities.PRISM, AbstractCompanionEntity.createAttributes().build());
   }
 }

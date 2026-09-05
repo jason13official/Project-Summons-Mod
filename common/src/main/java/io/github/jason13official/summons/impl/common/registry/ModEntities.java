@@ -15,10 +15,10 @@ public class ModEntities {
 
   public static void register(BiConsumer<EntityType<?>, ResourceLocation> consumer) {
 
-    CUBE = EntityType.Builder.<CompanionCube>of(CompanionCube::new, MobCategory.MISC).sized(0.5f, 0.5f).clientTrackingRange(32).updateInterval(10).build("summons:cube");
+    CUBE = EntityType.Builder.<CompanionCube>of(CompanionCube::new, MobCategory.MISC).sized(0.5f, 0.5f).clientTrackingRange(32).build("summons:cube");
     consumer.accept(CUBE, Summons.identifier("cube"));
 
-    PRISM = EntityType.Builder.<CompanionPrism>of(CompanionPrism::new, MobCategory.MISC).sized(0.5f, 1.0f).clientTrackingRange(32).updateInterval(10).build("summons:cube");
+    PRISM = EntityType.Builder.<CompanionPrism>of(CompanionPrism::new, MobCategory.MISC).sized(0.5f, 1.0f).clientTrackingRange(32).build("summons:cube");
     consumer.accept(PRISM, Summons.identifier("prism"));
   }
 }
