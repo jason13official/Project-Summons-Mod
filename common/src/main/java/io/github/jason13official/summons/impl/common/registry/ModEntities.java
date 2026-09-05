@@ -18,7 +18,7 @@ public class ModEntities {
     CUBE = EntityType.Builder.<CompanionCube>of(CompanionCube::new, MobCategory.MISC).sized(0.5f, 0.5f).clientTrackingRange(32).build("summons:cube");
     consumer.accept(CUBE, Summons.identifier("cube"));
 
-    PRISM = EntityType.Builder.<CompanionPrism>of(CompanionPrism::new, MobCategory.MISC).sized(0.5f, 1.0f).clientTrackingRange(32).build("summons:cube");
+    PRISM = EntityType.Builder.<CompanionPrism>of(CompanionPrism::new, MobCategory.MISC).sized(0.5f, 1.0f).clientTrackingRange(32).build("summons:prism");
     consumer.accept(PRISM, Summons.identifier("prism"));
   }
 }
