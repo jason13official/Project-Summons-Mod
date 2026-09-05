@@ -23,5 +23,6 @@ public class Summons {
   public static void createDefaultAttributes(BiConsumer<EntityType, AttributeSupplier> consumer) {
 
     consumer.accept(ModEntities.CUBE, Mob.createMobAttributes().build());
+    consumer.accept(ModEntities.PRISM, Mob.createMobAttributes().build());
   }
 }
