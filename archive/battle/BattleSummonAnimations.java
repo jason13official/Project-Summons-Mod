@@ -6,7 +6,7 @@
  * @author Author
  */
 public class battleAnimation {
-	public static final AnimationDefinition animation.battle.attack = AnimationDefinition.Builder.withLength(0.0F).looping()
+	public static final AnimationDefinition ATTACK = AnimationDefinition.Builder.withLength(0.0F).looping()
 		.addAnimation("arm0", new AnimationChannel(AnimationChannel.Targets.ROTATION, 
 			new Keyframe(0.0F, KeyframeAnimations.degreeVec(-56.7F, 0.0F, 0.0F), AnimationChannel.Interpolations.LINEAR)
 		))
@@ -15,13 +15,13 @@ public class battleAnimation {
 		))
 		.build();
 
-	public static final AnimationDefinition animation.battle.flower = AnimationDefinition.Builder.withLength(0.0F).looping()
+	public static final AnimationDefinition FLOWER = AnimationDefinition.Builder.withLength(0.0F).looping()
 		.addAnimation("arm0", new AnimationChannel(AnimationChannel.Targets.ROTATION, 
 			new Keyframe(0.0F, KeyframeAnimations.degreeVec(-46.05F, 0.0F, 0.0F), AnimationChannel.Interpolations.LINEAR)
 		))
 		.build();
 
-	public static final AnimationDefinition animation.battle.move = AnimationDefinition.Builder.withLength(0.0F).looping()
+	public static final AnimationDefinition MOVE = AnimationDefinition.Builder.withLength(0.0F).looping()
 		.addAnimation("arm0", new AnimationChannel(AnimationChannel.Targets.ROTATION, 
 			new Keyframe(0.0F, KeyframeAnimations.degreeVec(0.0F, 0.0F, 0.0F), AnimationChannel.Interpolations.LINEAR)
 		))
@@ -30,7 +30,7 @@ public class battleAnimation {
 		))
 		.build();
 
-	public static final AnimationDefinition animation.battle.move_to_target = AnimationDefinition.Builder.withLength(0.0F).looping()
+	public static final AnimationDefinition MOVE_TO_TARGET = AnimationDefinition.Builder.withLength(0.0F).looping()
 		.addAnimation("arm0", new AnimationChannel(AnimationChannel.Targets.ROTATION, 
 			new Keyframe(0.0F, KeyframeAnimations.degreeVec(43.3333F, 0.0F, 0.0F), AnimationChannel.Interpolations.LINEAR)
 		))
@@ -39,7 +39,7 @@ public class battleAnimation {
 		))
 		.build();
 
-	public static final AnimationDefinition animation.battle.walk = AnimationDefinition.Builder.withLength(0.0F).looping()
+	public static final AnimationDefinition WALK = AnimationDefinition.Builder.withLength(0.0F).looping()
 		.addAnimation("body", new AnimationChannel(AnimationChannel.Targets.ROTATION, 
 			new Keyframe(0.0F, KeyframeAnimations.degreeVec(0.0F, 0.0F, 0.0F), AnimationChannel.Interpolations.LINEAR)
 		))
@@ -54,7 +54,7 @@ public class battleAnimation {
 		))
 		.build();
 
-	public static final AnimationDefinition animation.battle.walk_to_target = AnimationDefinition.Builder.withLength(0.0F).looping()
+	public static final AnimationDefinition WALK_TO_TARGET = AnimationDefinition.Builder.withLength(0.0F).looping()
 		.addAnimation("body", new AnimationChannel(AnimationChannel.Targets.ROTATION, 
 			new Keyframe(0.0F, KeyframeAnimations.degreeVec(0.0F, 0.0F, -5.5F), AnimationChannel.Interpolations.LINEAR)
 		))

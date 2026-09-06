@@ -6,7 +6,7 @@
  * @author Author
  */
 public class devilAnimation {
-	public static final AnimationDefinition animation.devil.arms_legs = AnimationDefinition.Builder.withLength(0.0F).looping()
+	public static final AnimationDefinition ARMS_LEGS = AnimationDefinition.Builder.withLength(0.0F).looping()
 		.addAnimation("leftArm", new AnimationChannel(AnimationChannel.Targets.ROTATION, 
 			new Keyframe(0.0F, KeyframeAnimations.degreeVec(0.0F, 0.0F, 0.0F), AnimationChannel.Interpolations.LINEAR)
 		))
@@ -21,7 +21,7 @@ public class devilAnimation {
 		))
 		.build();
 
-	public static final AnimationDefinition animation.devil.carrying = AnimationDefinition.Builder.withLength(0.0F).looping()
+	public static final AnimationDefinition CARRYING = AnimationDefinition.Builder.withLength(0.0F).looping()
 		.addAnimation("leftArm", new AnimationChannel(AnimationChannel.Targets.ROTATION, 
 			new Keyframe(0.0F, KeyframeAnimations.degreeVec(-28.65F, 0.0F, -2.87F), AnimationChannel.Interpolations.LINEAR)
 		))
@@ -30,7 +30,7 @@ public class devilAnimation {
 		))
 		.build();
 
-	public static final AnimationDefinition animation.devil.scary_face = AnimationDefinition.Builder.withLength(0.0F).looping()
+	public static final AnimationDefinition SCARY_FACE = AnimationDefinition.Builder.withLength(0.0F).looping()
 		.addAnimation("hat", new AnimationChannel(AnimationChannel.Targets.POSITION, 
 			new Keyframe(0.0F, KeyframeAnimations.posVec(0.0F, -5.0F, 0.0F), AnimationChannel.Interpolations.LINEAR)
 		))
@@ -39,7 +39,7 @@ public class devilAnimation {
 		))
 		.build();
 
-	public static final AnimationDefinition animation.devil.attack.rotations = AnimationDefinition.Builder.withLength(0.0F).looping()
+	public static final AnimationDefinition ROTATIONS = AnimationDefinition.Builder.withLength(0.0F).looping()
 		.addAnimation("body", new AnimationChannel(AnimationChannel.Targets.ROTATION, 
 			new Keyframe(0.0F, KeyframeAnimations.degreeVec(0.0F, 0.0F, 0.0F), AnimationChannel.Interpolations.LINEAR)
 		))
@@ -51,7 +51,7 @@ public class devilAnimation {
 		))
 		.build();
 
-	public static final AnimationDefinition animation.devil.bob = AnimationDefinition.Builder.withLength(0.0F).looping()
+	public static final AnimationDefinition BOB = AnimationDefinition.Builder.withLength(0.0F).looping()
 		.addAnimation("leftArm", new AnimationChannel(AnimationChannel.Targets.ROTATION, 
 			new Keyframe(0.0F, KeyframeAnimations.degreeVec(0.0F, 0.0F, -5.73F), AnimationChannel.Interpolations.LINEAR)
 		))
@@ -60,7 +60,7 @@ public class devilAnimation {
 		))
 		.build();
 
-	public static final AnimationDefinition animation.devil.move = AnimationDefinition.Builder.withLength(0.0F).looping()
+	public static final AnimationDefinition MOVE = AnimationDefinition.Builder.withLength(0.0F).looping()
 		.addAnimation("leftArm", new AnimationChannel(AnimationChannel.Targets.ROTATION, 
 			new Keyframe(0.0F, KeyframeAnimations.degreeVec(0.0F, 0.0F, 0.0F), AnimationChannel.Interpolations.LINEAR)
 		))

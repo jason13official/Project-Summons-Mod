@@ -6,7 +6,7 @@
  * @author Author
  */
 public class mageAnimation {
-	public static final AnimationDefinition animation.mage.idle = AnimationDefinition.Builder.withLength(2.0F).looping()
+	public static final AnimationDefinition IDLE = AnimationDefinition.Builder.withLength(2.0F).looping()
 		.addAnimation("head", new AnimationChannel(AnimationChannel.Targets.POSITION, 
 			new Keyframe(0.0F, KeyframeAnimations.posVec(0.0F, 0.0F, 0.0F), AnimationChannel.Interpolations.CATMULLROM),
 			new Keyframe(1.0F, KeyframeAnimations.posVec(0.0F, -0.5F, 0.0F), AnimationChannel.Interpolations.CATMULLROM),
@@ -50,7 +50,7 @@ public class mageAnimation {
 		))
 		.build();
 
-	public static final AnimationDefinition animation.mage.fly = AnimationDefinition.Builder.withLength(2.0F).looping()
+	public static final AnimationDefinition FLY = AnimationDefinition.Builder.withLength(2.0F).looping()
 		.addAnimation("head", new AnimationChannel(AnimationChannel.Targets.ROTATION, 
 			new Keyframe(0.0F, KeyframeAnimations.degreeVec(2.5F, 0.0F, 0.0F), AnimationChannel.Interpolations.CATMULLROM),
 			new Keyframe(0.5833F, KeyframeAnimations.degreeVec(-2.5F, 0.0F, 0.0F), AnimationChannel.Interpolations.CATMULLROM),
@@ -111,7 +111,7 @@ public class mageAnimation {
 		))
 		.build();
 
-	public static final AnimationDefinition animation.mage.hold_item = AnimationDefinition.Builder.withLength(2.0F)
+	public static final AnimationDefinition HOLD_ITEM = AnimationDefinition.Builder.withLength(2.0F)
 		.addAnimation("right_arm", new AnimationChannel(AnimationChannel.Targets.ROTATION, 
 			new Keyframe(0.0F, KeyframeAnimations.degreeVec(-67.5F, 0.0F, 0.0F), AnimationChannel.Interpolations.CATMULLROM)
 		))

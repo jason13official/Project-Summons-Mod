@@ -6,7 +6,7 @@
  * @author Author
  */
 public class fairyAnimation {
-	public static final AnimationDefinition animation.fairy.flying = AnimationDefinition.Builder.withLength(0.0F).looping()
+	public static final AnimationDefinition FLYING = AnimationDefinition.Builder.withLength(0.0F).looping()
 		.addAnimation("body", new AnimationChannel(AnimationChannel.Targets.ROTATION, 
 			new Keyframe(0.0F, KeyframeAnimations.degreeVec(36.41F, 0.0F, 0.0F), AnimationChannel.Interpolations.LINEAR)
 		))
@@ -39,7 +39,7 @@ public class fairyAnimation {
 		))
 		.build();
 
-	public static final AnimationDefinition animation.fairy.resting = AnimationDefinition.Builder.withLength(0.0F).looping()
+	public static final AnimationDefinition RESTING = AnimationDefinition.Builder.withLength(0.0F).looping()
 		.addAnimation("body", new AnimationChannel(AnimationChannel.Targets.ROTATION, 
 			new Keyframe(0.0F, KeyframeAnimations.degreeVec(180.0F, 0.0F, 0.0F), AnimationChannel.Interpolations.LINEAR)
 		))
