@@ -48,6 +48,7 @@ public abstract class AbstractFlyingCompanion extends AbstractCompanion implemen
 
   @Override
   protected void registerGoals() {
+    super.registerGoals();
 
     // Parrot.class
     // this.goalSelector.addGoal(0, new TamableAnimal.TamableAnimalPanicGoal(this, (double)1.25F));

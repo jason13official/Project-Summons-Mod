@@ -1,0 +1,10 @@
+{
+  "key.categories.summons": "Summons",
+  "key.summons.toggle_summon": "Summon/Dismiss Companion",
+  "key.summons.cycle_party": "Cycle Party",
+  "key.summons.mode_up": "Companion Mode (Up)",
+  "key.summons.mode_down": "Companion Mode (Down)",
+  "key.summons.ability_left": "Companion Ability (Left)",
+  "key.summons.ability_right": "Companion Ability (Right)",
+  "key.summons.command": "Companion Command"
+}

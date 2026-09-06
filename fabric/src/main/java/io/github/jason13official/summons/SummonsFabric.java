@@ -1,5 +1,7 @@
 package io.github.jason13official.summons;
 
+import io.github.jason13official.summons.impl.common.network.SummonsNetworking;
+import io.github.jason13official.summons.impl.common.network.SummonsNetworking.CompanionInputPayload;
 import io.github.jason13official.summons.impl.common.registry.ModBlocks;
 import io.github.jason13official.summons.impl.common.registry.ModEntities;
 import io.github.jason13official.summons.impl.common.registry.ModItems;
@@ -10,6 +12,8 @@ import io.github.jason13official.summons.impl.common.registry.ModTiles;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
@@ -41,6 +45,10 @@ public class SummonsFabric implements ModInitializer {
     this.createDefaultAttributes(Summons::createDefaultAttributes);
 
     ResourceManagerHelper.get(PackType.SERVER_DATA).registerReloadListener(new ResourceReloadListener());
+
+    PayloadTypeRegistry.playC2S().register(CompanionInputPayload.TYPE, CompanionInputPayload.STREAM_CODEC);
+    ServerPlayNetworking.registerGlobalReceiver(CompanionInputPayload.TYPE, (payload, context) ->
+        context.server().execute(() -> SummonsNetworking.handle(context.player(), payload.action())));
   }
 
   public void createDefaultAttributes(Consumer<BiConsumer<EntityType, AttributeSupplier>> source) {

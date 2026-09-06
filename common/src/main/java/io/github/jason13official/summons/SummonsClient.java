@@ -1,5 +1,7 @@
 package io.github.jason13official.summons;
 
+import io.github.jason13official.summons.impl.client.SummonsKeyBindings;
+import io.github.jason13official.summons.impl.client.gui.SummonsHUD;
 import io.github.jason13official.summons.impl.client.model.CompanionCubeModel;
 import io.github.jason13official.summons.impl.client.model.CompanionPrismModel;
 import io.github.jason13official.summons.impl.client.model.summon.BattleSummonModel;
@@ -8,15 +10,31 @@ import io.github.jason13official.summons.impl.client.renderer.CompanionPrismRend
 import io.github.jason13official.summons.impl.client.renderer.summon.BattleSummonRenderer;
 import io.github.jason13official.summons.impl.common.registry.ModEntities;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
+import net.minecraft.client.DeltaTracker;
+import net.minecraft.client.KeyMapping;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.builders.LayerDefinition;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
 
 public class SummonsClient {
 
   public static void init() {
+  }
+
+  public static void registerKeyBindings(Consumer<KeyMapping> consumer) {
+
+    for (KeyMapping mapping : SummonsKeyBindings.all()) {
+      consumer.accept(mapping);
+    }
+  }
+
+  public static void registerHUD(BiConsumer<ResourceLocation, BiConsumer<GuiGraphics, DeltaTracker>> consumer) {
+    consumer.accept(Summons.identifier("hud"), SummonsHUD::render);
   }
 
   public static void registerEntityRenderers(BiConsumer<EntityType, EntityRendererProvider> consumer) {

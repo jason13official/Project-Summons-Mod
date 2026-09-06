@@ -25,6 +25,7 @@ public abstract class AbstractGroundCompanion extends AbstractCompanion {
 
   @Override
   protected void registerGoals() {
+    super.registerGoals();
 
     // Cow.class
     this.goalSelector.addGoal(0, new FloatGoal(this));

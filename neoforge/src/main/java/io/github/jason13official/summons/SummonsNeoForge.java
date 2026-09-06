@@ -1,5 +1,7 @@
 package io.github.jason13official.summons;
 
+import io.github.jason13official.summons.impl.common.network.SummonsNetworking;
+import io.github.jason13official.summons.impl.common.network.SummonsNetworking.CompanionInputPayload;
 import io.github.jason13official.summons.impl.common.registry.ModBlocks;
 import io.github.jason13official.summons.impl.common.registry.ModEntities;
 import io.github.jason13official.summons.impl.common.registry.ModItems;
@@ -13,6 +15,7 @@ import net.minecraft.core.Registry;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.SimplePreparableReloadListener;
 import net.minecraft.util.profiling.ProfilerFiller;
@@ -27,6 +30,8 @@ import net.neoforged.fml.loading.FMLLoader;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.AddReloadListenerEvent;
 import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
+import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
+import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 import net.neoforged.neoforge.registries.RegisterEvent;
 
 @Mod(Constants.MOD_ID)
@@ -52,6 +57,15 @@ public class SummonsNeoForge {
 
     NeoForge.EVENT_BUS.addListener((Consumer<AddReloadListenerEvent>) event -> {
       event.addListener(new ResourceReloadListener());
+    });
+
+    EVENT_BUS.addListener((RegisterPayloadHandlersEvent event) -> {
+      PayloadRegistrar registrar = event.registrar("1");
+      registrar.playToServer(CompanionInputPayload.TYPE, CompanionInputPayload.STREAM_CODEC, (payload, context) -> {
+        if (context.player() instanceof ServerPlayer player) {
+          SummonsNetworking.handle(player, payload.action());
+        }
+      });
     });
 
     if (FMLLoader.getDist() == Dist.CLIENT) {
