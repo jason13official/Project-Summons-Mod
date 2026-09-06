@@ -4,7 +4,10 @@
   "package": "io.github.jason13official.summons.mixin",
   "refmap": "${mod_id}.refmap.json",
   "compatibilityLevel": "JAVA_18",
-  "mixins": [],
+  "mixins": [
+    "EntityPersistentDataMixin",
+    "ServerPlayerPersistentDataMixin"
+  ],
   "client": [
     "MinecraftMixin"
   ],
