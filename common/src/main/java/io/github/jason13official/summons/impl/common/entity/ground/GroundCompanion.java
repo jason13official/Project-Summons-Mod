@@ -1,7 +1,11 @@
 package io.github.jason13official.summons.impl.common.entity.ground;
 
 import io.github.jason13official.summons.impl.common.entity.AbstractCompanion;
+import net.minecraft.core.BlockPos;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.ItemTags;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
 import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
@@ -11,6 +15,7 @@ import net.minecraft.world.entity.ai.goal.TemptGoal;
 import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 
 public abstract class GroundCompanion extends AbstractCompanion {
 
@@ -20,7 +25,6 @@ public abstract class GroundCompanion extends AbstractCompanion {
 
   @Override
   protected void registerGoals() {
-    // super.registerGoals(); // no-op in Mob.class
 
     // Cow.class
     this.goalSelector.addGoal(0, new FloatGoal(this));
@@ -32,4 +36,41 @@ public abstract class GroundCompanion extends AbstractCompanion {
     this.goalSelector.addGoal(6, new LookAtPlayerGoal(this, Player.class, 6.0F));
     this.goalSelector.addGoal(7, new RandomLookAroundGoal(this));
   }
+
+  // region sound
+  @Override
+  protected SoundEvent getAmbientSound() {
+
+    // Cow.class
+    return SoundEvents.COW_AMBIENT;
+  }
+
+  @Override
+  protected SoundEvent getHurtSound(DamageSource damageSource) {
+
+    // Cow.class
+    return SoundEvents.COW_HURT;
+  }
+
+  @Override
+  protected SoundEvent getDeathSound() {
+
+    // Cow.class
+    return SoundEvents.COW_DEATH;
+  }
+
+  @Override
+  protected void playStepSound(BlockPos pos, BlockState block) {
+
+    // Cow.class
+    this.playSound(SoundEvents.COW_STEP, 0.15F, 1.0F);
+  }
+
+  @Override
+  protected float getSoundVolume() {
+
+    // Cow.class
+    return 0.4F;
+  }
+  // endregion sound
 }

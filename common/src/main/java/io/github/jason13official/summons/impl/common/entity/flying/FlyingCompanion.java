@@ -3,8 +3,11 @@ package io.github.jason13official.summons.impl.common.entity.flying;
 import io.github.jason13official.summons.impl.common.entity.AbstractCompanion;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Mth;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.PathfinderMob;
@@ -41,9 +44,24 @@ public abstract class FlyingCompanion extends AbstractCompanion implements Flyin
   public static AttributeSupplier.Builder createAttributes() {
 
     // Parrot.class
-    return Mob.createMobAttributes().add(Attributes.MAX_HEALTH, (double)6.0F).add(Attributes.FLYING_SPEED, (double)0.4F).add(Attributes.MOVEMENT_SPEED, (double)0.2F).add(Attributes.ATTACK_DAMAGE, (double)3.0F);
+    return AbstractCompanion.createAttributes().add(Attributes.MAX_HEALTH, (double)6.0F).add(Attributes.FLYING_SPEED, (double)0.4F).add(Attributes.MOVEMENT_SPEED, (double)0.2F).add(Attributes.ATTACK_DAMAGE, (double)3.0F);
   }
 
+  @Override
+  protected void registerGoals() {
+
+    // Parrot.class
+    // this.goalSelector.addGoal(0, new TamableAnimal.TamableAnimalPanicGoal(this, (double)1.25F));
+    this.goalSelector.addGoal(0, new FloatGoal(this));
+    this.goalSelector.addGoal(1, new LookAtPlayerGoal(this, Player.class, 8.0F));
+    // this.goalSelector.addGoal(2, new SitWhenOrderedToGoal(this));
+    // this.goalSelector.addGoal(2, new FollowOwnerGoal(this, (double)1.0F, 5.0F, 1.0F));
+    this.goalSelector.addGoal(2, new CustomWanderGoal(this, (double)1.0F));
+    // this.goalSelector.addGoal(3, new LandOnOwnersShoulderGoal(this));
+    this.goalSelector.addGoal(3, new FollowMobGoal(this, (double)1.0F, 3.0F, 7.0F));
+  }
+
+  // region flight
   @Override
   protected PathNavigation createNavigation(Level level) {
 
@@ -65,22 +83,47 @@ public abstract class FlyingCompanion extends AbstractCompanion implements Flyin
   @Override
   protected void checkFallDamage(double y, boolean onGround, BlockState state, BlockPos pos) {
 
+    // Parrot.class
     // no-op
+  }
+  // endregion flight
+
+  // region sound
+  @Override
+  protected SoundEvent getAmbientSound() {
+
+    // Parrot.class
+    return SoundEvents.PARROT_AMBIENT;
   }
 
   @Override
-  protected void registerGoals() {
+  protected SoundEvent getHurtSound(DamageSource damageSource) {
 
     // Parrot.class
-    // this.goalSelector.addGoal(0, new TamableAnimal.TamableAnimalPanicGoal(this, (double)1.25F));
-    this.goalSelector.addGoal(0, new FloatGoal(this));
-    this.goalSelector.addGoal(1, new LookAtPlayerGoal(this, Player.class, 8.0F));
-    // this.goalSelector.addGoal(2, new SitWhenOrderedToGoal(this));
-    // this.goalSelector.addGoal(2, new FollowOwnerGoal(this, (double)1.0F, 5.0F, 1.0F));
-    this.goalSelector.addGoal(2, new CustomWanderGoal(this, (double)1.0F));
-    // this.goalSelector.addGoal(3, new LandOnOwnersShoulderGoal(this));
-    this.goalSelector.addGoal(3, new FollowMobGoal(this, (double)1.0F, 3.0F, 7.0F));
+    return SoundEvents.PARROT_HURT;
   }
+
+  @Override
+  protected SoundEvent getDeathSound() {
+
+    // Parrot.class
+    return SoundEvents.PARROT_DEATH;
+  }
+
+  @Override
+  protected void playStepSound(BlockPos pos, BlockState block) {
+
+    // Parrot.class
+    this.playSound(SoundEvents.PARROT_STEP, 0.15F, 1.0F);
+  }
+
+  @Override
+  protected float getSoundVolume() {
+
+    // Cow.class
+    return 0.4F;
+  }
+  // endregion sound
 
   /// Parrot$CustomWanderGoal.class
   public static class CustomWanderGoal extends WaterAvoidingRandomFlyingGoal {
