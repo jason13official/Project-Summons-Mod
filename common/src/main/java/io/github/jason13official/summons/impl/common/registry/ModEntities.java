@@ -3,6 +3,7 @@ package io.github.jason13official.summons.impl.common.registry;
 import io.github.jason13official.summons.Summons;
 import io.github.jason13official.summons.impl.common.entity.flying.FlyingCompanionCube;
 import io.github.jason13official.summons.impl.common.entity.flying.FlyingCompanionPrism;
+import io.github.jason13official.summons.impl.common.entity.ground.BattleSummon;
 import io.github.jason13official.summons.impl.common.entity.ground.CompanionCube;
 import io.github.jason13official.summons.impl.common.entity.ground.CompanionPrism;
 import java.util.function.BiConsumer;
@@ -18,6 +19,8 @@ public class ModEntities {
   public static EntityType<FlyingCompanionCube> FLYING_CUBE;
   public static EntityType<FlyingCompanionPrism> FLYING_PRISM;
 
+  public static EntityType<BattleSummon> BATTLE;
+
   public static void register(BiConsumer<EntityType<?>, ResourceLocation> consumer) {
 
     registerGround(consumer);
@@ -31,6 +34,10 @@ public class ModEntities {
 
     PRISM = EntityType.Builder.<CompanionPrism>of(CompanionPrism::new, MobCategory.MISC).sized(0.5f, 1.0f).clientTrackingRange(32).build("summons:prism");
     consumer.accept(PRISM, Summons.identifier("prism"));
+
+    // EntityType.class IRON_GOLEM sized
+    BATTLE = EntityType.Builder.<BattleSummon>of(BattleSummon::new, MobCategory.MISC).sized(1.4F, 2.7F).clientTrackingRange(32).build("summons:battle");
+    consumer.accept(BATTLE, Summons.identifier("battle"));
   }
 
   public static void registerFlying(BiConsumer<EntityType<?>, ResourceLocation> consumer) {
