@@ -9,7 +9,6 @@ import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -30,9 +29,9 @@ import net.minecraft.world.level.pathfinder.PathType;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
-public abstract class FlyingCompanion extends AbstractCompanion implements FlyingAnimal {
+public abstract class AbstractFlyingCompanion extends AbstractCompanion implements FlyingAnimal {
 
-  public FlyingCompanion(EntityType<? extends AbstractCompanion> entityType, Level level) {
+  public AbstractFlyingCompanion(EntityType<? extends AbstractCompanion> entityType, Level level) {
     super(entityType, level);
 
     // Parrot.class

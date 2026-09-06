@@ -3,7 +3,7 @@ package io.github.jason13official.summons;
 import io.github.jason13official.monolib.MonoLib;
 import io.github.jason13official.monolib.impl.common.sailing.Sailing;
 import io.github.jason13official.summons.impl.common.entity.AbstractCompanion;
-import io.github.jason13official.summons.impl.common.entity.flying.FlyingCompanion;
+import io.github.jason13official.summons.impl.common.entity.flying.AbstractFlyingCompanion;
 import io.github.jason13official.summons.impl.common.registry.ModEntities;
 import java.util.function.BiConsumer;
 import net.minecraft.resources.ResourceLocation;
@@ -26,7 +26,7 @@ public class Summons {
     consumer.accept(ModEntities.CUBE, AbstractCompanion.createAttributes().build());
     consumer.accept(ModEntities.PRISM, AbstractCompanion.createAttributes().build());
 
-    consumer.accept(ModEntities.FLYING_CUBE, FlyingCompanion.createAttributes().build());
-    consumer.accept(ModEntities.FLYING_PRISM, FlyingCompanion.createAttributes().build());
+    consumer.accept(ModEntities.FLYING_CUBE, AbstractFlyingCompanion.createAttributes().build());
+    consumer.accept(ModEntities.FLYING_PRISM, AbstractFlyingCompanion.createAttributes().build());
   }
 }

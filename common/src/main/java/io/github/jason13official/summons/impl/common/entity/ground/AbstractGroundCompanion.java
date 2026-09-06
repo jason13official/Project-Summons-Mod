@@ -17,9 +17,9 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 
-public abstract class GroundCompanion extends AbstractCompanion {
+public abstract class AbstractGroundCompanion extends AbstractCompanion {
 
-  public GroundCompanion(EntityType<? extends AbstractCompanion> entityType, Level level) {
+  public AbstractGroundCompanion(EntityType<? extends AbstractCompanion> entityType, Level level) {
     super(entityType, level);
   }
 
