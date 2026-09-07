@@ -5,6 +5,7 @@ import com.mojang.math.Axis;
 import io.github.jason13official.summons.Summons;
 import io.github.jason13official.summons.impl.client.model.summon.DevilSummonModel;
 import io.github.jason13official.summons.impl.client.model.summon.MageSummonModel;
+import io.github.jason13official.summons.impl.client.renderer.GuardFieldRenderer;
 import io.github.jason13official.summons.impl.common.entity.AbstractCompanion;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
@@ -44,6 +45,8 @@ public class DevilSummonRenderer extends EntityRenderer<AbstractCompanion> {
     this.model.setupAnim(cube, partialTick, 0.0F, -0.1F, 0.0F, 0.0F); // BoatRenderer: do animations/rotations?
     this.model.renderToBuffer(poseStack, bufferSource.getBuffer(RenderType.entityCutout(TEXTURE_LOCATION)), packedLight, OverlayTexture.NO_OVERLAY);
     poseStack.popPose();
+
+    GuardFieldRenderer.render(cube, poseStack, bufferSource);
 
     super.render(cube, entityYaw, partialTick, poseStack, bufferSource, packedLight);
   }

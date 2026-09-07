@@ -7,6 +7,7 @@ import io.github.jason13official.summons.impl.common.party.CompanionType;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
@@ -43,7 +44,7 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
 
   /// Guard field for DEFEND mode: radius of the damage-immunity field around this companion.
   /// Shrinks per hit taken, regenerates over time; only meaningful while getMode() == DEFEND.
-  /// TODO render circle below our summon with this radius, kinda like a shadow but white/light blue instead of dark
+  /// Rendered client-side by `GuardFieldRenderer` (Battle/Devil renderers only).
   private static final EntityDataAccessor<Float> DATA_GUARD_FIELD_RADIUS_ID =
       SynchedEntityData.defineId(AbstractCompanion.class, EntityDataSerializers.FLOAT);
 
@@ -84,6 +85,9 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     super.tick();
 
     if (this.level().isClientSide) {
+      if (this.getMode() == CompanionMode.DEFEND) {
+        this.spawnGuardFieldParticles();
+      }
       return;
     }
 
@@ -94,6 +98,20 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     } else if (this.getGuardFieldRadius() != GUARD_FIELD_MAX_RADIUS) {
       this.setGuardFieldRadius(GUARD_FIELD_MAX_RADIUS); // reset so re-entering DEFEND always starts full
     }
+  }
+
+  /// "light coming up out of the ground" along the Guard Field's edge;
+  /// the ring is drawn by `GuardFieldRenderer` but this just adds a rising particle accent to it
+  private void spawnGuardFieldParticles() {
+    if (this.random.nextInt(4) != 0) {
+      return;
+    }
+
+    float radius = this.getGuardFieldRadius();
+    double angle = this.random.nextDouble() * Math.PI * 2.0;
+    double x = this.getX() + Math.cos(angle) * radius;
+    double z = this.getZ() + Math.sin(angle) * radius;
+    this.level().addParticle(ParticleTypes.END_ROD, x, this.getY() + 0.05, z, 0.0, 0.03, 0.0);
   }
 
   // region guard field
