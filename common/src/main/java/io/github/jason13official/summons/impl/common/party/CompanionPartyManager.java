@@ -1,6 +1,7 @@
 package io.github.jason13official.summons.impl.common.party;
 
 import io.github.jason13official.summons.impl.common.entity.AbstractCompanion;
+import io.github.jason13official.summons.impl.common.registry.ModEntities;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -34,13 +35,14 @@ public class CompanionPartyManager {
   }
 
   /// record a newly acquired Innocent Devil/Summon into its party slot; no-op if that slot is
-  /// already unlocked. TODO impl
-  public static void unlock(ServerPlayer player, CompanionType type, EntityType<? extends AbstractCompanion> entityType) {
+  /// already unlocked.
+  public static void unlock(ServerPlayer player, CompanionType type) {
     CompanionParty party = CompanionParty.of(player);
     if (party.isUnlocked(type)) {
       return;
     }
 
+    EntityType<? extends AbstractCompanion> entityType = ModEntities.forType(type);
     Entity fresh = entityType.create(player.serverLevel());
     if (!(fresh instanceof AbstractCompanion companion)) {
       return;

@@ -7,6 +7,7 @@ import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.level.Level;
 
+/// Battle-Type: physically strong, lots of health and hits heavy
 public class BattleSummon extends AbstractGroundCompanion {
 
   public BattleSummon(EntityType<? extends AbstractCompanion> entityType, Level level) {

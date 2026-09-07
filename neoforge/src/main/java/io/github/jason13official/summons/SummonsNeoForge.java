@@ -3,6 +3,7 @@ package io.github.jason13official.summons;
 import io.github.jason13official.summons.impl.common.network.SummonsNetworking;
 import io.github.jason13official.summons.impl.common.network.SummonsNetworking.CompanionInputPayload;
 import io.github.jason13official.summons.impl.common.registry.ModBlocks;
+import io.github.jason13official.summons.impl.common.registry.ModCommands;
 import io.github.jason13official.summons.impl.common.registry.ModEntities;
 import io.github.jason13official.summons.impl.common.registry.ModItems;
 import io.github.jason13official.summons.impl.common.registry.ModMenus;
@@ -29,6 +30,7 @@ import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.fml.loading.FMLLoader;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.AddReloadListenerEvent;
+import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
@@ -58,6 +60,9 @@ public class SummonsNeoForge {
     NeoForge.EVENT_BUS.addListener((Consumer<AddReloadListenerEvent>) event -> {
       event.addListener(new ResourceReloadListener());
     });
+
+    NeoForge.EVENT_BUS.addListener((Consumer<RegisterCommandsEvent>) event ->
+        ModCommands.register(event.getDispatcher(), event.getBuildContext(), event.getCommandSelection()));
 
     EVENT_BUS.addListener((RegisterPayloadHandlersEvent event) -> {
       PayloadRegistrar registrar = event.registrar("1");

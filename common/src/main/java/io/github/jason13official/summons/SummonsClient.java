@@ -5,9 +5,19 @@ import io.github.jason13official.summons.impl.client.gui.SummonsHUD;
 import io.github.jason13official.summons.impl.client.model.CompanionCubeModel;
 import io.github.jason13official.summons.impl.client.model.CompanionPrismModel;
 import io.github.jason13official.summons.impl.client.model.summon.BattleSummonModel;
+import io.github.jason13official.summons.impl.client.model.summon.BirdSummonModel;
+import io.github.jason13official.summons.impl.client.model.summon.DevilSummonModel;
+import io.github.jason13official.summons.impl.client.model.summon.FairySummonModel;
+import io.github.jason13official.summons.impl.client.model.summon.MageSummonModel;
+import io.github.jason13official.summons.impl.client.model.summon.PumpkinSummonModel;
 import io.github.jason13official.summons.impl.client.renderer.CompanionCubeRenderer;
 import io.github.jason13official.summons.impl.client.renderer.CompanionPrismRenderer;
 import io.github.jason13official.summons.impl.client.renderer.summon.BattleSummonRenderer;
+import io.github.jason13official.summons.impl.client.renderer.summon.BirdSummonRenderer;
+import io.github.jason13official.summons.impl.client.renderer.summon.DevilSummonRenderer;
+import io.github.jason13official.summons.impl.client.renderer.summon.FairySummonRenderer;
+import io.github.jason13official.summons.impl.client.renderer.summon.MageSummonRenderer;
+import io.github.jason13official.summons.impl.client.renderer.summon.PumpkinSummonRenderer;
 import io.github.jason13official.summons.impl.common.registry.ModEntities;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -45,7 +55,12 @@ public class SummonsClient {
     consumer.accept(ModEntities.FLYING_CUBE, CompanionCubeRenderer::new);
     consumer.accept(ModEntities.FLYING_PRISM, CompanionPrismRenderer::new);
 
+    consumer.accept(ModEntities.FAIRY, FairySummonRenderer::new);
     consumer.accept(ModEntities.BATTLE, BattleSummonRenderer::new);
+    consumer.accept(ModEntities.BIRD, BirdSummonRenderer::new);
+    consumer.accept(ModEntities.MAGE, MageSummonRenderer::new);
+    consumer.accept(ModEntities.DEVIL, DevilSummonRenderer::new);
+    consumer.accept(ModEntities.PUMPKIN, PumpkinSummonRenderer::new);
   }
 
   public static void registerEntityModels(BiConsumer<ModelLayerLocation, Supplier<LayerDefinition>> consumer) {
@@ -53,6 +68,11 @@ public class SummonsClient {
     consumer.accept(CompanionCubeModel.LAYER_LOCATION, CompanionCubeModel::createBodyLayer);
     consumer.accept(CompanionPrismModel.LAYER_LOCATION, CompanionPrismModel::createBodyLayer);
 
+    consumer.accept(FairySummonModel.LAYER_LOCATION, FairySummonModel::createBodyLayer);
     consumer.accept(BattleSummonModel.LAYER_LOCATION, BattleSummonModel::createBodyLayer);
+    consumer.accept(BirdSummonModel.LAYER_LOCATION, BirdSummonModel::createBodyLayer);
+    consumer.accept(MageSummonModel.LAYER_LOCATION, MageSummonModel::createBodyLayer);
+    consumer.accept(DevilSummonModel.LAYER_LOCATION, DevilSummonModel::createBodyLayer);
+    consumer.accept(PumpkinSummonModel.LAYER_LOCATION, PumpkinSummonModel::createBodyLayer);
   }
 }

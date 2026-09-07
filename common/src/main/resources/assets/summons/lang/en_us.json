@@ -1,4 +1,13 @@
 {
+  "itemGroup.summons": "Summons",
+
+  "item.summons.fairy_spawn_egg": "Fairy Spawn Egg",
+  "item.summons.battle_spawn_egg": "Battle Spawn Egg",
+  "item.summons.bird_spawn_egg": "Bird Spawn Egg",
+  "item.summons.mage_spawn_egg": "Mage Spawn Egg",
+  "item.summons.devil_spawn_egg": "Devil Spawn Egg",
+  "item.summons.pumpkin_spawn_egg": "Pumpkin Spawn Egg",
+
   "key.categories.summons": "Summons",
   "key.summons.toggle_summon": "Summon/Dismiss Companion",
   "key.summons.cycle_party": "Cycle Party",
