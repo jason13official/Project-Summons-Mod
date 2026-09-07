@@ -50,7 +50,7 @@ public class PumpkinSummon extends AbstractGroundCompanion {
   @Override
   protected void registerGoals() {
     super.registerGoals();
-    this.goalSelector.addGoal(2, new MeleeAttackGoal(this, 1.0, true));
+    this.goalSelector.addGoal(0, new MeleeAttackGoal(this, 1.0, true));
   }
 
   @Override

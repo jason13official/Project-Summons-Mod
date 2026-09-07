@@ -58,7 +58,7 @@ public class BattleSummon extends AbstractGroundCompanion {
   @Override
   protected void registerGoals() {
     super.registerGoals();
-    this.goalSelector.addGoal(2, new MeleeAttackGoal(this, 1.2, true));
+    this.goalSelector.addGoal(0, new MeleeAttackGoal(this, 1.2, true));
   }
 
   @Override
