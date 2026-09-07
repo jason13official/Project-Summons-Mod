@@ -69,7 +69,7 @@ public class MageSummon extends AbstractFlyingCompanion {
   @Override
   protected void registerGoals() {
     super.registerGoals();
-    this.goalSelector.addGoal(4,
+    this.goalSelector.addGoal(1,
         new CompanionRangedAttackGoal(this, 1.0, DIRECT_ATTACK_COOLDOWN, DIRECT_ATTACK_RADIUS, MageSummon::castZap));
   }
 
