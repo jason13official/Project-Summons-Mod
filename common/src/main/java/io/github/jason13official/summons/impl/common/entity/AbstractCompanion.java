@@ -7,6 +7,7 @@ import io.github.jason13official.summons.impl.common.evolution.EvoCrystalColor;
 import io.github.jason13official.summons.impl.common.evolution.EvolutionForm;
 import io.github.jason13official.summons.impl.common.evolution.EvolutionThreshold;
 import io.github.jason13official.summons.impl.common.party.CompanionMode;
+import io.github.jason13official.summons.impl.common.party.CompanionParty;
 import io.github.jason13official.summons.impl.common.party.CompanionType;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -22,6 +23,7 @@ import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
@@ -276,17 +278,42 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
   }
 
   /// intercepts a lethal hit: I.D.s "cannot permanently die" (wiki), they go inert instead.
-  /// Bypass-invulnerability sources (void, /kill, creative) still remove it as normal.
+  /// The *only* way to fully remove a companion is the dismiss keybind; even a bypass-
+  /// invulnerability source (void, /kill, creative) doesn't discard it here, it just gets
+  /// snapshotted back into the party like a dismiss, flagged as a wisp for next time.
   @Override
   public void die(DamageSource source) {
-    if (this.level().isClientSide || this.isWisp() || source.is(DamageTypeTags.BYPASSES_INVULNERABILITY)) {
+    if (this.level().isClientSide || this.isWisp()) {
       super.die(source);
+      return;
+    }
+
+    if (source.is(DamageTypeTags.BYPASSES_INVULNERABILITY)) {
+      this.retreatToPartyAsWisp();
       return;
     }
 
     this.entityData.set(DATA_WISP_ID, true);
     this.setHealth(WISP_REVIVE_HEALTH);
     this.setNoAi(true);
+  }
+
+  /// used when something would otherwise truly remove the entity (void, /kill, creative);
+  /// stores it back in its party slot exactly like the dismiss keybind, but pre-marked as a
+  /// wisp so the next summon still needs a Heart. Falls back to a real discard only if there's
+  /// no owner to return it to (e.g. the owning player no longer exists).
+  private void retreatToPartyAsWisp() {
+    if (!(this.getOwner() instanceof ServerPlayer player)) {
+      super.die(this.damageSources().generic());
+      return;
+    }
+
+    this.entityData.set(DATA_WISP_ID, true);
+
+    CompanionParty party = CompanionParty.of(player);
+    party.putSnapshot(this.getCompanionType(), this.saveWithoutId(new CompoundTag()));
+    party.clearActiveType();
+    this.discard();
   }
 
   /// a Heart revives it; only meaningful while [#isWisp]
