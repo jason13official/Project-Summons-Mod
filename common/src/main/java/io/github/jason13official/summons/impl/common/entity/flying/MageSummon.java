@@ -2,6 +2,7 @@ package io.github.jason13official.summons.impl.common.entity.flying;
 
 import io.github.jason13official.summons.impl.common.entity.AbstractCompanion;
 import io.github.jason13official.summons.impl.common.entity.ability.CompanionAbility;
+import io.github.jason13official.summons.impl.common.entity.ai.goal.attack.CompanionRangedAttackGoal;
 import io.github.jason13official.summons.impl.common.entity.ground.AbstractGroundCompanion;
 import io.github.jason13official.summons.impl.common.evolution.EvoCrystalColor;
 import io.github.jason13official.summons.impl.common.evolution.EvolutionForm;
@@ -23,6 +24,8 @@ import net.minecraft.world.phys.Vec3;
 public class MageSummon extends AbstractFlyingCompanion {
 
   private static final double SPELL_RADIUS = 12.0;
+  private static final double DIRECT_ATTACK_RADIUS = 10.0;
+  private static final int DIRECT_ATTACK_COOLDOWN = 40;
 
   private static final List<CompanionAbility> ABILITIES = List.of(
       CompanionAbility.base("Lightning Strike", 30, (companion, owner) -> {
@@ -61,6 +64,22 @@ public class MageSummon extends AbstractFlyingCompanion {
     return AbstractFlyingCompanion.createAttributes().add(Attributes.MAX_HEALTH, (double) 12.0F)
         .add(Attributes.FLYING_SPEED, (double) 0.45F).add(Attributes.MOVEMENT_SPEED, (double) 0.28F)
         .add(Attributes.ATTACK_DAMAGE, (double) 10.0F).add(Attributes.KNOCKBACK_RESISTANCE, (double) 0.3F);
+  }
+
+  @Override
+  protected void registerGoals() {
+    super.registerGoals();
+    this.goalSelector.addGoal(4,
+        new CompanionRangedAttackGoal(this, 1.0, DIRECT_ATTACK_COOLDOWN, DIRECT_ATTACK_RADIUS, MageSummon::castZap));
+  }
+
+  /// small lightning zap: physically weak, so its basic attack is a light
+  /// instant spell, a scaled fraction of ATTACK_DAMAGE, no projectile entity.
+  private static void castZap(AbstractCompanion companion, LivingEntity target) {
+    float damage = (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * 0.3F;
+    target.hurt(companion.damageSources().magic(), damage);
+    spawnAbilityParticles(target, ParticleTypes.ELECTRIC_SPARK, 6);
+    companion.grantDirectAttackExperience();
   }
 
   @Override

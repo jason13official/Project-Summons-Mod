@@ -1,17 +1,23 @@
 package io.github.jason13official.summons.impl.common.entity.flying;
 
+import io.github.jason13official.summons.impl.common.entity.AbstractCompanion;
 import io.github.jason13official.summons.impl.common.entity.ability.CompanionAbility;
+import io.github.jason13official.summons.impl.common.entity.ai.goal.attack.CompanionRangedAttackGoal;
 import io.github.jason13official.summons.impl.common.evolution.EvoCrystalColor;
 import io.github.jason13official.summons.impl.common.evolution.EvolutionForm;
 import io.github.jason13official.summons.impl.common.evolution.EvolutionThreshold;
 import java.util.List;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.projectile.Arrow;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 
@@ -21,6 +27,8 @@ public class BirdSummon extends AbstractFlyingCompanion {
 
   private static final double CARPET_BOMBS_FIND_RADIUS = 10.0;
   private static final double CARPET_BOMBS_AOE_RADIUS = 2.0;
+  private static final double DIRECT_ATTACK_RADIUS = 10.0;
+  private static final int DIRECT_ATTACK_COOLDOWN = 30;
 
   private static final List<CompanionAbility> ABILITIES = List.of(
       CompanionAbility.base("Glide", 100, (companion, owner) -> {
@@ -54,6 +62,31 @@ public class BirdSummon extends AbstractFlyingCompanion {
     return AbstractFlyingCompanion.createAttributes().add(Attributes.MAX_HEALTH, (double) 14.0F)
         .add(Attributes.FLYING_SPEED, (double) 0.5F).add(Attributes.MOVEMENT_SPEED, (double) 0.25F)
         .add(Attributes.ATTACK_DAMAGE, (double) 4.0F);
+  }
+
+  @Override
+  protected void registerGoals() {
+    super.registerGoals();
+    this.goalSelector.addGoal(4,
+        new CompanionRangedAttackGoal(this, 1.0, DIRECT_ATTACK_COOLDOWN, DIRECT_ATTACK_RADIUS, BirdSummon::shootArrow));
+  }
+
+  private static void shootArrow(AbstractCompanion companion, LivingEntity target) {
+    if (!(companion.level() instanceof ServerLevel serverLevel)) {
+      return;
+    }
+
+    Arrow arrow = new Arrow(serverLevel, companion, new ItemStack(Items.ARROW), null);
+    arrow.setBaseDamage(companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * 0.5);
+
+    double dx = target.getX() - companion.getX();
+    double dy = target.getY(0.3333333333333333) - arrow.getY();
+    double dz = target.getZ() - companion.getZ();
+    double horizontalDistance = Math.sqrt(dx * dx + dz * dz);
+    arrow.shoot(dx, dy + horizontalDistance * 0.2, dz, 1.6F, 6.0F);
+
+    serverLevel.addFreshEntity(arrow);
+    companion.grantDirectAttackExperience();
   }
 
   @Override

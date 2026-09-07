@@ -26,6 +26,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
@@ -97,6 +98,7 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
 
   public static final int MAX_LEVEL = 99;
   private static final int ABILITY_USE_XP = 5;
+  private static final int DIRECT_ATTACK_XP = 2;
 
   /// "sparking wisp": at 0 Hearts the I.D. doesn't die, it goes inert and floats near the
   /// owner until a Heart revives it. No dedicated wisp entity/model; renderers skip
@@ -520,6 +522,23 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     this.entityData.set(DATA_EXPERIENCE_ID, level >= MAX_LEVEL ? 0 : xp);
   }
   // endregion leveling
+
+  // region direct attack
+  /// vanilla melee hit + XP; types with a different basic attack (ranged, or Fairy's
+  /// poison tick) override this instead of adding a plain MeleeAttackGoal.
+  @Override
+  public boolean doHurtTarget(Entity entity) {
+    boolean success = super.doHurtTarget(entity);
+    if (success) {
+      this.grantDirectAttackExperience();
+    }
+    return success;
+  }
+
+  public final void grantDirectAttackExperience() {
+    this.addExperience(DIRECT_ATTACK_XP);
+  }
+  // endregion direct attack
 
   @Override
   public void addAdditionalSaveData(CompoundTag compound) {

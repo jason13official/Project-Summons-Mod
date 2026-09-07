@@ -1,6 +1,7 @@
 package io.github.jason13official.summons.impl.common.entity.flying;
 
 import io.github.jason13official.summons.impl.common.entity.ability.CompanionAbility;
+import io.github.jason13official.summons.impl.common.entity.ai.goal.attack.CompanionLevelGatedMeleeAttackGoal;
 import io.github.jason13official.summons.impl.common.evolution.EvoCrystalColor;
 import io.github.jason13official.summons.impl.common.evolution.EvolutionForm;
 import io.github.jason13official.summons.impl.common.evolution.EvolutionThreshold;
@@ -8,13 +9,18 @@ import java.util.List;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.level.Level;
 
-/// Fairy-Type: support only, heals/cures the owner, does not attack.
+/// Fairy-Type: support only, heals/cures the owner. Per wiki, most forms don't attack at
+/// all; here it learns a weak poison-tick basic attack at [#DIRECT_ATTACK_MIN_LEVEL].
 public class FairySummon extends AbstractFlyingCompanion {
+
+  private static final int DIRECT_ATTACK_MIN_LEVEL = 4;
 
   private static final List<CompanionAbility> ABILITIES = List.of(
       CompanionAbility.base("Heal Lv.1", 20, (companion, owner) -> {
@@ -47,6 +53,23 @@ public class FairySummon extends AbstractFlyingCompanion {
     return AbstractFlyingCompanion.createAttributes().add(Attributes.MAX_HEALTH, (double) 6.0F)
         .add(Attributes.FLYING_SPEED, (double) 0.5F).add(Attributes.MOVEMENT_SPEED, (double) 0.3F)
         .add(Attributes.ATTACK_DAMAGE, (double) 0.0F);
+  }
+
+  @Override
+  protected void registerGoals() {
+    super.registerGoals();
+    this.goalSelector.addGoal(4, new CompanionLevelGatedMeleeAttackGoal(this, 1.0, true, DIRECT_ATTACK_MIN_LEVEL));
+  }
+
+  @Override
+  public boolean doHurtTarget(Entity entity) {
+    if (!(entity instanceof LivingEntity target)) {
+      return false;
+    }
+
+    target.addEffect(new MobEffectInstance(MobEffects.POISON, 30, 0));
+    this.grantDirectAttackExperience();
+    return true;
   }
 
   @Override

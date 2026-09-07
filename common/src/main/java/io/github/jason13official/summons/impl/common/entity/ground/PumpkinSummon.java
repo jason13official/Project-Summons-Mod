@@ -11,6 +11,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 
@@ -44,6 +45,12 @@ public class PumpkinSummon extends AbstractGroundCompanion {
 
     return AbstractCompanion.createAttributes().add(Attributes.MAX_HEALTH, (double) 8.0F)
         .add(Attributes.MOVEMENT_SPEED, (double) 0.18F).add(Attributes.ATTACK_DAMAGE, (double) 1.0F);
+  }
+
+  @Override
+  protected void registerGoals() {
+    super.registerGoals();
+    this.goalSelector.addGoal(2, new MeleeAttackGoal(this, 1.0, true));
   }
 
   @Override

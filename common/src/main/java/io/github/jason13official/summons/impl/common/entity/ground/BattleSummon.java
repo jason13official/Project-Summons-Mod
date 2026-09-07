@@ -12,6 +12,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 
@@ -52,6 +53,12 @@ public class BattleSummon extends AbstractGroundCompanion {
 
   public static AttributeSupplier.Builder createAttributes() {
     return Mob.createMobAttributes().add(Attributes.MAX_HEALTH, (double)100.0F).add(Attributes.MOVEMENT_SPEED, (double)0.25F).add(Attributes.KNOCKBACK_RESISTANCE, (double)1.0F).add(Attributes.ATTACK_DAMAGE, (double)15.0F).add(Attributes.STEP_HEIGHT, (double)1.0F);
+  }
+
+  @Override
+  protected void registerGoals() {
+    super.registerGoals();
+    this.goalSelector.addGoal(2, new MeleeAttackGoal(this, 1.2, true));
   }
 
   @Override
