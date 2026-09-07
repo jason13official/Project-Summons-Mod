@@ -1,6 +1,7 @@
 package io.github.jason13official.summons.impl.common.entity.flying;
 
 import io.github.jason13official.summons.impl.common.entity.ability.CompanionAbility;
+import io.github.jason13official.summons.impl.common.evolution.EvolutionThreshold;
 import java.util.List;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.world.entity.EntityType;
@@ -55,6 +56,15 @@ public class DevilSummon extends AbstractFlyingCompanion {
 
   @Override
   protected List<CompanionAbility> abilities() {
-    return ABILITIES;
+    // Devil-Type evolves in a single line (Gale -> Brow -> The End); Needle Magic Circle
+    // really is a Brow-stage ability, so this gating is exact
+    return this.getEvolutionStage() >= 1 ? ABILITIES : ABILITIES.subList(0, 1);
+  }
+
+  @Override
+  protected List<EvolutionThreshold> evolutionThresholds() {
+    // Gale -> Brow: 200 of any color combined (not alternates -> this is the one wiki example
+    // of a non-branching, cumulative-colors threshold)
+    return List.of(EvolutionThreshold.any(200, "Brow"));
   }
 }

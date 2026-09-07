@@ -78,6 +78,9 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
   private static final EntityDataAccessor<Integer> DATA_CRYSTAL_WHITE_ID =
       SynchedEntityData.defineId(AbstractCompanion.class, EntityDataSerializers.INT);
 
+  private static final EntityDataAccessor<Integer> DATA_EVOLUTION_STAGE_ID =
+      SynchedEntityData.defineId(AbstractCompanion.class, EntityDataSerializers.INT);
+
   public AbstractCompanion(EntityType<? extends AbstractCompanion> entityType, Level level) {
     super(entityType, level);
   }
@@ -110,6 +113,7 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     builder.define(DATA_CRYSTAL_GREEN_ID, 0);
     builder.define(DATA_CRYSTAL_YELLOW_ID, 0);
     builder.define(DATA_CRYSTAL_WHITE_ID, 0);
+    builder.define(DATA_EVOLUTION_STAGE_ID, 0);
   }
 
   @Override
@@ -250,27 +254,69 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     this.checkEvolution();
   }
 
-  /// evolution routes out of this companion's current form; override per type/stage.
-  /// Colors are alternates (any one alone reaching `amount` qualifies), never combined.
+  public int getEvolutionStage() {
+    return this.entityData.get(DATA_EVOLUTION_STAGE_ID);
+  }
+
+  private void setEvolutionStage(int stage) {
+    this.entityData.set(DATA_EVOLUTION_STAGE_ID, stage);
+  }
+
+  /// evolution routes out of this companion's *current* stage; override per type. See
+  /// [EvolutionThreshold] for the alternate-vs-"Any" distinction.
   protected List<EvolutionThreshold> evolutionThresholds() {
     return List.of();
   }
 
-  /// TODO: no evolved forms/models yet, so this just announces and spends the points; need to wire an actual entity/model swap once evolution assets exist
+  /// TODO: only stage 0->1 data is wired for any type so far, and no evolved forms/models
+  /// exist yet; this just advances the stage, spends the points, and announces the result.
   private void checkEvolution() {
+    if (this.getEvolutionStage() > 0) {
+      return;
+    }
+
     for (EvolutionThreshold threshold : this.evolutionThresholds()) {
-      int points = this.getCrystalPoints(threshold.color());
-      if (points < threshold.amount()) {
+      int available = threshold.color() != null ? this.getCrystalPoints(threshold.color()) : this.totalCrystalPoints();
+      if (available < threshold.amount()) {
         continue;
       }
 
-      this.setCrystalPoints(threshold.color(), points - threshold.amount());
+      if (threshold.color() != null) {
+        this.setCrystalPoints(threshold.color(), available - threshold.amount());
+      } else {
+        this.spendCrystalPointsAcrossColors(threshold.amount());
+      }
+
+      this.setEvolutionStage(this.getEvolutionStage() + 1);
+
       LivingEntity owner = this.getOwner();
       if (owner instanceof Player player) {
-        player.displayClientMessage(
-            Component.literal(this.getCompanionType().name() + "-Type is ready to evolve! (not yet implemented)"), false);
+        player.displayClientMessage(Component.literal(this.getCompanionType().name() + "-Type is ready to evolve into "
+            + threshold.resultName() + "! (not yet implemented)"), false);
       }
       return;
+    }
+  }
+
+  private int totalCrystalPoints() {
+    int total = 0;
+    for (EvoCrystalColor color : EvoCrystalColor.values()) {
+      total += this.getCrystalPoints(color);
+    }
+    return total;
+  }
+
+  /// drains `amount` across colors in a fixed order; only used by "Any" thresholds
+  private void spendCrystalPointsAcrossColors(int amount) {
+    for (EvoCrystalColor color : EvoCrystalColor.values()) {
+      if (amount <= 0) {
+        break;
+      }
+
+      int have = this.getCrystalPoints(color);
+      int take = Math.min(have, amount);
+      this.setCrystalPoints(color, have - take);
+      amount -= take;
     }
   }
   // endregion evolution
@@ -289,6 +335,7 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     for (EvoCrystalColor color : EvoCrystalColor.values()) {
       compound.putInt("Crystal" + color.name(), this.getCrystalPoints(color));
     }
+    compound.putInt("EvolutionStage", this.getEvolutionStage());
   }
 
   @Override
@@ -322,6 +369,10 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
       if (compound.contains(key)) {
         this.setCrystalPoints(color, compound.getInt(key));
       }
+    }
+
+    if (compound.contains("EvolutionStage")) {
+      this.setEvolutionStage(compound.getInt("EvolutionStage"));
     }
   }
 

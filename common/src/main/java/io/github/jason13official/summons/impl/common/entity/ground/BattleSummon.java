@@ -2,6 +2,8 @@ package io.github.jason13official.summons.impl.common.entity.ground;
 
 import io.github.jason13official.summons.impl.common.entity.AbstractCompanion;
 import io.github.jason13official.summons.impl.common.entity.ability.CompanionAbility;
+import io.github.jason13official.summons.impl.common.evolution.EvoCrystalColor;
+import io.github.jason13official.summons.impl.common.evolution.EvolutionThreshold;
 import java.util.List;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.world.entity.EntityType;
@@ -52,6 +54,18 @@ public class BattleSummon extends AbstractGroundCompanion {
 
   @Override
   protected List<CompanionAbility> abilities() {
-    return ABILITIES;
+    // TODO: branch-specific (Speed Mail vs Golem) once we track which one was taken; Hip
+    // Press is really Golem-only, but any evolution unlocks it for now
+    return this.getEvolutionStage() >= 1 ? ABILITIES : ABILITIES.subList(0, 1);
+  }
+
+  @Override
+  protected List<EvolutionThreshold> evolutionThresholds() {
+    return List.of(
+        new EvolutionThreshold(EvoCrystalColor.BLUE, 40, "Speed Mail"),
+        new EvolutionThreshold(EvoCrystalColor.YELLOW, 40, "Speed Mail"),
+        new EvolutionThreshold(EvoCrystalColor.GREEN, 40, "Speed Mail"),
+        new EvolutionThreshold(EvoCrystalColor.RED, 40, "Golem"),
+        new EvolutionThreshold(EvoCrystalColor.WHITE, 40, "Golem"));
   }
 }

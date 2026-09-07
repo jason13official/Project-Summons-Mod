@@ -3,6 +3,8 @@ package io.github.jason13official.summons.impl.common.entity.flying;
 import io.github.jason13official.summons.impl.common.entity.AbstractCompanion;
 import io.github.jason13official.summons.impl.common.entity.ability.CompanionAbility;
 import io.github.jason13official.summons.impl.common.entity.ground.AbstractGroundCompanion;
+import io.github.jason13official.summons.impl.common.evolution.EvoCrystalColor;
+import io.github.jason13official.summons.impl.common.evolution.EvolutionThreshold;
 import java.util.List;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
@@ -61,6 +63,18 @@ public class MageSummon extends AbstractFlyingCompanion {
 
   @Override
   protected List<CompanionAbility> abilities() {
-    return ABILITIES;
+    // TODO: branch-specific (Scissor Rod vs Talon Rod) once we track which one was taken;
+    // Freeze is really Talon Rod-only, but any evolution unlocks it for now
+    return this.getEvolutionStage() >= 1 ? ABILITIES : ABILITIES.subList(0, 1);
+  }
+
+  @Override
+  protected List<EvolutionThreshold> evolutionThresholds() {
+    return List.of(
+        new EvolutionThreshold(EvoCrystalColor.RED, 40, "Scissor Rod"),
+        new EvolutionThreshold(EvoCrystalColor.YELLOW, 40, "Scissor Rod"),
+        new EvolutionThreshold(EvoCrystalColor.BLUE, 40, "Talon Rod"),
+        new EvolutionThreshold(EvoCrystalColor.GREEN, 40, "Talon Rod"),
+        new EvolutionThreshold(EvoCrystalColor.WHITE, 40, "Talon Rod"));
   }
 }

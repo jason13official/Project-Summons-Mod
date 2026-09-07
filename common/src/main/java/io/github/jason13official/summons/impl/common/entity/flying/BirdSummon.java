@@ -1,6 +1,8 @@
 package io.github.jason13official.summons.impl.common.entity.flying;
 
 import io.github.jason13official.summons.impl.common.entity.ability.CompanionAbility;
+import io.github.jason13official.summons.impl.common.evolution.EvoCrystalColor;
+import io.github.jason13official.summons.impl.common.evolution.EvolutionThreshold;
 import java.util.List;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -54,6 +56,17 @@ public class BirdSummon extends AbstractFlyingCompanion {
 
   @Override
   protected List<CompanionAbility> abilities() {
-    return ABILITIES;
+    // TODO: branch-specific (Goldfinch vs Skull Wing), need to track which one was taken; Carpet Bombs is really Skull Wing-only, but any evolution unlocks it for now
+    return this.getEvolutionStage() >= 1 ? ABILITIES : ABILITIES.subList(0, 1);
+  }
+
+  @Override
+  protected List<EvolutionThreshold> evolutionThresholds() {
+    return List.of(
+        new EvolutionThreshold(EvoCrystalColor.GREEN, 40, "Goldfinch"),
+        new EvolutionThreshold(EvoCrystalColor.YELLOW, 40, "Goldfinch"),
+        new EvolutionThreshold(EvoCrystalColor.WHITE, 40, "Goldfinch"),
+        new EvolutionThreshold(EvoCrystalColor.RED, 40, "Skull Wing"),
+        new EvolutionThreshold(EvoCrystalColor.BLUE, 40, "Skull Wing"));
   }
 }

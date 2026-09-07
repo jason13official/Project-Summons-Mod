@@ -2,6 +2,8 @@ package io.github.jason13official.summons.impl.common.entity.ground;
 
 import io.github.jason13official.summons.impl.common.entity.AbstractCompanion;
 import io.github.jason13official.summons.impl.common.entity.ability.CompanionAbility;
+import io.github.jason13official.summons.impl.common.evolution.EvoCrystalColor;
+import io.github.jason13official.summons.impl.common.evolution.EvolutionThreshold;
 import java.util.List;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.world.entity.EntityType;
@@ -45,6 +47,17 @@ public class PumpkinSummon extends AbstractGroundCompanion {
 
   @Override
   protected List<CompanionAbility> abilities() {
+    // evolutions are purely cosmetic for Pumpkin-Type; Pose stays its only ability regardless
     return ABILITIES;
+  }
+
+  @Override
+  protected List<EvolutionThreshold> evolutionThresholds() {
+    return List.of(
+        new EvolutionThreshold(EvoCrystalColor.YELLOW, 70, "Queen"),
+        new EvolutionThreshold(EvoCrystalColor.BLUE, 70, "Bloody"),
+        new EvolutionThreshold(EvoCrystalColor.RED, 70, "Tiny King"),
+        new EvolutionThreshold(EvoCrystalColor.WHITE, 70, "Clown Nose"),
+        new EvolutionThreshold(EvoCrystalColor.GREEN, 70, "New Deli"));
   }
 }

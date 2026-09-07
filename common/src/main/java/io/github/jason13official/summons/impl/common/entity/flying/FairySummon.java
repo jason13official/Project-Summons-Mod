@@ -49,13 +49,17 @@ public class FairySummon extends AbstractFlyingCompanion {
 
   @Override
   protected List<CompanionAbility> abilities() {
-    return ABILITIES;
+    // TODO: branch-specific (Leaffle vs Herbest) need to track which one was taken; for now any evolution at all unlocks the full kit
+    return this.getEvolutionStage() >= 1 ? ABILITIES : ABILITIES.subList(0, 1);
   }
 
   @Override
   protected List<EvolutionThreshold> evolutionThresholds() {
-
-    // Infant Fairy -> Leaffle: 40 Red or 40 Yellow (colors are alternates, not combined)
-    return List.of(new EvolutionThreshold(EvoCrystalColor.RED, 40), new EvolutionThreshold(EvoCrystalColor.YELLOW, 40));
+    return List.of(
+        new EvolutionThreshold(EvoCrystalColor.RED, 40, "Leaffle"),
+        new EvolutionThreshold(EvoCrystalColor.YELLOW, 40, "Leaffle"),
+        new EvolutionThreshold(EvoCrystalColor.BLUE, 40, "Herbest"),
+        new EvolutionThreshold(EvoCrystalColor.GREEN, 40, "Herbest"),
+        new EvolutionThreshold(EvoCrystalColor.WHITE, 40, "Herbest"));
   }
 }
