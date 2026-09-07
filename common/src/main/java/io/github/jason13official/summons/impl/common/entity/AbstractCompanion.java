@@ -6,12 +6,15 @@ import io.github.jason13official.summons.impl.common.party.CompanionMode;
 import io.github.jason13official.summons.impl.common.party.CompanionType;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
@@ -53,6 +56,8 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
   private static final float GUARD_FIELD_SHRINK_PER_HIT = 0.75F;
   private static final float GUARD_FIELD_REGEN_PER_TICK = 0.01F; // ~4.5s min->max
 
+  private static final double TELEPORT_TO_OWNER_DISTANCE = 24.0;
+
   public AbstractCompanion(EntityType<? extends AbstractCompanion> entityType, Level level) {
     super(entityType, level);
   }
@@ -91,6 +96,11 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
       return;
     }
 
+    this.teleportToOwner();
+    if (this.isRemoved()) {
+      return; // relocated into the owner's dimension; this instance was replaced
+    }
+
     if (this.getMode() == CompanionMode.DEFEND) {
       if (this.getGuardFieldRadius() < GUARD_FIELD_MAX_RADIUS) {
         this.setGuardFieldRadius(this.getGuardFieldRadius() + GUARD_FIELD_REGEN_PER_TICK);
@@ -100,18 +110,49 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     }
   }
 
-  /// "light coming up out of the ground" along the Guard Field's edge;
-  /// the ring is drawn by `GuardFieldRenderer` but this just adds a rising particle accent to it
+  /// "light coming up out of the ground" around the Guard Field (matching the
+  /// ring `GuardFieldRenderer` draws), with some inside the field too.
   private void spawnGuardFieldParticles() {
-    if (this.random.nextInt(4) != 0) {
+    float radius = this.getGuardFieldRadius();
+
+    if (this.random.nextInt(4) == 0) {
+      this.spawnGuardFieldParticle(radius);
+    }
+
+    if (this.random.nextInt(8) == 0) {
+      // sqrt so points land uniformly across the disc's area, not bunched at the center
+      this.spawnGuardFieldParticle(radius * (float) Math.sqrt(this.random.nextDouble()));
+    }
+  }
+
+  private void spawnGuardFieldParticle(float distanceFromCenter) {
+    double angle = this.random.nextDouble() * Math.PI * 2.0;
+    double x = this.getX() + Math.cos(angle) * distanceFromCenter;
+    double z = this.getZ() + Math.sin(angle) * distanceFromCenter;
+    this.level().addParticle(ParticleTypes.END_ROD, x, this.getY() + 0.05, z, 0.0, 0.03, 0.0);
+  }
+
+  /// Safety net for dimension changes, respawns, or companions falling behind.
+  /// `teleportTo` handles cross-dimension moves and preserves NBT.
+  /// Runs regardlessof [CompanionMode]
+  private void teleportToOwner() {
+    if (!(this.level() instanceof ServerLevel level)) {
       return;
     }
 
-    float radius = this.getGuardFieldRadius();
-    double angle = this.random.nextDouble() * Math.PI * 2.0;
-    double x = this.getX() + Math.cos(angle) * radius;
-    double z = this.getZ() + Math.sin(angle) * radius;
-    this.level().addParticle(ParticleTypes.END_ROD, x, this.getY() + 0.05, z, 0.0, 0.03, 0.0);
+    LivingEntity owner = this.getOwner();
+    if (owner == null || !(owner.level() instanceof ServerLevel ownerLevel)) {
+      return;
+    }
+
+    boolean differentDimension = !level.dimension().equals(ownerLevel.dimension());
+    if (!differentDimension && this.distanceTo(owner) <= TELEPORT_TO_OWNER_DISTANCE) {
+      return;
+    }
+
+    double x = owner.getX() + (this.random.nextFloat() * 2.0F - 1.0F);
+    double z = owner.getZ() + (this.random.nextFloat() * 2.0F - 1.0F);
+    this.teleportTo(ownerLevel, x, owner.getY(), z, Set.of(), owner.getYRot(), 0.0F);
   }
 
   // region guard field
@@ -236,6 +277,12 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
 
   public void setMode(CompanionMode mode) {
     this.entityData.set(DATA_MODE_ID, (byte) mode.ordinal());
+
+    // Guard Mode disables AI, preventing wandering, chasing, and attacking.
+    // Direct position updates (moveTo/teleportTo) still work normally.
+    if (!this.level().isClientSide) {
+      this.setNoAi(mode == CompanionMode.DEFEND);
+    }
   }
 
   /// Fairy/Bird/Mage/Pumpkin-Type only have Auto and Command; Battle- and Devil-Type add Defend
