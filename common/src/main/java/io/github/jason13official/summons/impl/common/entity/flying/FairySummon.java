@@ -1,11 +1,11 @@
 package io.github.jason13official.summons.impl.common.entity.flying;
 
+import io.github.jason13official.summons.impl.common.entity.ability.CompanionAbility;
+import java.util.List;
 import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.level.Level;
@@ -14,10 +14,25 @@ import net.minecraft.world.level.Level;
 /// TODO: real abilities are evolution gated (Infant Fairy only has Heal Lv.1); testing to try the HUD before evolution impl
 public class FairySummon extends AbstractFlyingCompanion {
 
-  private static final int HEAL_1 = 0;
-  private static final int TIME_HEAL = 1;
-  private static final int HEAL_2 = 2;
-  private static final int ANTIDOTE = 3;
+  private static final List<CompanionAbility> ABILITIES = List.of(
+      new CompanionAbility("Heal Lv.1", 20, (companion, owner) -> {
+        owner.heal(2.0F);
+        spawnAbilityParticles(owner, ParticleTypes.HEART, 5);
+      }),
+      new CompanionAbility("Time Heal", 100, (companion, owner) -> {
+        owner.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 100, 1)); // ~4.0F over the duration
+        spawnAbilityParticles(owner, ParticleTypes.HEART, 5);
+      }),
+      new CompanionAbility("Heal Lv.2", 30, (companion, owner) -> {
+        owner.heal(6.0F);
+        spawnAbilityParticles(owner, ParticleTypes.HEART, 5);
+      }),
+      new CompanionAbility("Antidote", 20, (companion, owner) -> {
+        owner.removeEffect(MobEffects.POISON);
+        owner.removeEffect(MobEffects.WITHER);
+        spawnAbilityParticles(owner, ParticleTypes.HEART, 5);
+      })
+  );
 
   public FairySummon(EntityType<? extends AbstractFlyingCompanion> entityType, Level level) {
     super(entityType, level);
@@ -31,54 +46,7 @@ public class FairySummon extends AbstractFlyingCompanion {
   }
 
   @Override
-  public int getAbilityCount() {
-    return 4;
-  }
-
-  @Override
-  public String getAbilityName(int index) {
-    return switch (index) {
-      case HEAL_1 -> "Heal Lv.1";
-      case TIME_HEAL -> "Time Heal";
-      case HEAL_2 -> "Heal Lv.2";
-      case ANTIDOTE -> "Antidote";
-      default -> super.getAbilityName(index);
-    };
-  }
-
-  @Override
-  protected void useAbility(int index) {
-    LivingEntity owner = this.getOwner();
-    if (owner == null) {
-      return;
-    }
-
-    switch (index) {
-      case HEAL_1 -> {
-        owner.heal(2.0F);
-        this.setAbilityBusy(20);
-      }
-      case TIME_HEAL -> {
-        owner.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 100, 1)); // ~ 4.0F
-        this.setAbilityBusy(100);
-      }
-      case HEAL_2 -> {
-        owner.heal(6.0F);
-        this.setAbilityBusy(30);
-      }
-      case ANTIDOTE -> {
-        owner.removeEffect(MobEffects.POISON);
-        owner.removeEffect(MobEffects.WITHER);
-        this.setAbilityBusy(20);
-      }
-      default -> {
-        return;
-      }
-    }
-
-    if (this.level() instanceof ServerLevel serverLevel) {
-      serverLevel.sendParticles(ParticleTypes.HEART, owner.getX(), owner.getY() + owner.getBbHeight(), owner.getZ(),
-          5, 0.3, 0.3, 0.3, 0.0);
-    }
+  protected List<CompanionAbility> abilities() {
+    return ABILITIES;
   }
 }

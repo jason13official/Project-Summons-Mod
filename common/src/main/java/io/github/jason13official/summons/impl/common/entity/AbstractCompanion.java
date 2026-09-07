@@ -1,5 +1,6 @@
 package io.github.jason13official.summons.impl.common.entity;
 
+import io.github.jason13official.summons.impl.common.entity.ability.CompanionAbility;
 import io.github.jason13official.summons.impl.common.entity.ai.goal.target.CompanionOwnerHurtByTargetGoal;
 import io.github.jason13official.summons.impl.common.entity.ai.goal.target.CompanionOwnerHurtTargetGoal;
 import io.github.jason13official.summons.impl.common.party.CompanionMode;
@@ -8,6 +9,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -316,12 +318,18 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     this.entityData.set(DATA_ABILITY_INDEX_ID, (byte) index);
   }
 
-  public int getAbilityCount() {
-    return 0;
+  /// this companion's Command-mode abilities/kit; override per type, e.g. `FairySummon#abilities`
+  protected List<CompanionAbility> abilities() {
+    return List.of();
   }
 
-  public String getAbilityName(int index) {
-    return "Ability " + (index + 1);
+  public final int getAbilityCount() {
+    return this.abilities().size();
+  }
+
+  public final String getAbilityName(int index) {
+    List<CompanionAbility> abilities = this.abilities();
+    return index >= 0 && index < abilities.size() ? abilities.get(index).name() : "???";
   }
 
   public boolean isAbilityBusy() {
@@ -348,11 +356,28 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
       return;
     }
 
-    this.useAbility(this.getAbilityIndex());
+    List<CompanionAbility> abilities = this.abilities();
+    int index = this.getAbilityIndex();
+    if (index < 0 || index >= abilities.size()) {
+      return;
+    }
+
+    LivingEntity owner = this.getOwner();
+    if (owner == null) {
+      return;
+    }
+
+    CompanionAbility ability = abilities.get(index);
+    ability.effect().accept(this, owner);
+    this.setAbilityBusy(ability.busyTicks());
   }
 
-  /// no-op until a concrete type overrides it
-  protected void useAbility(int index) {
+  /// small particle burst at `target`'s head, for ability effects to call
+  protected static void spawnAbilityParticles(LivingEntity target, ParticleOptions particle, int count) {
+    if (target.level() instanceof ServerLevel serverLevel) {
+      serverLevel.sendParticles(particle, target.getX(), target.getY() + target.getBbHeight(), target.getZ(), count,
+          0.3, 0.3, 0.3, 0.0);
+    }
   }
   // endregion mode
 }
