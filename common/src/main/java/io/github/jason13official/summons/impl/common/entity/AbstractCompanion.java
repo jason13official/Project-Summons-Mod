@@ -37,6 +37,7 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
 public abstract class AbstractCompanion extends PathfinderMob implements TraceableEntity, OwnableEntity {
@@ -163,6 +164,10 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
       return; // relocated into the owner's dimension; this instance was replaced
     }
 
+    if (this.isWisp()) {
+      this.floatTowardOwner(); // noAi skips normal goal-based movement entirely
+    }
+
     if (this.abilityBusyTicks > 0 && --this.abilityBusyTicks == 0) {
       this.entityData.set(DATA_ABILITY_BUSY_ID, false);
     }
@@ -203,6 +208,26 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     double y = this.getY() + this.random.nextDouble() * this.getBbHeight();
     double z = this.getZ() + (this.random.nextDouble() - 0.5) * 0.6;
     this.level().addParticle(ParticleTypes.SOUL, x, y, z, 0.0, 0.02, 0.0);
+  }
+
+  /// noAi skips goal-based movement entirely, so a wisp needs its own hand-rolled "hover
+  /// near the owner" -> ease pos toward a point near owner head, no
+  /// gravity/collision/physics. teleportToOwner() above still covers big distance
+  /// (far away, different dimension); this handles ordinary following
+  private void floatTowardOwner() {
+    LivingEntity owner = this.getOwner();
+    if (owner == null) {
+      return;
+    }
+
+    Vec3 target = new Vec3(owner.getX(), owner.getY() + owner.getEyeHeight() + 0.5, owner.getZ());
+    Vec3 delta = target.subtract(this.position());
+    if (delta.lengthSqr() < 0.04) {
+      return;
+    }
+
+    Vec3 step = delta.scale(0.08);
+    this.setPos(this.getX() + step.x, this.getY() + step.y, this.getZ() + step.z);
   }
 
   /// safety net for dimension changes, respawns, or falling too far behind
@@ -278,9 +303,9 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
   }
 
   /// intercepts a lethal hit: I.D.s "cannot permanently die" (wiki), they go inert instead.
-  /// The *only* way to fully remove a companion is the dismiss keybind; even a bypass-
+  /// The *only* way to fully remove a companion is the "dismiss" keybind; even a bypass-
   /// invulnerability source (void, /kill, creative) doesn't discard it here, it just gets
-  /// snapshotted back into the party like a dismiss, flagged as a wisp for next time.
+  /// snapshotted back into the party like a "dismiss" key press, flagged as a wisp for next time.
   @Override
   public void die(DamageSource source) {
     if (this.level().isClientSide || this.isWisp()) {
