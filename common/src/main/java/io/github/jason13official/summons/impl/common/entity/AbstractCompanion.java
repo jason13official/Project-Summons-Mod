@@ -4,12 +4,15 @@ import io.github.jason13official.summons.impl.common.entity.ai.goal.target.Compa
 import io.github.jason13official.summons.impl.common.entity.ai.goal.target.CompanionOwnerHurtTargetGoal;
 import io.github.jason13official.summons.impl.common.party.CompanionMode;
 import io.github.jason13official.summons.impl.common.party.CompanionType;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.tags.DamageTypeTags;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
@@ -38,6 +41,17 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
   private static final EntityDataAccessor<Byte> DATA_ABILITY_INDEX_ID =
       SynchedEntityData.defineId(AbstractCompanion.class, EntityDataSerializers.BYTE);
 
+  /// Guard field for DEFEND mode: radius of the damage-immunity field around this companion.
+  /// Shrinks per hit taken, regenerates over time; only meaningful while getMode() == DEFEND.
+  /// TODO render circle below our summon with this radius, kinda like a shadow but white/light blue instead of dark
+  private static final EntityDataAccessor<Float> DATA_GUARD_FIELD_RADIUS_ID =
+      SynchedEntityData.defineId(AbstractCompanion.class, EntityDataSerializers.FLOAT);
+
+  public static final float GUARD_FIELD_MAX_RADIUS = 3.0F;
+  public static final float GUARD_FIELD_MIN_RADIUS = 0.75F;
+  private static final float GUARD_FIELD_SHRINK_PER_HIT = 0.75F;
+  private static final float GUARD_FIELD_REGEN_PER_TICK = 0.01F; // ~4.5s min->max
+
   public AbstractCompanion(EntityType<? extends AbstractCompanion> entityType, Level level) {
     super(entityType, level);
   }
@@ -62,7 +76,67 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     builder.define(DATA_COMPANION_TYPE_ID, (byte) CompanionType.FAIRY.ordinal());
     builder.define(DATA_MODE_ID, (byte) CompanionMode.AUTO.ordinal());
     builder.define(DATA_ABILITY_INDEX_ID, (byte) 0);
+    builder.define(DATA_GUARD_FIELD_RADIUS_ID, GUARD_FIELD_MAX_RADIUS);
   }
+
+  @Override
+  public void tick() {
+    super.tick();
+
+    if (this.level().isClientSide) {
+      return;
+    }
+
+    if (this.getMode() == CompanionMode.DEFEND) {
+      if (this.getGuardFieldRadius() < GUARD_FIELD_MAX_RADIUS) {
+        this.setGuardFieldRadius(this.getGuardFieldRadius() + GUARD_FIELD_REGEN_PER_TICK);
+      }
+    } else if (this.getGuardFieldRadius() != GUARD_FIELD_MAX_RADIUS) {
+      this.setGuardFieldRadius(GUARD_FIELD_MAX_RADIUS); // reset so re-entering DEFEND always starts full
+    }
+  }
+
+  // region guard field
+  public float getGuardFieldRadius() {
+    return this.entityData.get(DATA_GUARD_FIELD_RADIUS_ID);
+  }
+
+  private void setGuardFieldRadius(float radius) {
+    this.entityData.set(DATA_GUARD_FIELD_RADIUS_ID,
+        Math.min(GUARD_FIELD_MAX_RADIUS, Math.max(GUARD_FIELD_MIN_RADIUS, radius)));
+  }
+
+  /// Battle-/Devil-Type in DEFEND mode take no damage; the field shrinks per hit and
+  /// regenerates over time (see [#tick]). Bypass-invulnerability sources (void, /kill,
+  /// creative mode) still go through.
+  @Override
+  public boolean hurt(DamageSource source, float amount) {
+    if (!this.level().isClientSide && this.getMode() == CompanionMode.DEFEND
+        && !source.is(DamageTypeTags.BYPASSES_INVULNERABILITY)) {
+      this.setGuardFieldRadius(this.getGuardFieldRadius() - GUARD_FIELD_SHRINK_PER_HIT);
+      return false;
+    }
+
+    return super.hurt(source, amount);
+  }
+
+  /// "If Hector stands in the Guard Field he will also be protected from enemy attacks"
+  /// - checked from [io.github.jason13official.summons.mixin.LivingEntityGuardFieldMixin]
+  /// against every DEFEND-mode companion `owner` owns, regardless of party/boss ownership.
+  public static boolean isProtectedByGuardField(LivingEntity owner) {
+    List<AbstractCompanion> nearby = owner.level().getEntitiesOfClass(AbstractCompanion.class,
+        owner.getBoundingBox().inflate(GUARD_FIELD_MAX_RADIUS),
+        companion -> companion.getMode() == CompanionMode.DEFEND && owner.getUUID().equals(companion.getOwnerUUID()));
+
+    for (AbstractCompanion companion : nearby) {
+      if (companion.distanceTo(owner) <= companion.getGuardFieldRadius()) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+  // endregion guard field
 
   @Override
   public void addAdditionalSaveData(CompoundTag compound) {
