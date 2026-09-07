@@ -3,8 +3,11 @@ package io.github.jason13official.summons.impl.common.entity;
 import io.github.jason13official.summons.impl.common.entity.ability.CompanionAbility;
 import io.github.jason13official.summons.impl.common.entity.ai.goal.target.CompanionOwnerHurtByTargetGoal;
 import io.github.jason13official.summons.impl.common.entity.ai.goal.target.CompanionOwnerHurtTargetGoal;
+import io.github.jason13official.summons.impl.common.evolution.EvoCrystalColor;
+import io.github.jason13official.summons.impl.common.evolution.EvolutionThreshold;
 import io.github.jason13official.summons.impl.common.party.CompanionMode;
 import io.github.jason13official.summons.impl.common.party.CompanionType;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -12,6 +15,7 @@ import java.util.UUID;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -26,7 +30,9 @@ import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.TraceableEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.AABB;
 import org.jetbrains.annotations.Nullable;
 
 public abstract class AbstractCompanion extends PathfinderMob implements TraceableEntity, OwnableEntity {
@@ -61,6 +67,17 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
 
   private static final double TELEPORT_TO_OWNER_DISTANCE = 24.0;
 
+  private static final EntityDataAccessor<Integer> DATA_CRYSTAL_RED_ID =
+      SynchedEntityData.defineId(AbstractCompanion.class, EntityDataSerializers.INT);
+  private static final EntityDataAccessor<Integer> DATA_CRYSTAL_BLUE_ID =
+      SynchedEntityData.defineId(AbstractCompanion.class, EntityDataSerializers.INT);
+  private static final EntityDataAccessor<Integer> DATA_CRYSTAL_GREEN_ID =
+      SynchedEntityData.defineId(AbstractCompanion.class, EntityDataSerializers.INT);
+  private static final EntityDataAccessor<Integer> DATA_CRYSTAL_YELLOW_ID =
+      SynchedEntityData.defineId(AbstractCompanion.class, EntityDataSerializers.INT);
+  private static final EntityDataAccessor<Integer> DATA_CRYSTAL_WHITE_ID =
+      SynchedEntityData.defineId(AbstractCompanion.class, EntityDataSerializers.INT);
+
   public AbstractCompanion(EntityType<? extends AbstractCompanion> entityType, Level level) {
     super(entityType, level);
   }
@@ -88,6 +105,11 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     builder.define(DATA_ABILITY_INDEX_ID, (byte) 0);
     builder.define(DATA_ABILITY_BUSY_ID, false);
     builder.define(DATA_GUARD_FIELD_RADIUS_ID, GUARD_FIELD_MAX_RADIUS);
+    builder.define(DATA_CRYSTAL_RED_ID, 0);
+    builder.define(DATA_CRYSTAL_BLUE_ID, 0);
+    builder.define(DATA_CRYSTAL_GREEN_ID, 0);
+    builder.define(DATA_CRYSTAL_YELLOW_ID, 0);
+    builder.define(DATA_CRYSTAL_WHITE_ID, 0);
   }
 
   @Override
@@ -201,6 +223,58 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
   }
   // endregion guard field
 
+  // region evolution
+  public int getCrystalPoints(EvoCrystalColor color) {
+    return this.entityData.get(switch (color) {
+      case RED -> DATA_CRYSTAL_RED_ID;
+      case BLUE -> DATA_CRYSTAL_BLUE_ID;
+      case GREEN -> DATA_CRYSTAL_GREEN_ID;
+      case YELLOW -> DATA_CRYSTAL_YELLOW_ID;
+      case WHITE -> DATA_CRYSTAL_WHITE_ID;
+    });
+  }
+
+  private void setCrystalPoints(EvoCrystalColor color, int points) {
+    this.entityData.set(switch (color) {
+      case RED -> DATA_CRYSTAL_RED_ID;
+      case BLUE -> DATA_CRYSTAL_BLUE_ID;
+      case GREEN -> DATA_CRYSTAL_GREEN_ID;
+      case YELLOW -> DATA_CRYSTAL_YELLOW_ID;
+      case WHITE -> DATA_CRYSTAL_WHITE_ID;
+    }, Math.max(0, points));
+  }
+
+  /// credits `amount` points of `color`, then checks for an evolution
+  public void addCrystalPoints(EvoCrystalColor color, int amount) {
+    this.setCrystalPoints(color, this.getCrystalPoints(color) + amount);
+    this.checkEvolution();
+  }
+
+  /// evolution routes out of this companion's current form; override per type/stage.
+  /// Colors are alternates (any one alone reaching `amount` qualifies), never combined.
+  protected List<EvolutionThreshold> evolutionThresholds() {
+    return List.of();
+  }
+
+  /// TODO: no evolved forms/models yet, so this just announces and spends the points; need to wire an actual entity/model swap once evolution assets exist
+  private void checkEvolution() {
+    for (EvolutionThreshold threshold : this.evolutionThresholds()) {
+      int points = this.getCrystalPoints(threshold.color());
+      if (points < threshold.amount()) {
+        continue;
+      }
+
+      this.setCrystalPoints(threshold.color(), points - threshold.amount());
+      LivingEntity owner = this.getOwner();
+      if (owner instanceof Player player) {
+        player.displayClientMessage(
+            Component.literal(this.getCompanionType().name() + "-Type is ready to evolve! (not yet implemented)"), false);
+      }
+      return;
+    }
+  }
+  // endregion evolution
+
   @Override
   public void addAdditionalSaveData(CompoundTag compound) {
     super.addAdditionalSaveData(compound);
@@ -211,6 +285,10 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     compound.putString("CompanionType", this.getCompanionType().name());
     compound.putString("CompanionMode", this.getMode().name());
     compound.putInt("AbilityIndex", this.getAbilityIndex());
+
+    for (EvoCrystalColor color : EvoCrystalColor.values()) {
+      compound.putInt("Crystal" + color.name(), this.getCrystalPoints(color));
+    }
   }
 
   @Override
@@ -237,6 +315,13 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
 
     if (compound.contains("AbilityIndex")) {
       this.setAbilityIndex(compound.getInt("AbilityIndex"));
+    }
+
+    for (EvoCrystalColor color : EvoCrystalColor.values()) {
+      String key = "Crystal" + color.name();
+      if (compound.contains(key)) {
+        this.setCrystalPoints(color, compound.getInt(key));
+      }
     }
   }
 
@@ -383,6 +468,14 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
       level.sendParticles(particle, target.getX(), target.getY() + target.getBbHeight(), target.getZ(), count,
           randOffsetThird(level), randOffsetThird(level), randOffsetThird(level), 0.0);
     }
+  }
+
+  /// nearest living target to `companion` within `radius`, excluding itself and `owner`
+  protected static LivingEntity findNearestTarget(AbstractCompanion companion, LivingEntity owner, double radius) {
+    AABB area = companion.getBoundingBox().inflate(radius);
+    return companion.level().getEntitiesOfClass(LivingEntity.class, area,
+            e -> e != companion && e != owner && e.isAlive())
+        .stream().min(Comparator.comparingDouble(companion::distanceToSqr)).orElse(null);
   }
 
   private static double randOffsetThird(Level level) {

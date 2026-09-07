@@ -8,6 +8,12 @@
   "item.summons.devil_spawn_egg": "Devil Spawn Egg",
   "item.summons.pumpkin_spawn_egg": "Pumpkin Spawn Egg",
 
+  "item.summons.evo_crystal_red": "Evo Crystal (Sword)",
+  "item.summons.evo_crystal_blue": "Evo Crystal (Axe)",
+  "item.summons.evo_crystal_green": "Evo Crystal (Spear)",
+  "item.summons.evo_crystal_yellow": "Evo Crystal (Knuckle)",
+  "item.summons.evo_crystal_white": "Evo Crystal (Special)",
+
   "key.categories.summons": "Summons",
   "key.summons.toggle_summon": "Summon/Dismiss Companion",
   "key.summons.cycle_party": "Cycle Party",

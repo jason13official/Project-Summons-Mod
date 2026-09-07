@@ -25,6 +25,11 @@ public class ModTabs {
           output.accept(ModItems.MAGE_SPAWN_EGG);
           output.accept(ModItems.DEVIL_SPAWN_EGG);
           output.accept(ModItems.PUMPKIN_SPAWN_EGG);
+          output.accept(ModItems.EVO_CRYSTAL_RED);
+          output.accept(ModItems.EVO_CRYSTAL_BLUE);
+          output.accept(ModItems.EVO_CRYSTAL_GREEN);
+          output.accept(ModItems.EVO_CRYSTAL_YELLOW);
+          output.accept(ModItems.EVO_CRYSTAL_WHITE);
         }).build();
 
     consumer.accept(SUMMONS, Summons.identifier(Constants.MOD_ID));

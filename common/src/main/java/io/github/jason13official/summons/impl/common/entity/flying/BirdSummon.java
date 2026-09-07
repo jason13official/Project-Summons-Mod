@@ -6,18 +6,38 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.AABB;
 
 /// Bird-Type: air mobility, lifts/carries the owner and juggles light enemies.
 /// TODO: "Glide" (carry Hector over gaps) mimicked with Slow Falling (for now); gliding is a movement/input feature and not a Command-mode effect so heavy WIP
 public class BirdSummon extends AbstractFlyingCompanion {
 
+  private static final double CARPET_BOMBS_FIND_RADIUS = 10.0;
+  private static final double CARPET_BOMBS_AOE_RADIUS = 2.0;
+
   private static final List<CompanionAbility> ABILITIES = List.of(
       new CompanionAbility("Glide", 100, (companion, owner) -> {
         owner.addEffect(new MobEffectInstance(MobEffects.SLOW_FALLING, 100));
         spawnAbilityParticles(owner, ParticleTypes.CLOUD, 8);
+      }),
+      new CompanionAbility("Carpet Bombs", 30, (companion, owner) -> {
+        LivingEntity primary = findNearestTarget(companion, owner, CARPET_BOMBS_FIND_RADIUS);
+        if (primary == null) {
+          return;
+        }
+
+        float damage = (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE);
+        AABB blastArea = primary.getBoundingBox().inflate(CARPET_BOMBS_AOE_RADIUS);
+        for (LivingEntity target : companion.level().getEntitiesOfClass(LivingEntity.class, blastArea,
+            e -> e != companion && e != owner && e.isAlive())) {
+          target.hurt(companion.damageSources().mobAttack(companion), damage);
+        }
+
+        spawnAbilityParticles(primary, ParticleTypes.POOF, 6);
       })
   );
 

@@ -7,7 +7,9 @@
   "mixins": [
     "EntityPersistentDataMixin",
     "ServerPlayerPersistentDataMixin",
-    "LivingEntityGuardFieldMixin"
+    "LivingEntityGuardFieldMixin",
+    "LivingEntityEvoCrystalDropMixin",
+    "ItemEntityEvoCrystalPickupMixin"
   ],
   "client": [
     "MinecraftMixin"

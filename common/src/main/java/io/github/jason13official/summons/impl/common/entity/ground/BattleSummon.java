@@ -28,6 +28,17 @@ public class BattleSummon extends AbstractGroundCompanion {
         }
 
         spawnAbilityParticles(companion, ParticleTypes.EXPLOSION, 2);
+      }),
+      new CompanionAbility("Hip Press", 30, (companion, owner) -> {
+        LivingEntity target = findNearestTarget(companion, owner, AURA_BLAST_RADIUS);
+        if (target == null) {
+          return;
+        }
+
+        float damage = (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * 1.5F;
+        target.hurt(companion.damageSources().mobAttack(companion), damage);
+        target.knockback(0.8, companion.getX() - target.getX(), companion.getZ() - target.getZ());
+        spawnAbilityParticles(target, ParticleTypes.CRIT, 8);
       })
   );
 

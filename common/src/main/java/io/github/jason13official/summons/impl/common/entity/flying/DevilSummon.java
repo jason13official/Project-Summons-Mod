@@ -29,6 +29,16 @@ public class DevilSummon extends AbstractFlyingCompanion {
         }
 
         spawnAbilityParticles(companion, ParticleTypes.PORTAL, 12);
+      }),
+      new CompanionAbility("Needle Magic Circle", 30, (companion, owner) -> {
+        LivingEntity target = findNearestTarget(companion, owner, MAGIC_CIRCLE_RADIUS * 2.0);
+        if (target == null) {
+          return;
+        }
+
+        float damage = (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * 1.5F;
+        target.hurt(companion.damageSources().mobAttack(companion), damage);
+        spawnAbilityParticles(target, ParticleTypes.PORTAL, 6);
       })
   );
 

@@ -1,6 +1,8 @@
 package io.github.jason13official.summons.impl.common.entity.flying;
 
 import io.github.jason13official.summons.impl.common.entity.ability.CompanionAbility;
+import io.github.jason13official.summons.impl.common.evolution.EvoCrystalColor;
+import io.github.jason13official.summons.impl.common.evolution.EvolutionThreshold;
 import java.util.List;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -48,5 +50,12 @@ public class FairySummon extends AbstractFlyingCompanion {
   @Override
   protected List<CompanionAbility> abilities() {
     return ABILITIES;
+  }
+
+  @Override
+  protected List<EvolutionThreshold> evolutionThresholds() {
+
+    // Infant Fairy -> Leaffle: 40 Red or 40 Yellow (colors are alternates, not combined)
+    return List.of(new EvolutionThreshold(EvoCrystalColor.RED, 40), new EvolutionThreshold(EvoCrystalColor.YELLOW, 40));
   }
 }
