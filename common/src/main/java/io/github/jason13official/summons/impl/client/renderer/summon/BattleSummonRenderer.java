@@ -42,6 +42,7 @@ public class BattleSummonRenderer extends EntityRenderer<AbstractCompanion> {
     poseStack.mulPose(Axis.YP.rotationDegrees(180.0F - entityYaw)); // BoatRenderer: face model in look direction
     poseStack.scale(-1.0F, -1.0F, 1.0F); // BoatRenderer: invert coordinate space
 
+    // TODO: distinct DEFEND pose/animation instead of the normal idle
     this.model.setupAnim(cube, partialTick, 0.0F, -0.1F, 0.0F, 0.0F); // BoatRenderer: do animations/rotations?
     this.model.renderToBuffer(poseStack, bufferSource.getBuffer(RenderType.entityCutout(TEXTURE_LOCATION)), packedLight, OverlayTexture.NO_OVERLAY);
     poseStack.popPose();

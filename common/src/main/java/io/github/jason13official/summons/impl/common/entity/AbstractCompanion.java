@@ -44,6 +44,11 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
   private static final EntityDataAccessor<Byte> DATA_ABILITY_INDEX_ID =
       SynchedEntityData.defineId(AbstractCompanion.class, EntityDataSerializers.BYTE);
 
+  private static final EntityDataAccessor<Boolean> DATA_ABILITY_BUSY_ID =
+      SynchedEntityData.defineId(AbstractCompanion.class, EntityDataSerializers.BOOLEAN);
+
+  private int abilityBusyTicks;
+
   /// Guard field radius for DEFEND mode; shrinks per hit, regenerates over time.
   private static final EntityDataAccessor<Float> DATA_GUARD_FIELD_RADIUS_ID =
       SynchedEntityData.defineId(AbstractCompanion.class, EntityDataSerializers.FLOAT);
@@ -69,6 +74,7 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
   protected void registerGoals() {
     this.targetSelector.addGoal(1, new CompanionOwnerHurtByTargetGoal(this));
     this.targetSelector.addGoal(2, new CompanionOwnerHurtTargetGoal(this));
+    // TODO: face owner's target/last attacker/nearest enemy, even while noAi (DEFEND)
   }
 
   // region owner
@@ -79,6 +85,7 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     builder.define(DATA_COMPANION_TYPE_ID, (byte) CompanionType.FAIRY.ordinal());
     builder.define(DATA_MODE_ID, (byte) CompanionMode.AUTO.ordinal());
     builder.define(DATA_ABILITY_INDEX_ID, (byte) 0);
+    builder.define(DATA_ABILITY_BUSY_ID, false);
     builder.define(DATA_GUARD_FIELD_RADIUS_ID, GUARD_FIELD_MAX_RADIUS);
   }
 
@@ -96,6 +103,10 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     this.teleportToOwner();
     if (this.isRemoved()) {
       return; // relocated into the owner's dimension; this instance was replaced
+    }
+
+    if (this.abilityBusyTicks > 0 && --this.abilityBusyTicks == 0) {
+      this.entityData.set(DATA_ABILITY_BUSY_ID, false);
     }
 
     if (this.getMode() == CompanionMode.DEFEND) {
@@ -305,10 +316,21 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     this.entityData.set(DATA_ABILITY_INDEX_ID, (byte) index);
   }
 
-  /// how many Command-mode abilities this companion currently has;
-  /// TODO: 0 until we implement real abilities, then this should be overridden per companion
   public int getAbilityCount() {
     return 0;
+  }
+
+  public String getAbilityName(int index) {
+    return "Ability " + (index + 1);
+  }
+
+  public boolean isAbilityBusy() {
+    return this.entityData.get(DATA_ABILITY_BUSY_ID);
+  }
+
+  protected void setAbilityBusy(int ticks) {
+    this.abilityBusyTicks = ticks;
+    this.entityData.set(DATA_ABILITY_BUSY_ID, ticks > 0);
   }
 
   public void cycleAbility(int direction) {
@@ -320,9 +342,17 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     this.setAbilityIndex(Math.floorMod(this.getAbilityIndex() + direction, count));
   }
 
-  /// hook for COMMAND keybind while in Command mode;
-  /// no-op until we implement real abilities
-  public void performCommandAbility() {
+  /// COMMAND keybind hook; gated to Command mode and not already busy
+  public final void performCommandAbility() {
+    if (this.level().isClientSide || this.getMode() != CompanionMode.COMMAND || this.isAbilityBusy()) {
+      return;
+    }
+
+    this.useAbility(this.getAbilityIndex());
+  }
+
+  /// no-op until a concrete type overrides it
+  protected void useAbility(int index) {
   }
   // endregion mode
 }

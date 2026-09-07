@@ -38,6 +38,12 @@ public class SummonsHUD {
         int color = i == active.getAbilityIndex() ? 0xFFFFFFFF : 0xFF808080;
         graphics.fill(slotX, y, slotX + 16, y + 16, color);
       }
+
+      if (active.getAbilityCount() > 0) {
+        String label = active.getAbilityName(active.getAbilityIndex());
+        boolean busy = active.isAbilityBusy();
+        graphics.drawString(mc.font, busy ? label + " (busy)" : label, x, y - 33, busy ? 0xFF5555 : 0xFFFFFF);
+      }
     }
   }
 }
