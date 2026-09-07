@@ -16,7 +16,6 @@ import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
@@ -372,12 +371,23 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     this.setAbilityBusy(ability.busyTicks());
   }
 
-  /// small particle burst at `target`'s head, for ability effects to call
+  /// small particle burst at `target`'s head and feet, for ability effects to call
   protected static void spawnAbilityParticles(LivingEntity target, ParticleOptions particle, int count) {
-    if (target.level() instanceof ServerLevel serverLevel) {
-      serverLevel.sendParticles(particle, target.getX(), target.getY() + target.getBbHeight(), target.getZ(), count,
-          0.3, 0.3, 0.3, 0.0);
+    if (target.level() instanceof ServerLevel level) {
+
+      // at feet
+      level.sendParticles(particle, target.getX(), target.getY(), target.getZ(), count,
+          randOffsetThird(level), randOffsetThird(level), randOffsetThird(level), 0.0);
+
+      // at head
+      level.sendParticles(particle, target.getX(), target.getY() + target.getBbHeight(), target.getZ(), count,
+          randOffsetThird(level), randOffsetThird(level), randOffsetThird(level), 0.0);
     }
+  }
+
+  private static double randOffsetThird(Level level) {
+
+    return ((level.getRandom().nextDouble() * 2.0D) - 1.0D) / 3.0D; // random*2-1 [-1, 1), / 3 [-0.3, 0.3)
   }
   // endregion mode
 }
