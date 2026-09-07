@@ -9,9 +9,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-/// "If Hector stands in the Guard Field he will also be protected from enemy attacks"
-/// - a companion's own Guard-mode immunity is handled directly in [AbstractCompanion#hurt];
-/// this covers the owner standing inside one of their companion's Guard Fields instead.
+/// Protects an owner standing inside their companion's Guard Field. Companion self-immunity
+/// is handled separately in [AbstractCompanion#hurt].
 @Mixin(LivingEntity.class)
 public class LivingEntityGuardFieldMixin {
 

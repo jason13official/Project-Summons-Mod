@@ -30,8 +30,7 @@ import org.jetbrains.annotations.Nullable;
 
 public abstract class AbstractCompanion extends PathfinderMob implements TraceableEntity, OwnableEntity {
 
-  // TamableAnimal.class - owner tracked by UUID (not a raw reference) so it round-trips
-  // through NBT save/load on its own, including across dimension changes via restoreFrom.
+  // TamableAnimal.class; UUID owner, round-trips via restoreFrom
   private static final EntityDataAccessor<Optional<UUID>> DATA_OWNER_UUID_ID =
       SynchedEntityData.defineId(AbstractCompanion.class, EntityDataSerializers.OPTIONAL_UUID);
 
@@ -45,9 +44,7 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
   private static final EntityDataAccessor<Byte> DATA_ABILITY_INDEX_ID =
       SynchedEntityData.defineId(AbstractCompanion.class, EntityDataSerializers.BYTE);
 
-  /// Guard field for DEFEND mode: radius of the damage-immunity field around this companion.
-  /// Shrinks per hit taken, regenerates over time; only meaningful while getMode() == DEFEND.
-  /// Rendered client-side by `GuardFieldRenderer` (Battle/Devil renderers only).
+  /// Guard field radius for DEFEND mode; shrinks per hit, regenerates over time.
   private static final EntityDataAccessor<Float> DATA_GUARD_FIELD_RADIUS_ID =
       SynchedEntityData.defineId(AbstractCompanion.class, EntityDataSerializers.FLOAT);
 
@@ -110,8 +107,7 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     }
   }
 
-  /// "light coming up out of the ground" around the Guard Field (matching the
-  /// ring `GuardFieldRenderer` draws), with some inside the field too.
+  /// light rising around the Guard Field edge, plus a few inside it
   private void spawnGuardFieldParticles() {
     float radius = this.getGuardFieldRadius();
 
@@ -132,9 +128,7 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     this.level().addParticle(ParticleTypes.END_ROD, x, this.getY() + 0.05, z, 0.0, 0.03, 0.0);
   }
 
-  /// Safety net for dimension changes, respawns, or companions falling behind.
-  /// `teleportTo` handles cross-dimension moves and preserves NBT.
-  /// Runs regardlessof [CompanionMode]
+  /// safety net for dimension changes, respawns, or falling too far behind
   private void teleportToOwner() {
     if (!(this.level() instanceof ServerLevel level)) {
       return;
@@ -165,9 +159,7 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
         Math.min(GUARD_FIELD_MAX_RADIUS, Math.max(GUARD_FIELD_MIN_RADIUS, radius)));
   }
 
-  /// Battle-/Devil-Type in DEFEND mode take no damage; the field shrinks per hit and
-  /// regenerates over time (see [#tick]). Bypass-invulnerability sources (void, /kill,
-  /// creative mode) still go through.
+  /// DEFEND mode blocks damage and shrinks the field; bypass-invulnerability sources still go through
   @Override
   public boolean hurt(DamageSource source, float amount) {
     if (!this.level().isClientSide && this.getMode() == CompanionMode.DEFEND
@@ -179,9 +171,8 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     return super.hurt(source, amount);
   }
 
-  /// "If Hector stands in the Guard Field he will also be protected from enemy attacks"
-  /// - checked from [io.github.jason13official.summons.mixin.LivingEntityGuardFieldMixin]
-  /// against every DEFEND-mode companion `owner` owns, regardless of party/boss ownership.
+  /// protects an owner standing inside a DEFEND-mode companion's field; also shrinks it,
+  /// same as a direct hit would
   public static boolean isProtectedByGuardField(LivingEntity owner) {
     List<AbstractCompanion> nearby = owner.level().getEntitiesOfClass(AbstractCompanion.class,
         owner.getBoundingBox().inflate(GUARD_FIELD_MAX_RADIUS),
@@ -189,6 +180,7 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
 
     for (AbstractCompanion companion : nearby) {
       if (companion.distanceTo(owner) <= companion.getGuardFieldRadius()) {
+        companion.setGuardFieldRadius(companion.getGuardFieldRadius() - GUARD_FIELD_SHRINK_PER_HIT);
         return true;
       }
     }
@@ -278,8 +270,7 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
   public void setMode(CompanionMode mode) {
     this.entityData.set(DATA_MODE_ID, (byte) mode.ordinal());
 
-    // Guard Mode disables AI, preventing wandering, chasing, and attacking.
-    // Direct position updates (moveTo/teleportTo) still work normally.
+    // DEFEND disables AI (no wander/chase/attack); direct teleports still work
     if (!this.level().isClientSide) {
       this.setNoAi(mode == CompanionMode.DEFEND);
     }

@@ -11,7 +11,7 @@ import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 
-/// `/summons debug unlockall` - unlocks every [CompanionType] for the executing player,
+/// `/summons debug unlockall` -> unlocks every [CompanionType] for the executing player,
 /// so the party keybinds/HUD can be exercised without a real Devil Shard-equivalent item yet.
 public class SummonsDebugCommand {
 

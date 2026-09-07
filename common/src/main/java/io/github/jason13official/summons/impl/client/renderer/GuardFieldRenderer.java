@@ -8,10 +8,8 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import org.joml.Matrix4f;
 
-/// Draws the "shining circle" (Guard Field) under a Battle-/Devil-Type companion while it's
-/// in DEFEND mode, radius from [AbstractCompanion#getGuardFieldRadius].
-/// Uses the same rendering as vanilla's lightning bolt;
-/// no new texture asset needed ! (haha guard field gar-field lol)
+/// Draws the Guard Field ring/disc under a companion in DEFEND mode. Reuses vanilla's
+/// lightning render type; no new texture needed.
 public final class GuardFieldRenderer {
 
   private static final int SEGMENTS = 32;
@@ -35,10 +33,7 @@ public final class GuardFieldRenderer {
     Matrix4f matrix = poseStack.last().pose();
     VertexConsumer buffer = bufferSource.getBuffer(RenderType.lightning());
 
-    // Filled disc; triangle fan using degenerate quads (center vertex repeated),
-    // since RenderType.lightning() uses QUADS. Cull is enabled, so winding matters;
-    // match the visible ring order (near a0, near a1, far a1, far a0), collapse
-    // the near vertices to the center to keep the triangles front facing (relatively...)
+    // filled disc: triangle fan via degenerate quads; winding matters (cull is on)
     for (int i = 0; i < SEGMENTS; i++) {
       double a0 = Math.PI * 2 * i / SEGMENTS;
       double a1 = Math.PI * 2 * (i + 1) / SEGMENTS;
@@ -59,6 +54,7 @@ public final class GuardFieldRenderer {
 
     // brighter ring on top, for the edge
     for (int i = 0; i < SEGMENTS; i++) {
+      poseStack.translate(0.0, 0.02, 0.0); // avoid z-fighting with the disc
       double a0 = Math.PI * 2 * i / SEGMENTS;
       double a1 = Math.PI * 2 * (i + 1) / SEGMENTS;
 
