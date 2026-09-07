@@ -60,7 +60,7 @@ public class DevilSummon extends AbstractFlyingCompanion {
   @Override
   protected void registerGoals() {
     super.registerGoals();
-    this.goalSelector.addGoal(4, new MeleeAttackGoal(this, 1.3, true));
+    this.goalSelector.addGoal(1, new MeleeAttackGoal(this, 1.3, true));
   }
 
   @Override

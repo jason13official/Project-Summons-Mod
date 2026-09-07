@@ -58,7 +58,7 @@ public class FairySummon extends AbstractFlyingCompanion {
   @Override
   protected void registerGoals() {
     super.registerGoals();
-    this.goalSelector.addGoal(4, new CompanionLevelGatedMeleeAttackGoal(this, 1.0, true, DIRECT_ATTACK_MIN_LEVEL));
+    this.goalSelector.addGoal(1, new CompanionLevelGatedMeleeAttackGoal(this, 1.0, true, DIRECT_ATTACK_MIN_LEVEL));
   }
 
   @Override
