@@ -3,6 +3,7 @@ package io.github.jason13official.summons.impl.common.evolution;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TridentItem;
+import org.jetbrains.annotations.Nullable;
 
 /// Evo Crystal color; matches the weapon Hector's holding at the kill (wiki: Sword=Red,
 /// Axe=Blue, Spear=Green, Knuckle=Yellow, Special=White).
@@ -13,6 +14,9 @@ public enum EvoCrystalColor {
   YELLOW,
   WHITE;
 
+  /// null for anything that isn't Sword/Axe/Trident(Spear)/bare-fist(Knuckle)
+  /// TODO we don't have Special weapons yet, so WHITE has nothing to map to
+  @Nullable
   public static EvoCrystalColor fromWeapon(ItemStack heldItem) {
     if (heldItem.isEmpty()) {
       return YELLOW; // bare fists -> Knuckle
@@ -26,6 +30,6 @@ public enum EvoCrystalColor {
     if (heldItem.getItem() instanceof TridentItem) {
       return GREEN; // closest vanilla analog to Spear
     }
-    return WHITE; // Special Weapon
+    return null;
   }
 }

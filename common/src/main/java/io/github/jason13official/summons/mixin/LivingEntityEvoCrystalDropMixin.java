@@ -50,6 +50,10 @@ public class LivingEntityEvoCrystalDropMixin {
     }
 
     EvoCrystalColor color = EvoCrystalColor.fromWeapon(player.getMainHandItem());
+    if (color == null) {
+      return;
+    }
+
     ItemStack stack = new ItemStack(ModItems.forColor(color));
     int count = 1 + level.random.nextInt(2);
     for (int i = 0; i < count; i++) {
