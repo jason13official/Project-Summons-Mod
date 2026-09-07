@@ -25,7 +25,10 @@ public class SummonsHUD {
     int x = 6;
     int y = mc.getWindow().getGuiScaledHeight() - 40;
 
-    graphics.drawString(mc.font, active.getCompanionType().name(), x, y - 22, 0xFFFFFF);
+    int xpToNext = AbstractCompanion.experienceToNextLevel(active.getLevel());
+    String header = active.getCompanionType().name() + "  Lv." + active.getLevel()
+        + " (" + active.getExperience() + "/" + xpToNext + ")";
+    graphics.drawString(mc.font, header, x, y - 22, 0xFFFFFF);
 
     CompanionMode mode = active.getMode();
     int modeColor = mode == CompanionMode.DEFEND ? 0x55AAFF : mode == CompanionMode.COMMAND ? 0xFFFF55 : 0xAAAAAA;

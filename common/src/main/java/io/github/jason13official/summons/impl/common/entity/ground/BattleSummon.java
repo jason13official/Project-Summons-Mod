@@ -33,7 +33,7 @@ public class BattleSummon extends AbstractGroundCompanion {
         spawnAbilityParticles(companion, ParticleTypes.EXPLOSION, 2);
       }),
       // wiki: Golem gets "Hip Press, Hip Press Lv.2"
-      CompanionAbility.gated("Hip Press", 30, Form.GOLEM, (companion, owner) -> {
+      CompanionAbility.gated("Hip Press", 30, Form.GOLEM, 5, (companion, owner) -> {
         LivingEntity target = findNearestTarget(companion, owner, AURA_BLAST_RADIUS);
         if (target == null) {
           return;

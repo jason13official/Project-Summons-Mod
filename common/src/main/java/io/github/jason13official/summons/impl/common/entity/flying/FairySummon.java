@@ -22,16 +22,16 @@ public class FairySummon extends AbstractFlyingCompanion {
         spawnAbilityParticles(owner, ParticleTypes.HEART, 5);
       }),
       // wiki: Leaffle gets "Time Heal, Poison Powder" - we only have Time Heal implemented
-      CompanionAbility.gated("Time Heal", 100, Form.LEAFFLE, (companion, owner) -> {
+      CompanionAbility.gated("Time Heal", 100, Form.LEAFFLE, 5, (companion, owner) -> {
         owner.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 100, 1)); // ~4.0F over the duration
         spawnAbilityParticles(owner, ParticleTypes.HEART, 5);
       }),
       // wiki: Herbest gets "Antidote, Heal Lv.2"
-      CompanionAbility.gated("Heal Lv.2", 30, Form.HERBEST, (companion, owner) -> {
+      CompanionAbility.gated("Heal Lv.2", 30, Form.HERBEST, 5, (companion, owner) -> {
         owner.heal(6.0F);
         spawnAbilityParticles(owner, ParticleTypes.HEART, 5);
       }),
-      CompanionAbility.gated("Antidote", 20, Form.HERBEST, (companion, owner) -> {
+      CompanionAbility.gated("Antidote", 20, Form.HERBEST, 5, (companion, owner) -> {
         owner.removeEffect(MobEffects.POISON);
         owner.removeEffect(MobEffects.WITHER);
         spawnAbilityParticles(owner, ParticleTypes.HEART, 5);

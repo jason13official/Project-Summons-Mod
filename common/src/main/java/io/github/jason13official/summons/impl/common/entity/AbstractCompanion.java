@@ -87,6 +87,14 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
   private static final EntityDataAccessor<String> DATA_REACHED_FORMS_ID =
       SynchedEntityData.defineId(AbstractCompanion.class, EntityDataSerializers.STRING);
 
+  private static final EntityDataAccessor<Integer> DATA_LEVEL_ID =
+      SynchedEntityData.defineId(AbstractCompanion.class, EntityDataSerializers.INT);
+  private static final EntityDataAccessor<Integer> DATA_EXPERIENCE_ID =
+      SynchedEntityData.defineId(AbstractCompanion.class, EntityDataSerializers.INT);
+
+  public static final int MAX_LEVEL = 99;
+  private static final int ABILITY_USE_XP = 5;
+
   public AbstractCompanion(EntityType<? extends AbstractCompanion> entityType, Level level) {
     super(entityType, level);
   }
@@ -121,6 +129,8 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     builder.define(DATA_CRYSTAL_WHITE_ID, 0);
     builder.define(DATA_EVOLUTION_FORM_ID, this.baseForm().id());
     builder.define(DATA_REACHED_FORMS_ID, this.baseForm().id());
+    builder.define(DATA_LEVEL_ID, 1);
+    builder.define(DATA_EXPERIENCE_ID, 0);
   }
 
   @Override
@@ -368,6 +378,35 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
   }
   // endregion evolution
 
+  // region leveling
+  public int getLevel() {
+    return this.entityData.get(DATA_LEVEL_ID);
+  }
+
+  public int getExperience() {
+    return this.entityData.get(DATA_EXPERIENCE_ID);
+  }
+
+  /// XP needed to advance from `level` to `level + 1`
+  public static int experienceToNextLevel(int level) {
+    return 10 * level;
+  }
+
+  /// grants XP, leveling up (possibly several times) while there's enough; caps at [#MAX_LEVEL]
+  public void addExperience(int amount) {
+    int level = this.getLevel();
+    int xp = this.getExperience() + amount;
+
+    while (level < MAX_LEVEL && xp >= experienceToNextLevel(level)) {
+      xp -= experienceToNextLevel(level);
+      level++;
+    }
+
+    this.entityData.set(DATA_LEVEL_ID, level);
+    this.entityData.set(DATA_EXPERIENCE_ID, level >= MAX_LEVEL ? 0 : xp);
+  }
+  // endregion leveling
+
   @Override
   public void addAdditionalSaveData(CompoundTag compound) {
     super.addAdditionalSaveData(compound);
@@ -384,6 +423,8 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     }
     compound.putString("EvolutionForm", this.entityData.get(DATA_EVOLUTION_FORM_ID));
     compound.putString("ReachedForms", this.entityData.get(DATA_REACHED_FORMS_ID));
+    compound.putInt("Level", this.getLevel());
+    compound.putInt("Experience", this.getExperience());
   }
 
   @Override
@@ -424,6 +465,12 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     }
     if (compound.contains("ReachedForms")) {
       this.entityData.set(DATA_REACHED_FORMS_ID, compound.getString("ReachedForms"));
+    }
+    if (compound.contains("Level")) {
+      this.entityData.set(DATA_LEVEL_ID, compound.getInt("Level"));
+    }
+    if (compound.contains("Experience")) {
+      this.entityData.set(DATA_EXPERIENCE_ID, compound.getInt("Experience"));
     }
   }
 
@@ -511,11 +558,13 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
   }
 
   /// this companion's currently-unlocked Command-mode abilities: [CompanionAbility#requiredForms]
-  /// empty, or [#hasReachedForm] true for at least one of them
+  /// empty, or [#hasReachedForm] true for at least one of them, AND [#getLevel] at least
+  /// [CompanionAbility#minLevel] (soft-gated by level on top of evolution form)
   public final List<CompanionAbility> abilities() {
     List<CompanionAbility> unlocked = new ArrayList<>();
     for (CompanionAbility ability : this.allAbilities()) {
-      if (ability.requiredForms().isEmpty() || ability.requiredForms().stream().anyMatch(this::hasReachedForm)) {
+      boolean formOk = ability.requiredForms().isEmpty() || ability.requiredForms().stream().anyMatch(this::hasReachedForm);
+      if (formOk && this.getLevel() >= ability.minLevel()) {
         unlocked.add(ability);
       }
     }
@@ -569,6 +618,7 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     CompanionAbility ability = abilities.get(index);
     ability.effect().accept(this, owner);
     this.setAbilityBusy(ability.busyTicks());
+    this.addExperience(ABILITY_USE_XP);
   }
 
   /// small particle burst at `target`'s head and feet, for ability effects to call

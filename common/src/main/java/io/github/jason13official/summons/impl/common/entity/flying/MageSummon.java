@@ -39,7 +39,7 @@ public class MageSummon extends AbstractFlyingCompanion {
         }
       }),
       // wiki: Talon Rod gets "Circle Scissors, Freeze"
-      CompanionAbility.gated("Freeze", 30, Form.TALON_ROD, (companion, owner) -> {
+      CompanionAbility.gated("Freeze", 30, Form.TALON_ROD, 5, (companion, owner) -> {
         LivingEntity target = findNearestTarget(companion, owner, SPELL_RADIUS);
         if (target == null) {
           return;

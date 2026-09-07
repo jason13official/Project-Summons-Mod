@@ -28,7 +28,7 @@ public class BirdSummon extends AbstractFlyingCompanion {
         spawnAbilityParticles(owner, ParticleTypes.CLOUD, 8);
       }),
       // wiki: Skull Wing gets "Carpet Bombs, Bone Shot"
-      CompanionAbility.gated("Carpet Bombs", 30, Form.SKULL_WING, (companion, owner) -> {
+      CompanionAbility.gated("Carpet Bombs", 30, Form.SKULL_WING, 5, (companion, owner) -> {
         LivingEntity primary = findNearestTarget(companion, owner, CARPET_BOMBS_FIND_RADIUS);
         if (primary == null) {
           return;

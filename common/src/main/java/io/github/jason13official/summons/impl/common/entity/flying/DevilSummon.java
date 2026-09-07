@@ -33,7 +33,7 @@ public class DevilSummon extends AbstractFlyingCompanion {
         spawnAbilityParticles(companion, ParticleTypes.PORTAL, 12);
       }),
       // wiki: Brow gets "M. Circle Scissors, Needle Magic Circle"
-      CompanionAbility.gated("Needle Magic Circle", 30, Form.BROW, (companion, owner) -> {
+      CompanionAbility.gated("Needle Magic Circle", 30, Form.BROW, 5, (companion, owner) -> {
         LivingEntity target = findNearestTarget(companion, owner, MAGIC_CIRCLE_RADIUS * 2.0);
         if (target == null) {
           return;
