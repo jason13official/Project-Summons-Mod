@@ -2,6 +2,7 @@ package io.github.jason13official.summons.impl.common.entity.flying;
 
 import io.github.jason13official.summons.impl.common.entity.ability.CompanionAbility;
 import io.github.jason13official.summons.impl.common.evolution.EvoCrystalColor;
+import io.github.jason13official.summons.impl.common.evolution.EvolutionForm;
 import io.github.jason13official.summons.impl.common.evolution.EvolutionThreshold;
 import java.util.List;
 import net.minecraft.core.particles.ParticleTypes;
@@ -22,11 +23,12 @@ public class BirdSummon extends AbstractFlyingCompanion {
   private static final double CARPET_BOMBS_AOE_RADIUS = 2.0;
 
   private static final List<CompanionAbility> ABILITIES = List.of(
-      new CompanionAbility("Glide", 100, (companion, owner) -> {
+      CompanionAbility.base("Glide", 100, (companion, owner) -> {
         owner.addEffect(new MobEffectInstance(MobEffects.SLOW_FALLING, 100));
         spawnAbilityParticles(owner, ParticleTypes.CLOUD, 8);
       }),
-      new CompanionAbility("Carpet Bombs", 30, (companion, owner) -> {
+      // wiki: Skull Wing gets "Carpet Bombs, Bone Shot"
+      CompanionAbility.gated("Carpet Bombs", 30, Form.SKULL_WING, (companion, owner) -> {
         LivingEntity primary = findNearestTarget(companion, owner, CARPET_BOMBS_FIND_RADIUS);
         if (primary == null) {
           return;
@@ -55,18 +57,90 @@ public class BirdSummon extends AbstractFlyingCompanion {
   }
 
   @Override
-  protected List<CompanionAbility> abilities() {
-    // TODO: branch-specific (Goldfinch vs Skull Wing), need to track which one was taken; Carpet Bombs is really Skull Wing-only, but any evolution unlocks it for now
-    return this.getEvolutionStage() >= 1 ? ABILITIES : ABILITIES.subList(0, 1);
+  protected List<CompanionAbility> allAbilities() {
+    return ABILITIES;
+  }
+
+  @Override
+  protected EvolutionForm baseForm() {
+    return Form.CROW;
+  }
+
+  @Override
+  protected EvolutionForm resolveForm(String id) {
+    try {
+      return Form.valueOf(id);
+    } catch (IllegalArgumentException e) {
+      return Form.CROW;
+    }
   }
 
   @Override
   protected List<EvolutionThreshold> evolutionThresholds() {
-    return List.of(
-        new EvolutionThreshold(EvoCrystalColor.GREEN, 40, "Goldfinch"),
-        new EvolutionThreshold(EvoCrystalColor.YELLOW, 40, "Goldfinch"),
-        new EvolutionThreshold(EvoCrystalColor.WHITE, 40, "Goldfinch"),
-        new EvolutionThreshold(EvoCrystalColor.RED, 40, "Skull Wing"),
-        new EvolutionThreshold(EvoCrystalColor.BLUE, 40, "Skull Wing"));
+    return switch ((Form) this.getEvolutionForm()) {
+      case CROW -> List.of(
+          new EvolutionThreshold(EvoCrystalColor.GREEN, 40, Form.GOLDFINCH),
+          new EvolutionThreshold(EvoCrystalColor.YELLOW, 40, Form.GOLDFINCH),
+          new EvolutionThreshold(EvoCrystalColor.WHITE, 40, Form.GOLDFINCH),
+          new EvolutionThreshold(EvoCrystalColor.RED, 40, Form.SKULL_WING),
+          new EvolutionThreshold(EvoCrystalColor.BLUE, 40, Form.SKULL_WING));
+      case GOLDFINCH -> List.of(EvolutionThreshold.any(70, Form.KHAOS));
+      case SKULL_WING -> List.of(
+          new EvolutionThreshold(EvoCrystalColor.GREEN, 90, Form.PHOENIX),
+          new EvolutionThreshold(EvoCrystalColor.YELLOW, 90, Form.PHOENIX),
+          new EvolutionThreshold(EvoCrystalColor.WHITE, 90, Form.PHOENIX),
+          new EvolutionThreshold(EvoCrystalColor.RED, 70, Form.WINGOSAURUS),
+          new EvolutionThreshold(EvoCrystalColor.BLUE, 70, Form.WINGOSAURUS));
+      case KHAOS -> List.of(
+          new EvolutionThreshold(EvoCrystalColor.RED, 90, Form.BLAGSDEATH),
+          new EvolutionThreshold(EvoCrystalColor.GREEN, 90, Form.BLAGSDEATH),
+          new EvolutionThreshold(EvoCrystalColor.YELLOW, 90, Form.BLAGSDEATH),
+          new EvolutionThreshold(EvoCrystalColor.BLUE, 90, Form.GARGOYLE),
+          new EvolutionThreshold(EvoCrystalColor.WHITE, 90, Form.GARGOYLE));
+      case WINGOSAURUS -> List.of(
+          new EvolutionThreshold(EvoCrystalColor.GREEN, 90, Form.INDIGO),
+          new EvolutionThreshold(EvoCrystalColor.YELLOW, 90, Form.INDIGO),
+          new EvolutionThreshold(EvoCrystalColor.RED, 90, Form.CRIMSON),
+          new EvolutionThreshold(EvoCrystalColor.BLUE, 90, Form.CRIMSON),
+          new EvolutionThreshold(EvoCrystalColor.WHITE, 90, Form.CRIMSON));
+      default -> List.of(); // Phoenix (final at Level 3), and all Level 4 forms
+    };
+  }
+
+  /// Innocent Devil Data (Bird-Types); Phoenix is final at Level 3, everything else at Level 4
+  public enum Form implements EvolutionForm {
+    CROW("Crow", 0),
+    GOLDFINCH("Goldfinch", 1),
+    SKULL_WING("Skull Wing", 1),
+    KHAOS("Khaos", 2),
+    PHOENIX("Phoenix", 2),
+    WINGOSAURUS("Wingosaurus", 2),
+    BLAGSDEATH("Blagsdeath", 3),
+    GARGOYLE("Gargoyle", 3),
+    INDIGO("Indigo", 3),
+    CRIMSON("Crimson", 3);
+
+    private final String displayName;
+    private final int stage;
+
+    Form(String displayName, int stage) {
+      this.displayName = displayName;
+      this.stage = stage;
+    }
+
+    @Override
+    public String id() {
+      return this.name();
+    }
+
+    @Override
+    public String displayName() {
+      return this.displayName;
+    }
+
+    @Override
+    public int stage() {
+      return this.stage;
+    }
   }
 }

@@ -4,6 +4,7 @@ import io.github.jason13official.summons.impl.common.entity.AbstractCompanion;
 import io.github.jason13official.summons.impl.common.entity.ability.CompanionAbility;
 import io.github.jason13official.summons.impl.common.entity.ground.AbstractGroundCompanion;
 import io.github.jason13official.summons.impl.common.evolution.EvoCrystalColor;
+import io.github.jason13official.summons.impl.common.evolution.EvolutionForm;
 import io.github.jason13official.summons.impl.common.evolution.EvolutionThreshold;
 import java.util.List;
 import net.minecraft.core.particles.ParticleTypes;
@@ -24,7 +25,7 @@ public class MageSummon extends AbstractFlyingCompanion {
   private static final double SPELL_RADIUS = 12.0;
 
   private static final List<CompanionAbility> ABILITIES = List.of(
-      new CompanionAbility("Lightning Strike", 30, (companion, owner) -> {
+      CompanionAbility.base("Lightning Strike", 30, (companion, owner) -> {
         if (!(companion.level() instanceof ServerLevel serverLevel)) {
           return;
         }
@@ -37,7 +38,8 @@ public class MageSummon extends AbstractFlyingCompanion {
           serverLevel.addFreshEntity(bolt);
         }
       }),
-      new CompanionAbility("Freeze", 30, (companion, owner) -> {
+      // wiki: Talon Rod gets "Circle Scissors, Freeze"
+      CompanionAbility.gated("Freeze", 30, Form.TALON_ROD, (companion, owner) -> {
         LivingEntity target = findNearestTarget(companion, owner, SPELL_RADIUS);
         if (target == null) {
           return;
@@ -62,19 +64,101 @@ public class MageSummon extends AbstractFlyingCompanion {
   }
 
   @Override
-  protected List<CompanionAbility> abilities() {
-    // TODO: branch-specific (Scissor Rod vs Talon Rod) once we track which one was taken;
-    // Freeze is really Talon Rod-only, but any evolution unlocks it for now
-    return this.getEvolutionStage() >= 1 ? ABILITIES : ABILITIES.subList(0, 1);
+  protected List<CompanionAbility> allAbilities() {
+    return ABILITIES;
+  }
+
+  @Override
+  protected EvolutionForm baseForm() {
+    return Form.WOOD_ROD;
+  }
+
+  @Override
+  protected EvolutionForm resolveForm(String id) {
+    try {
+      return Form.valueOf(id);
+    } catch (IllegalArgumentException e) {
+      return Form.WOOD_ROD;
+    }
   }
 
   @Override
   protected List<EvolutionThreshold> evolutionThresholds() {
-    return List.of(
-        new EvolutionThreshold(EvoCrystalColor.RED, 40, "Scissor Rod"),
-        new EvolutionThreshold(EvoCrystalColor.YELLOW, 40, "Scissor Rod"),
-        new EvolutionThreshold(EvoCrystalColor.BLUE, 40, "Talon Rod"),
-        new EvolutionThreshold(EvoCrystalColor.GREEN, 40, "Talon Rod"),
-        new EvolutionThreshold(EvoCrystalColor.WHITE, 40, "Talon Rod"));
+    return switch ((Form) this.getEvolutionForm()) {
+      case WOOD_ROD -> List.of(
+          new EvolutionThreshold(EvoCrystalColor.RED, 40, Form.SCISSOR_ROD),
+          new EvolutionThreshold(EvoCrystalColor.YELLOW, 40, Form.SCISSOR_ROD),
+          new EvolutionThreshold(EvoCrystalColor.BLUE, 40, Form.TALON_ROD),
+          new EvolutionThreshold(EvoCrystalColor.GREEN, 40, Form.TALON_ROD),
+          new EvolutionThreshold(EvoCrystalColor.WHITE, 40, Form.TALON_ROD));
+      case SCISSOR_ROD -> List.of(
+          new EvolutionThreshold(EvoCrystalColor.GREEN, 70, Form.NAUTILUS_ROD),
+          new EvolutionThreshold(EvoCrystalColor.YELLOW, 70, Form.NAUTILUS_ROD),
+          new EvolutionThreshold(EvoCrystalColor.WHITE, 70, Form.NAUTILUS_ROD),
+          new EvolutionThreshold(EvoCrystalColor.RED, 70, Form.OGRE_ROD),
+          new EvolutionThreshold(EvoCrystalColor.BLUE, 70, Form.OGRE_ROD));
+      case TALON_ROD -> List.of(
+          new EvolutionThreshold(EvoCrystalColor.RED, 70, Form.OGRE_ROD),
+          new EvolutionThreshold(EvoCrystalColor.BLUE, 70, Form.OGRE_ROD),
+          new EvolutionThreshold(EvoCrystalColor.WHITE, 70, Form.OGRE_ROD),
+          new EvolutionThreshold(EvoCrystalColor.GREEN, 70, Form.GOAT_HEAD),
+          new EvolutionThreshold(EvoCrystalColor.YELLOW, 70, Form.GOAT_HEAD));
+      case NAUTILUS_ROD -> List.of(
+          new EvolutionThreshold(EvoCrystalColor.BLUE, 90, Form.EYEBALL_ROD),
+          new EvolutionThreshold(EvoCrystalColor.GREEN, 90, Form.EYEBALL_ROD),
+          new EvolutionThreshold(EvoCrystalColor.RED, 90, Form.EMBRYO_ROD),
+          new EvolutionThreshold(EvoCrystalColor.YELLOW, 90, Form.EMBRYO_ROD),
+          new EvolutionThreshold(EvoCrystalColor.WHITE, 90, Form.EMBRYO_ROD));
+      case OGRE_ROD -> List.of(
+          new EvolutionThreshold(EvoCrystalColor.RED, 90, Form.EMBRYO_ROD),
+          new EvolutionThreshold(EvoCrystalColor.GREEN, 90, Form.EMBRYO_ROD),
+          new EvolutionThreshold(EvoCrystalColor.BLUE, 90, Form.CRYSTAL_ROD),
+          new EvolutionThreshold(EvoCrystalColor.YELLOW, 90, Form.CRYSTAL_ROD),
+          new EvolutionThreshold(EvoCrystalColor.WHITE, 90, Form.CRYSTAL_ROD));
+      case GOAT_HEAD -> List.of(
+          new EvolutionThreshold(EvoCrystalColor.RED, 90, Form.CRYSTAL_ROD),
+          new EvolutionThreshold(EvoCrystalColor.BLUE, 90, Form.CRYSTAL_ROD),
+          new EvolutionThreshold(EvoCrystalColor.GREEN, 90, Form.CRYSTAL_ROD),
+          new EvolutionThreshold(EvoCrystalColor.YELLOW, 90, Form.CRYSTAL_ROD),
+          new EvolutionThreshold(EvoCrystalColor.WHITE, 90, Form.TWINKLE_ROD));
+      default -> List.of(); // all Level 4 forms are final
+    };
+  }
+
+  /// Innocent Devil Data (Mage-Types); all Level 4 forms are final
+  public enum Form implements EvolutionForm {
+    WOOD_ROD("Wood Rod", 0),
+    SCISSOR_ROD("Scissor Rod", 1),
+    TALON_ROD("Talon Rod", 1),
+    NAUTILUS_ROD("Nautilus Rod", 2),
+    OGRE_ROD("Ogre Rod", 2),
+    GOAT_HEAD("Goat Head", 2),
+    EYEBALL_ROD("Eyeball Rod", 3),
+    EMBRYO_ROD("Embryo Rod", 3),
+    CRYSTAL_ROD("Crystal Rod", 3),
+    TWINKLE_ROD("Twinkle Rod", 3);
+
+    private final String displayName;
+    private final int stage;
+
+    Form(String displayName, int stage) {
+      this.displayName = displayName;
+      this.stage = stage;
+    }
+
+    @Override
+    public String id() {
+      return this.name();
+    }
+
+    @Override
+    public String displayName() {
+      return this.displayName;
+    }
+
+    @Override
+    public int stage() {
+      return this.stage;
+    }
   }
 }

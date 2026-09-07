@@ -3,6 +3,7 @@ package io.github.jason13official.summons.impl.common.entity.ground;
 import io.github.jason13official.summons.impl.common.entity.AbstractCompanion;
 import io.github.jason13official.summons.impl.common.entity.ability.CompanionAbility;
 import io.github.jason13official.summons.impl.common.evolution.EvoCrystalColor;
+import io.github.jason13official.summons.impl.common.evolution.EvolutionForm;
 import io.github.jason13official.summons.impl.common.evolution.EvolutionThreshold;
 import java.util.List;
 import net.minecraft.core.particles.ParticleTypes;
@@ -20,7 +21,7 @@ public class BattleSummon extends AbstractGroundCompanion {
   private static final double AURA_BLAST_RADIUS = 3.0;
 
   private static final List<CompanionAbility> ABILITIES = List.of(
-      new CompanionAbility("Aura Blast", 20, (companion, owner) -> {
+      CompanionAbility.base("Aura Blast", 20, (companion, owner) -> {
         AABB area = companion.getBoundingBox().inflate(AURA_BLAST_RADIUS);
         float damage = (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE);
 
@@ -31,7 +32,8 @@ public class BattleSummon extends AbstractGroundCompanion {
 
         spawnAbilityParticles(companion, ParticleTypes.EXPLOSION, 2);
       }),
-      new CompanionAbility("Hip Press", 30, (companion, owner) -> {
+      // wiki: Golem gets "Hip Press, Hip Press Lv.2"
+      CompanionAbility.gated("Hip Press", 30, Form.GOLEM, (companion, owner) -> {
         LivingEntity target = findNearestTarget(companion, owner, AURA_BLAST_RADIUS);
         if (target == null) {
           return;
@@ -53,19 +55,88 @@ public class BattleSummon extends AbstractGroundCompanion {
   }
 
   @Override
-  protected List<CompanionAbility> abilities() {
-    // TODO: branch-specific (Speed Mail vs Golem) once we track which one was taken; Hip
-    // Press is really Golem-only, but any evolution unlocks it for now
-    return this.getEvolutionStage() >= 1 ? ABILITIES : ABILITIES.subList(0, 1);
+  protected List<CompanionAbility> allAbilities() {
+    return ABILITIES;
+  }
+
+  @Override
+  protected EvolutionForm baseForm() {
+    return Form.MAGMARD;
+  }
+
+  @Override
+  protected EvolutionForm resolveForm(String id) {
+    try {
+      return Form.valueOf(id);
+    } catch (IllegalArgumentException e) {
+      return Form.MAGMARD;
+    }
   }
 
   @Override
   protected List<EvolutionThreshold> evolutionThresholds() {
-    return List.of(
-        new EvolutionThreshold(EvoCrystalColor.BLUE, 40, "Speed Mail"),
-        new EvolutionThreshold(EvoCrystalColor.YELLOW, 40, "Speed Mail"),
-        new EvolutionThreshold(EvoCrystalColor.GREEN, 40, "Speed Mail"),
-        new EvolutionThreshold(EvoCrystalColor.RED, 40, "Golem"),
-        new EvolutionThreshold(EvoCrystalColor.WHITE, 40, "Golem"));
+    return switch ((Form) this.getEvolutionForm()) {
+      case MAGMARD -> List.of(
+          new EvolutionThreshold(EvoCrystalColor.BLUE, 40, Form.SPEED_MAIL),
+          new EvolutionThreshold(EvoCrystalColor.YELLOW, 40, Form.SPEED_MAIL),
+          new EvolutionThreshold(EvoCrystalColor.GREEN, 40, Form.SPEED_MAIL),
+          new EvolutionThreshold(EvoCrystalColor.RED, 40, Form.GOLEM),
+          new EvolutionThreshold(EvoCrystalColor.WHITE, 40, Form.GOLEM));
+      case SPEED_MAIL -> List.of(
+          new EvolutionThreshold(EvoCrystalColor.BLUE, 90, Form.RASETZ),
+          new EvolutionThreshold(EvoCrystalColor.WHITE, 90, Form.RASETZ),
+          new EvolutionThreshold(EvoCrystalColor.RED, 90, Form.CORPSEY),
+          new EvolutionThreshold(EvoCrystalColor.GREEN, 90, Form.CORPSEY),
+          new EvolutionThreshold(EvoCrystalColor.YELLOW, 90, Form.CORPSEY));
+      case GOLEM -> List.of(
+          new EvolutionThreshold(EvoCrystalColor.WHITE, 90, Form.IYTEI),
+          new EvolutionThreshold(EvoCrystalColor.RED, 70, Form.JUGGERNAUT),
+          new EvolutionThreshold(EvoCrystalColor.BLUE, 70, Form.JUGGERNAUT),
+          new EvolutionThreshold(EvoCrystalColor.GREEN, 70, Form.JUGGERNAUT),
+          new EvolutionThreshold(EvoCrystalColor.YELLOW, 70, Form.JUGGERNAUT));
+      case JUGGERNAUT -> List.of(
+          new EvolutionThreshold(EvoCrystalColor.BLUE, 90, Form.IRONSIDE),
+          new EvolutionThreshold(EvoCrystalColor.WHITE, 90, Form.IRONSIDE),
+          new EvolutionThreshold(EvoCrystalColor.RED, 90, Form.LIQUID_GOLEM),
+          new EvolutionThreshold(EvoCrystalColor.GREEN, 90, Form.LIQUID_GOLEM),
+          new EvolutionThreshold(EvoCrystalColor.YELLOW, 90, Form.LIQUID_GOLEM));
+      default -> List.of(); // Iytei (final at Level 3), and all Level 4 forms
+    };
+  }
+
+  /// Innocent Devil Data (Battle-Types); Iytei is final at Level 3, everything else at Level 4
+  public enum Form implements EvolutionForm {
+    MAGMARD("Magmard", 0),
+    SPEED_MAIL("Speed Mail", 1),
+    GOLEM("Golem", 1),
+    IYTEI("Iytei", 2),
+    JUGGERNAUT("Juggernaut", 2),
+    RASETZ("Rasetz", 3),
+    CORPSEY("Corpsey", 3),
+    IRONSIDE("Ironside", 3),
+    LIQUID_GOLEM("Liquid Golem", 3);
+
+    private final String displayName;
+    private final int stage;
+
+    Form(String displayName, int stage) {
+      this.displayName = displayName;
+      this.stage = stage;
+    }
+
+    @Override
+    public String id() {
+      return this.name();
+    }
+
+    @Override
+    public String displayName() {
+      return this.displayName;
+    }
+
+    @Override
+    public int stage() {
+      return this.stage;
+    }
   }
 }

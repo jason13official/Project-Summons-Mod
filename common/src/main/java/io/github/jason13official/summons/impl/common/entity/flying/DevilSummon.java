@@ -1,6 +1,7 @@
 package io.github.jason13official.summons.impl.common.entity.flying;
 
 import io.github.jason13official.summons.impl.common.entity.ability.CompanionAbility;
+import io.github.jason13official.summons.impl.common.evolution.EvolutionForm;
 import io.github.jason13official.summons.impl.common.evolution.EvolutionThreshold;
 import java.util.List;
 import net.minecraft.core.particles.ParticleTypes;
@@ -19,7 +20,7 @@ public class DevilSummon extends AbstractFlyingCompanion {
   private static final double MAGIC_CIRCLE_KNOCKBACK = 0.6;
 
   private static final List<CompanionAbility> ABILITIES = List.of(
-      new CompanionAbility("Magic Circle", 20, (companion, owner) -> {
+      CompanionAbility.base("Magic Circle", 20, (companion, owner) -> {
         AABB area = companion.getBoundingBox().inflate(MAGIC_CIRCLE_RADIUS);
         float damage = (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * 0.5F;
 
@@ -31,7 +32,8 @@ public class DevilSummon extends AbstractFlyingCompanion {
 
         spawnAbilityParticles(companion, ParticleTypes.PORTAL, 12);
       }),
-      new CompanionAbility("Needle Magic Circle", 30, (companion, owner) -> {
+      // wiki: Brow gets "M. Circle Scissors, Needle Magic Circle"
+      CompanionAbility.gated("Needle Magic Circle", 30, Form.BROW, (companion, owner) -> {
         LivingEntity target = findNearestTarget(companion, owner, MAGIC_CIRCLE_RADIUS * 2.0);
         if (target == null) {
           return;
@@ -55,16 +57,63 @@ public class DevilSummon extends AbstractFlyingCompanion {
   }
 
   @Override
-  protected List<CompanionAbility> abilities() {
-    // Devil-Type evolves in a single line (Gale -> Brow -> The End); Needle Magic Circle
-    // really is a Brow-stage ability, so this gating is exact
-    return this.getEvolutionStage() >= 1 ? ABILITIES : ABILITIES.subList(0, 1);
+  protected List<CompanionAbility> allAbilities() {
+    return ABILITIES;
+  }
+
+  @Override
+  protected EvolutionForm baseForm() {
+    return Form.GALE;
+  }
+
+  @Override
+  protected EvolutionForm resolveForm(String id) {
+    try {
+      return Form.valueOf(id);
+    } catch (IllegalArgumentException e) {
+      return Form.GALE;
+    }
   }
 
   @Override
   protected List<EvolutionThreshold> evolutionThresholds() {
-    // Gale -> Brow: 200 of any color combined (not alternates -> this is the one wiki example
-    // of a non-branching, cumulative-colors threshold)
-    return List.of(EvolutionThreshold.any(200, "Brow"));
+    return switch ((Form) this.getEvolutionForm()) {
+      // Gale -> Brow: 200 of any color combined (not alternates; the wiki's one example of a
+      // non-branching, cumulative-across-colors threshold)
+      case GALE -> List.of(EvolutionThreshold.any(200, Form.BROW));
+      // Brow -> The End needs the Chauve-souris weapon, not just crystals; we have no
+      // item-requirement infra or that weapon yet, so this stays unreachable for now
+      default -> List.of();
+    };
+  }
+
+  /// Innocent Devil Data (Devil-Types); the only type with a single, non-branching line
+  public enum Form implements EvolutionForm {
+    GALE("Gale", 0),
+    BROW("Brow", 1),
+    THE_END("The End", 2);
+
+    private final String displayName;
+    private final int stage;
+
+    Form(String displayName, int stage) {
+      this.displayName = displayName;
+      this.stage = stage;
+    }
+
+    @Override
+    public String id() {
+      return this.name();
+    }
+
+    @Override
+    public String displayName() {
+      return this.displayName;
+    }
+
+    @Override
+    public int stage() {
+      return this.stage;
+    }
   }
 }

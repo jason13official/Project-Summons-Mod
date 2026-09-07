@@ -4,9 +4,11 @@ import io.github.jason13official.summons.impl.common.entity.ability.CompanionAbi
 import io.github.jason13official.summons.impl.common.entity.ai.goal.target.CompanionOwnerHurtByTargetGoal;
 import io.github.jason13official.summons.impl.common.entity.ai.goal.target.CompanionOwnerHurtTargetGoal;
 import io.github.jason13official.summons.impl.common.evolution.EvoCrystalColor;
+import io.github.jason13official.summons.impl.common.evolution.EvolutionForm;
 import io.github.jason13official.summons.impl.common.evolution.EvolutionThreshold;
 import io.github.jason13official.summons.impl.common.party.CompanionMode;
 import io.github.jason13official.summons.impl.common.party.CompanionType;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -78,8 +80,12 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
   private static final EntityDataAccessor<Integer> DATA_CRYSTAL_WHITE_ID =
       SynchedEntityData.defineId(AbstractCompanion.class, EntityDataSerializers.INT);
 
-  private static final EntityDataAccessor<Integer> DATA_EVOLUTION_STAGE_ID =
-      SynchedEntityData.defineId(AbstractCompanion.class, EntityDataSerializers.INT);
+  private static final EntityDataAccessor<String> DATA_EVOLUTION_FORM_ID =
+      SynchedEntityData.defineId(AbstractCompanion.class, EntityDataSerializers.STRING);
+  // comma-joined form ids ever reached; abilities stay learned once unlocked, even past
+  // whatever form originally granted them (matches the wiki: evolving never revokes one)
+  private static final EntityDataAccessor<String> DATA_REACHED_FORMS_ID =
+      SynchedEntityData.defineId(AbstractCompanion.class, EntityDataSerializers.STRING);
 
   public AbstractCompanion(EntityType<? extends AbstractCompanion> entityType, Level level) {
     super(entityType, level);
@@ -113,7 +119,8 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     builder.define(DATA_CRYSTAL_GREEN_ID, 0);
     builder.define(DATA_CRYSTAL_YELLOW_ID, 0);
     builder.define(DATA_CRYSTAL_WHITE_ID, 0);
-    builder.define(DATA_EVOLUTION_STAGE_ID, 0);
+    builder.define(DATA_EVOLUTION_FORM_ID, this.baseForm().id());
+    builder.define(DATA_REACHED_FORMS_ID, this.baseForm().id());
   }
 
   @Override
@@ -254,27 +261,66 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     this.checkEvolution();
   }
 
-  public int getEvolutionStage() {
-    return this.entityData.get(DATA_EVOLUTION_STAGE_ID);
+  private static final EvolutionForm NONE_FORM = new EvolutionForm() {
+    @Override
+    public String id() {
+      return "NONE";
+    }
+
+    @Override
+    public String displayName() {
+      return "None";
+    }
+
+    @Override
+    public int stage() {
+      return 0;
+    }
+  };
+
+  /// this type's unevolved starting form; override per lore type. Called during
+  /// construction (via [#defineSynchedData]), so it must not depend on instance state.
+  protected EvolutionForm baseForm() {
+    return NONE_FORM;
   }
 
-  private void setEvolutionStage(int stage) {
-    this.entityData.set(DATA_EVOLUTION_STAGE_ID, stage);
+  /// resolves a stored form id back to this type's concrete [EvolutionForm] constant;
+  /// override per lore type alongside [#baseForm]
+  protected EvolutionForm resolveForm(String id) {
+    return NONE_FORM;
   }
 
-  /// evolution routes out of this companion's *current* stage; override per type. See
-  /// [EvolutionThreshold] for the alternate-vs-"Any" distinction.
+  public EvolutionForm getEvolutionForm() {
+    return this.resolveForm(this.entityData.get(DATA_EVOLUTION_FORM_ID));
+  }
+
+  private void setEvolutionForm(EvolutionForm form) {
+    this.entityData.set(DATA_EVOLUTION_FORM_ID, form.id());
+  }
+
+  /// has this companion ever reached `form` (including its current one)? Abilities check
+  /// this rather than the current form alone, so evolving further never revokes one.
+  public boolean hasReachedForm(EvolutionForm form) {
+    String reached = this.entityData.get(DATA_REACHED_FORMS_ID);
+    return ("," + reached + ",").contains("," + form.id() + ",");
+  }
+
+  private void markFormReached(EvolutionForm form) {
+    if (this.hasReachedForm(form)) {
+      return;
+    }
+    this.entityData.set(DATA_REACHED_FORMS_ID, this.entityData.get(DATA_REACHED_FORMS_ID) + "," + form.id());
+  }
+
+  /// evolution routes out of this companion's *current* form; override per type, switching
+  /// on [#getEvolutionForm]. See [EvolutionThreshold] for the alternate-vs-"Any" distinction.
   protected List<EvolutionThreshold> evolutionThresholds() {
     return List.of();
   }
 
-  /// TODO: only stage 0->1 data is wired for any type so far, and no evolved forms/models
-  /// exist yet; this just advances the stage, spends the points, and announces the result.
+  /// TODO: no evolved-form entities/models exist yet, so this just updates the form, spends
+  /// the points, and announces the result.
   private void checkEvolution() {
-    if (this.getEvolutionStage() > 0) {
-      return;
-    }
-
     for (EvolutionThreshold threshold : this.evolutionThresholds()) {
       int available = threshold.color() != null ? this.getCrystalPoints(threshold.color()) : this.totalCrystalPoints();
       if (available < threshold.amount()) {
@@ -287,12 +333,13 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
         this.spendCrystalPointsAcrossColors(threshold.amount());
       }
 
-      this.setEvolutionStage(this.getEvolutionStage() + 1);
+      this.setEvolutionForm(threshold.result());
+      this.markFormReached(threshold.result());
 
       LivingEntity owner = this.getOwner();
       if (owner instanceof Player player) {
-        player.displayClientMessage(Component.literal(this.getCompanionType().name() + "-Type is ready to evolve into "
-            + threshold.resultName() + "! (not yet implemented)"), false);
+        player.displayClientMessage(Component.literal(this.getCompanionType().name() + "-Type evolved into "
+            + threshold.result().displayName() + "! (not yet implemented visually)"), false);
       }
       return;
     }
@@ -335,7 +382,8 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     for (EvoCrystalColor color : EvoCrystalColor.values()) {
       compound.putInt("Crystal" + color.name(), this.getCrystalPoints(color));
     }
-    compound.putInt("EvolutionStage", this.getEvolutionStage());
+    compound.putString("EvolutionForm", this.entityData.get(DATA_EVOLUTION_FORM_ID));
+    compound.putString("ReachedForms", this.entityData.get(DATA_REACHED_FORMS_ID));
   }
 
   @Override
@@ -371,8 +419,11 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
       }
     }
 
-    if (compound.contains("EvolutionStage")) {
-      this.setEvolutionStage(compound.getInt("EvolutionStage"));
+    if (compound.contains("EvolutionForm")) {
+      this.entityData.set(DATA_EVOLUTION_FORM_ID, compound.getString("EvolutionForm"));
+    }
+    if (compound.contains("ReachedForms")) {
+      this.entityData.set(DATA_REACHED_FORMS_ID, compound.getString("ReachedForms"));
     }
   }
 
@@ -453,9 +504,22 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     this.entityData.set(DATA_ABILITY_INDEX_ID, (byte) index);
   }
 
-  /// this companion's Command-mode abilities/kit; override per type, e.g. `FairySummon#abilities`
-  protected List<CompanionAbility> abilities() {
+  /// this companion type's full Command-mode kit, gated or not; override per type, e.g.
+  /// `FairySummon#allAbilities`. [#abilities] filters this down to what's actually unlocked.
+  protected List<CompanionAbility> allAbilities() {
     return List.of();
+  }
+
+  /// this companion's currently-unlocked Command-mode abilities: [CompanionAbility#requiredForms]
+  /// empty, or [#hasReachedForm] true for at least one of them
+  public final List<CompanionAbility> abilities() {
+    List<CompanionAbility> unlocked = new ArrayList<>();
+    for (CompanionAbility ability : this.allAbilities()) {
+      if (ability.requiredForms().isEmpty() || ability.requiredForms().stream().anyMatch(this::hasReachedForm)) {
+        unlocked.add(ability);
+      }
+    }
+    return unlocked;
   }
 
   public final int getAbilityCount() {

@@ -1,10 +1,23 @@
 package io.github.jason13official.summons.impl.common.entity.ability;
 
 import io.github.jason13official.summons.impl.common.entity.AbstractCompanion;
+import io.github.jason13official.summons.impl.common.evolution.EvolutionForm;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import net.minecraft.world.entity.LivingEntity;
 
-/// A Command-mode ability: display name, how long it makes the companion busy, and
-/// what it does. Companions expose their kit/abilities via `AbstractCompanion#abilities()`.
-public record CompanionAbility(String name, int busyTicks, BiConsumer<AbstractCompanion, LivingEntity> effect) {
+/// A Command-mode ability: display name, how long it makes the companion busy, which
+/// [EvolutionForm]s must have ever been reached to have learned it (empty = base kit,
+/// always available), and what it does. See `AbstractCompanion#allAbilities`/`abilities`.
+public record CompanionAbility(String name, int busyTicks, Set<EvolutionForm> requiredForms,
+                                BiConsumer<AbstractCompanion, LivingEntity> effect) {
+
+  public static CompanionAbility base(String name, int busyTicks, BiConsumer<AbstractCompanion, LivingEntity> effect) {
+    return new CompanionAbility(name, busyTicks, Set.of(), effect);
+  }
+
+  public static CompanionAbility gated(String name, int busyTicks, EvolutionForm requiredForm,
+                                        BiConsumer<AbstractCompanion, LivingEntity> effect) {
+    return new CompanionAbility(name, busyTicks, Set.of(requiredForm), effect);
+  }
 }
