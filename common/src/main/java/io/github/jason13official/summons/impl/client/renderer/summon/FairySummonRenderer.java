@@ -33,6 +33,10 @@ public class FairySummonRenderer extends EntityRenderer<AbstractCompanion> {
   @Override
   public void render(AbstractCompanion cube, float entityYaw, float partialTick, PoseStack poseStack, MultiBufferSource bufferSource, int packedLight) {
 
+    if (cube.isWisp()) {
+      return; // no real renderer while wisp; AbstractCompanion#tick spawns particles instead
+    }
+
     poseStack.pushPose();
 
     poseStack.translate(0, 0.0625f * 12F, 0); // translate up by half the model height

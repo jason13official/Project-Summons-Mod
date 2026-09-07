@@ -95,6 +95,15 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
   public static final int MAX_LEVEL = 99;
   private static final int ABILITY_USE_XP = 5;
 
+  /// "sparking wisp": at 0 Hearts the I.D. doesn't die, it goes inert and floats near the
+  /// owner until a Heart revives it. No dedicated wisp entity/model; renderers skip
+  /// drawing while this is true (see e.g. BattleSummonRenderer#render) and tick() below
+  /// emits particles at its position instead
+  private static final EntityDataAccessor<Boolean> DATA_WISP_ID =
+      SynchedEntityData.defineId(AbstractCompanion.class, EntityDataSerializers.BOOLEAN);
+  private static final float WISP_REVIVE_HEALTH = 1.0F;
+  private static final float HEART_HEAL_AMOUNT = 4.0F;
+
   public AbstractCompanion(EntityType<? extends AbstractCompanion> entityType, Level level) {
     super(entityType, level);
   }
@@ -131,6 +140,7 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     builder.define(DATA_REACHED_FORMS_ID, this.baseForm().id());
     builder.define(DATA_LEVEL_ID, 1);
     builder.define(DATA_EXPERIENCE_ID, 0);
+    builder.define(DATA_WISP_ID, false);
   }
 
   @Override
@@ -138,7 +148,9 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     super.tick();
 
     if (this.level().isClientSide) {
-      if (this.getMode() == CompanionMode.DEFEND) {
+      if (this.isWisp()) {
+        this.spawnWispParticles();
+      } else if (this.getMode() == CompanionMode.DEFEND) {
         this.spawnGuardFieldParticles();
       }
       return;
@@ -183,6 +195,14 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     this.level().addParticle(ParticleTypes.END_ROD, x, this.getY() + 0.05, z, 0.0, 0.03, 0.0);
   }
 
+  /// the only "visual" a sparking wisp has - a few sparkles drifting around its position
+  private void spawnWispParticles() {
+    double x = this.getX() + (this.random.nextDouble() - 0.5) * 0.6;
+    double y = this.getY() + this.random.nextDouble() * this.getBbHeight();
+    double z = this.getZ() + (this.random.nextDouble() - 0.5) * 0.6;
+    this.level().addParticle(ParticleTypes.SOUL, x, y, z, 0.0, 0.02, 0.0);
+  }
+
   /// safety net for dimension changes, respawns, or falling too far behind
   private void teleportToOwner() {
     if (!(this.level() instanceof ServerLevel level)) {
@@ -214,13 +234,19 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
         Math.min(GUARD_FIELD_MAX_RADIUS, Math.max(GUARD_FIELD_MIN_RADIUS, radius)));
   }
 
-  /// DEFEND mode blocks damage and shrinks the field; bypass-invulnerability sources still go through
+  /// a sparking wisp is already "spent"; DEFEND mode blocks damage and shrinks the field.
+  /// Bypass-invulnerability sources (void, /kill, creative) still go through either way.
   @Override
   public boolean hurt(DamageSource source, float amount) {
-    if (!this.level().isClientSide && this.getMode() == CompanionMode.DEFEND
-        && !source.is(DamageTypeTags.BYPASSES_INVULNERABILITY)) {
-      this.setGuardFieldRadius(this.getGuardFieldRadius() - GUARD_FIELD_SHRINK_PER_HIT);
-      return false;
+    if (!this.level().isClientSide && !source.is(DamageTypeTags.BYPASSES_INVULNERABILITY)) {
+      if (this.isWisp()) {
+        return false;
+      }
+
+      if (this.getMode() == CompanionMode.DEFEND) {
+        this.setGuardFieldRadius(this.getGuardFieldRadius() - GUARD_FIELD_SHRINK_PER_HIT);
+        return false;
+      }
     }
 
     return super.hurt(source, amount);
@@ -243,6 +269,42 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     return false;
   }
   // endregion guard field
+
+  // region wisp
+  public boolean isWisp() {
+    return this.entityData.get(DATA_WISP_ID);
+  }
+
+  /// intercepts a lethal hit: I.D.s "cannot permanently die" (wiki), they go inert instead.
+  /// Bypass-invulnerability sources (void, /kill, creative) still remove it as normal.
+  @Override
+  public void die(DamageSource source) {
+    if (this.level().isClientSide || this.isWisp() || source.is(DamageTypeTags.BYPASSES_INVULNERABILITY)) {
+      super.die(source);
+      return;
+    }
+
+    this.entityData.set(DATA_WISP_ID, true);
+    this.setHealth(WISP_REVIVE_HEALTH);
+    this.setNoAi(true);
+  }
+
+  /// a Heart revives it; only meaningful while [#isWisp]
+  public void reviveFromWisp() {
+    if (!this.isWisp()) {
+      return;
+    }
+
+    this.entityData.set(DATA_WISP_ID, false);
+    this.setNoAi(this.getMode() == CompanionMode.DEFEND);
+  }
+
+  /// what touching a Heart does: revives from wisp first if needed, then heals
+  public void consumeHeart() {
+    this.reviveFromWisp();
+    this.heal(HEART_HEAL_AMOUNT);
+  }
+  // endregion wisp
 
   // region evolution
   public int getCrystalPoints(EvoCrystalColor color) {
@@ -425,6 +487,7 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     compound.putString("ReachedForms", this.entityData.get(DATA_REACHED_FORMS_ID));
     compound.putInt("Level", this.getLevel());
     compound.putInt("Experience", this.getExperience());
+    compound.putBoolean("Wisp", this.isWisp());
   }
 
   @Override
@@ -472,6 +535,10 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     if (compound.contains("Experience")) {
       this.entityData.set(DATA_EXPERIENCE_ID, compound.getInt("Experience"));
     }
+    if (compound.getBoolean("Wisp")) {
+      this.entityData.set(DATA_WISP_ID, true);
+      this.setNoAi(true);
+    }
   }
 
   // TraceableEntity and OwnableEntity getOwner() collide once both are implemented;
@@ -516,8 +583,9 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
   public void setMode(CompanionMode mode) {
     this.entityData.set(DATA_MODE_ID, (byte) mode.ordinal());
 
-    // DEFEND disables AI (no wander/chase/attack); direct teleports still work
-    if (!this.level().isClientSide) {
+    // DEFEND disables AI (no wander/chase/attack); direct teleports still work.
+    // A wisp stays noAi regardless - a mode change shouldn't wake it back up.
+    if (!this.level().isClientSide && !this.isWisp()) {
       this.setNoAi(mode == CompanionMode.DEFEND);
     }
   }
@@ -598,9 +666,10 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     this.setAbilityIndex(Math.floorMod(this.getAbilityIndex() + direction, count));
   }
 
-  /// COMMAND keybind hook; gated to Command mode and not already busy
+  /// COMMAND keybind hook; gated to Command mode, not already busy, and not a wisp
   public final void performCommandAbility() {
-    if (this.level().isClientSide || this.getMode() != CompanionMode.COMMAND || this.isAbilityBusy()) {
+    if (this.level().isClientSide || this.isWisp() || this.getMode() != CompanionMode.COMMAND
+        || this.isAbilityBusy()) {
       return;
     }
 

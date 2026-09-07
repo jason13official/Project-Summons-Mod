@@ -30,6 +30,7 @@ public class ModTabs {
           output.accept(ModItems.EVO_CRYSTAL_GREEN);
           output.accept(ModItems.EVO_CRYSTAL_YELLOW);
           output.accept(ModItems.EVO_CRYSTAL_WHITE);
+          output.accept(ModItems.HEART);
         }).build();
 
     consumer.accept(SUMMONS, Summons.identifier(Constants.MOD_ID));

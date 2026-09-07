@@ -29,8 +29,9 @@ public class SummonsHUD {
       return;
     }
 
-    renderHealthBar(graphics, mc.font, 6, 10 + BAR_GAP, active.getCompanionType().name(),
-        active.getHealth(), active.getMaxHealth(), 0xFF3366CC);
+    String companionLabel = active.isWisp() ? active.getCompanionType().name() + " (wisp)" : active.getCompanionType().name();
+    int companionColor = active.isWisp() ? 0xFF777777 : 0xFF3366CC;
+    renderHealthBar(graphics, mc.font, 6, 10 + BAR_GAP, companionLabel, active.getHealth(), active.getMaxHealth(), companionColor);
 
     int x = 6;
     int y = mc.getWindow().getGuiScaledHeight() - 40;

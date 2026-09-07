@@ -9,7 +9,9 @@
     "ServerPlayerPersistentDataMixin",
     "LivingEntityGuardFieldMixin",
     "LivingEntityEvoCrystalDropMixin",
-    "ItemEntityEvoCrystalPickupMixin"
+    "ItemEntityEvoCrystalPickupMixin",
+    "LivingEntityHeartDropMixin",
+    "ItemEntityHeartPickupMixin"
   ],
   "client": [
     "MinecraftMixin"

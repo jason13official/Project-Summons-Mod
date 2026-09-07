@@ -3,6 +3,7 @@ package io.github.jason13official.summons.impl.common.registry;
 import io.github.jason13official.summons.Summons;
 import io.github.jason13official.summons.impl.common.evolution.EvoCrystalColor;
 import io.github.jason13official.summons.impl.common.item.EvoCrystalItem;
+import io.github.jason13official.summons.impl.common.item.HeartItem;
 import io.github.jason13official.summons.platform.Services;
 import java.util.function.BiConsumer;
 import net.minecraft.resources.ResourceLocation;
@@ -24,6 +25,8 @@ public class ModItems {
   public static Item EVO_CRYSTAL_YELLOW;
   public static Item EVO_CRYSTAL_WHITE;
 
+  public static Item HEART;
+
   public static void register(BiConsumer<Item, ResourceLocation> consumer) {
 
     FAIRY_SPAWN_EGG = Services.PLATFORM.createSpawnEggItem(() -> ModEntities.FAIRY, 0xFFAEE2, 0xFFFFFF, new Properties());
@@ -39,6 +42,8 @@ public class ModItems {
     EVO_CRYSTAL_YELLOW = new EvoCrystalItem(EvoCrystalColor.YELLOW, new Properties());
     EVO_CRYSTAL_WHITE = new EvoCrystalItem(EvoCrystalColor.WHITE, new Properties());
 
+    HEART = new HeartItem(new Properties());
+
     consumer.accept(FAIRY_SPAWN_EGG, Summons.identifier("fairy_spawn_egg"));
     consumer.accept(BATTLE_SPAWN_EGG, Summons.identifier("battle_spawn_egg"));
     consumer.accept(BIRD_SPAWN_EGG, Summons.identifier("bird_spawn_egg"));
@@ -51,6 +56,8 @@ public class ModItems {
     consumer.accept(EVO_CRYSTAL_GREEN, Summons.identifier("evo_crystal_green"));
     consumer.accept(EVO_CRYSTAL_YELLOW, Summons.identifier("evo_crystal_yellow"));
     consumer.accept(EVO_CRYSTAL_WHITE, Summons.identifier("evo_crystal_white"));
+
+    consumer.accept(HEART, Summons.identifier("heart"));
   }
 
   public static Item forColor(EvoCrystalColor color) {

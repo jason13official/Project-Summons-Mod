@@ -34,6 +34,10 @@ public class BattleSummonRenderer extends EntityRenderer<AbstractCompanion> {
   @Override
   public void render(AbstractCompanion cube, float entityYaw, float partialTick, PoseStack poseStack, MultiBufferSource bufferSource, int packedLight) {
 
+    if (cube.isWisp()) {
+      return; // no real renderer while wisp; AbstractCompanion#tick spawns particles instead
+    }
+
     poseStack.pushPose();
 
     // TODO adjust, calc 21.6 (ModEntities height in sized) but doesn't account for initial offset in model. needs 2.4px (total 24.0F px coincidental) more offset upwards
