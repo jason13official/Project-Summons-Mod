@@ -16,7 +16,8 @@
     "LivingEntityLuckyDropMixin"
   ],
   "client": [
-    "MinecraftMixin"
+    "MinecraftMixin",
+    "HumanoidModelBirdGripMixin"
   ],
   "server": [],
   "injectors": {

@@ -13,6 +13,8 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityDimensions;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
@@ -22,9 +24,10 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 
-/// Bird-Type: air mobility, lifts/carries the owner and juggles light enemies.
-/// TODO: "Glide" (carry Hector over gaps) mimicked with Slow Falling (for now); gliding is a movement/input feature and not a Command-mode effect so heavy WIP
+/// Bird-Type: air mobility, lifts/carries the owner and juggles light enemies. Glide/Long
+/// Glide are real rides (see #beginGlide/#tick), not a status-effect proxy.
 public class BirdSummon extends AbstractFlyingCompanion {
 
   // wiki: CON +4 initial, +12 growth
@@ -34,15 +37,18 @@ public class BirdSummon extends AbstractFlyingCompanion {
   private static final double CARPET_BOMBS_AOE_RADIUS = 2.0;
   private static final double DIVE_ATTACK_HIT_RADIUS = 1.5;
   private static final int DIVE_ATTACK_COOLDOWN = 20;
+  private static final double GLIDE_BOOST_SPEED = 1.2;
+  private static final double GLIDE_UP_BURST = 0.6;
+
+  /// direction locked in at cast time (owner's look, horizontal only); held constant every
+  /// tick for the ride, since the owner's own look can drift once they're along for the ride
+  private Vec3 glideDirection = Vec3.ZERO;
 
   private static final List<CompanionAbility> ABILITIES = List.of(
       // "Uses legs to propel Hector long distances. Allows access to places a normal jump
-      // cannot reach." -> grabbing/carrying is a movement/input feature, not a Command
-      // effect, so proxied as Slow Falling
-      CompanionAbility.base("Glide", 100, (companion, owner) -> {
-        owner.addEffect(new MobEffectInstance(MobEffects.SLOW_FALLING, 100));
-        spawnAbilityParticles(owner, ParticleTypes.CLOUD, 8);
-      }),
+      // cannot reach." - a real ride: owner mounts, gets launched in their look direction,
+      // and the companion counters gravity for a slow glide-down instead of a hard drop
+      CompanionAbility.base("Glide", 100, (companion, owner) -> beginGlide(companion, owner, GLIDE_BOOST_SPEED)),
       // "Spreads explosive caltrops, which explode after a brief period." TODO: no delayed
       // detonation, proxied as an immediate AoE hit around the target instead
       CompanionAbility.gated("Caltrops", 30, Form.GOLDFINCH, 5, (companion, owner) -> {
@@ -122,11 +128,10 @@ public class BirdSummon extends AbstractFlyingCompanion {
         target.hurt(companion.damageSources().mobAttack(companion), (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * 1.5F);
         spawnAbilityParticles(target, ParticleTypes.FLAME, 12);
       }),
-      // "Uses legs to propel Hector long distances" (upgraded) -> reaches the Tower of Evermore
-      CompanionAbility.gated("Long Glide", 200, Form.WINGOSAURUS, 8, (companion, owner) -> {
-        owner.addEffect(new MobEffectInstance(MobEffects.SLOW_FALLING, 200));
-        spawnAbilityParticles(owner, ParticleTypes.CLOUD, 12);
-      }),
+      // "Uses legs to propel Hector long distances" (upgraded) -> reaches the Tower of
+      // Evermore; same real ride as Glide, longer and with more launch speed
+      CompanionAbility.gated("Long Glide", 200, Form.WINGOSAURUS, 8, (companion, owner) ->
+          beginGlide(companion, owner, GLIDE_BOOST_SPEED * 1.3)),
       // "Drains HP & gives it to Hector."
       CompanionAbility.gated("Deadly Absorb", 30, Form.WINGOSAURUS, 8, (companion, owner) -> {
         LivingEntity target = findNearestTarget(companion, owner, CARPET_BOMBS_FIND_RADIUS);
@@ -245,6 +250,45 @@ public class BirdSummon extends AbstractFlyingCompanion {
     super.registerGoals();
     this.goalSelector.addGoal(1,
         new CompanionDiveAttackGoal(this, 1.4, DIVE_ATTACK_HIT_RADIUS, DIVE_ATTACK_COOLDOWN, BirdSummon::diveAttack));
+  }
+
+  @Override
+  public void tick() {
+    super.tick();
+    if (this.level().isClientSide) {
+      return;
+    }
+
+    if (this.isVehicle() && this.isAbilityBusy()) {
+      // horizontal is re-set (not added) every tick so drag can't bleed it off; vertical is
+      // left alone so the initial up-burst arcs and settles under normal gravity instead of
+      // climbing forever
+      Vec3 velocity = this.getDeltaMovement();
+      this.setDeltaMovement(this.glideDirection.x, velocity.y, this.glideDirection.z);
+    } else if (this.isVehicle()) {
+      this.ejectPassengers(); // glide duration (busyTicks) ran out
+    }
+  }
+
+  /// no `setNoAi` here; that ties into `isControlledByLocalInstance()`, which
+  /// `LivingEntity#travel` checks before integrating `deltaMovement` at all. Warps the
+  /// companion to the owner first (Curse of Darkness's warp-to-Hector visual), not vice versa.
+  private static void beginGlide(AbstractCompanion companion, LivingEntity owner, double boostSpeed) {
+    spawnAbilityParticles(companion, ParticleTypes.POOF, 10);
+    companion.moveTo(owner.getX(), owner.getY() + 1.0, owner.getZ(), owner.getYRot(), 0.0F);
+    spawnAbilityParticles(companion, ParticleTypes.CLOUD, 10);
+
+    BirdSummon bird = (BirdSummon) companion;
+    Vec3 look = owner.getLookAngle();
+    bird.glideDirection = new Vec3(look.x, 0.0, look.z).normalize().scale(boostSpeed);
+    companion.setDeltaMovement(0.0, GLIDE_UP_BURST, 0.0); // small up-burst; forward comes from #tick
+    owner.startRiding(companion, true);
+  }
+
+  /// renders/positions the rider below the companion, gripping its legs, instead of on top
+  @Override
+  protected Vec3 getPassengerAttachmentPoint(Entity entity, EntityDimensions dimensions, float partialTick) {
+    return new Vec3(0.0, -0.6, 0.0);
   }
 
   /// physical swoop/dive-bomb -> Bird's basic direct attack
