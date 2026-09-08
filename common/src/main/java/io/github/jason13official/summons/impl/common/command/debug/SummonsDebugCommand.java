@@ -14,20 +14,11 @@ import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 
-/// - `/summons debug unlockall` -> unlocks every [CompanionType] for the executing player,
-/// so the party keybinds/HUD can be exercised without a real Devil Shard-equivalent item yet.
-/// - `/summons debug addxp <amount>` -> grants XP to the active companion, so leveling/ability
-/// level-gates can be exercised without dozens of manual ability uses.
+/// `/summons debug unlockall`; unlocks every [CompanionType] without a real Devil Shard item.
+/// `/summons debug addxp <amount>`; grants XP without dozens of manual ability uses.
 public class SummonsDebugCommand {
 
   public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
-
-//    dispatcher.register(Commands.literal(Constants.MOD_ID).requires(source -> source.hasPermission(2))
-//        .then(Commands.literal("debug")
-//            .then(Commands.literal("unlockall").executes(SummonsDebugCommand::unlockAll))
-//            .then(Commands.literal("addxp")
-//                .then(Commands.argument("amount", IntegerArgumentType.integer(1))
-//                    .executes(SummonsDebugCommand::addXp)))));
 
     // region root
     LiteralArgumentBuilder<CommandSourceStack> root = Commands.literal(Constants.MOD_ID);

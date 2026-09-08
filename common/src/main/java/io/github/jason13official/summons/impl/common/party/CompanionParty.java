@@ -7,10 +7,8 @@ import java.util.Set;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
 
-/// per-player collection of up to one Innocent Devil per [CompanionType]; only one may be
-/// summoned into the world at a time.
-/// @see CompanionPartyManager
-/// @see io.github.jason13official.summons.mixin.ServerPlayerPersistentDataMixin
+/// Per-player collection of up to one Innocent Devil per [CompanionType]; only one summoned
+/// at a time. @see CompanionPartyManager
 public class CompanionParty {
 
   private static final String ROOT_TAG = "summons_party";

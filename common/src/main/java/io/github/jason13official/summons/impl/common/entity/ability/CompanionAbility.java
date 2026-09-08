@@ -6,10 +6,8 @@ import java.util.Set;
 import java.util.function.BiConsumer;
 import net.minecraft.world.entity.LivingEntity;
 
-/// A Command-mode ability: display name, how long it makes the companion busy, which
-/// [EvolutionForm]s must have ever been reached to have learned it (empty = base kit,
-/// always available), the minimum level to have learned it, and what it does. See
-/// `AbstractCompanion#allAbilities`/`abilities`.
+/// A Command-mode ability; `requiredForms` empty means base kit, always available.
+/// See `AbstractCompanion#allAbilities`/`abilities`.
 public record CompanionAbility(String name, int busyTicks, Set<EvolutionForm> requiredForms, int minLevel,
                                 BiConsumer<AbstractCompanion, LivingEntity> effect) {
 

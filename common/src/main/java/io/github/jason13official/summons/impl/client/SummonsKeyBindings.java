@@ -5,11 +5,9 @@ import io.github.jason13official.summons.platform.Services;
 import net.minecraft.client.KeyMapping;
 import org.lwjgl.glfw.GLFW;
 
-/// mirrors Curse of Darkness Innocent Devil controls:
-/// - UP/DOWN cycles Auto <-> Command <-> Defend,
-/// - LEFT/RIGHT cycles the selected ability while in Command mode,
-/// - COMMAND activates it the selected ability in Command mode,
-/// - TOGGLE_SUMMON/CYCLE_PARTY condense current summon back to party/switch to next member
+/// Mirrors Curse of Darkness Innocent Devil controls: UP/DOWN cycles Auto/Command/Defend,
+/// LEFT/RIGHT cycles the selected ability, COMMAND activates it, TOGGLE_SUMMON/CYCLE_PARTY
+/// dismiss/switch the active companion.
 public class SummonsKeyBindings {
 
   private static final String CATEGORY = "key.categories.summons";

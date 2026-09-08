@@ -7,6 +7,7 @@ import io.github.jason13official.summons.impl.common.entity.ground.AbstractGroun
 import io.github.jason13official.summons.impl.common.evolution.EvoCrystalColor;
 import io.github.jason13official.summons.impl.common.evolution.EvolutionForm;
 import io.github.jason13official.summons.impl.common.evolution.EvolutionThreshold;
+import java.util.Comparator;
 import java.util.List;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
@@ -34,7 +35,20 @@ public class MageSummon extends AbstractFlyingCompanion {
   public final AnimationState idleAnimationState = new AnimationState();
   public final AnimationState flyAnimationState = new AnimationState();
 
+  // names/effects sourced from guide_paste.md's in-game FAQ, not just the wiki's bare
+  // ability names; "B" spells use real orbiting hitboxes, see AbstractCompanion#spawnOrbitingBits
   private static final List<CompanionAbility> ABILITIES = List.of(
+      // "Stops time for enemies, leaving Hector to beat on them unopposed." TODO: no true
+      // freeze exists, proxied as heavy AoE slowness
+      CompanionAbility.base("Time Stop", 40, (companion, owner) -> {
+        AABB area = companion.getBoundingBox().inflate(SPELL_RADIUS);
+        for (LivingEntity target : companion.level().getEntitiesOfClass(LivingEntity.class, area,
+            e -> e != companion && e != owner && e.isAlive())) {
+          target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 60, 9));
+        }
+        spawnAbilityParticles(companion, ParticleTypes.END_ROD, 10);
+      }),
+      // "Rains lightning down on a foe (sometimes hits multiple enemies)."
       CompanionAbility.base("Lightning Strike", 30, (companion, owner) -> {
         if (!(companion.level() instanceof ServerLevel serverLevel)) {
           return;
@@ -48,108 +62,46 @@ public class MageSummon extends AbstractFlyingCompanion {
           serverLevel.addFreshEntity(bolt);
         }
       }),
-      // wiki: Talon Rod gets "Circle Scissors, Freeze"
+      // "Sends out three balls of fire" that revolve around Hector and burn on contact
+      CompanionAbility.gated("Floating B", 20, Form.SCISSOR_ROD, 5, (companion, owner) ->
+          companion.spawnOrbitingBits(3, 2.5, 0.3, 1.0,
+              (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * 0.4F, ParticleTypes.FLAME, false, 100)),
+      // "Shoots a beam of fire in a slow sweep across the room... excellent against undead."
+      CompanionAbility.gated("Sorcery Flame", 20, Form.SCISSOR_ROD, 5, (companion, owner) -> {
+        AABB area = companion.getBoundingBox().inflate(SPELL_RADIUS);
+        float damage = (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * 0.6F;
+        for (LivingEntity target : companion.level().getEntitiesOfClass(LivingEntity.class, area,
+            e -> e != companion && e != owner && e.isAlive())) {
+          target.setRemainingFireTicks(80);
+          target.hurt(companion.damageSources().magic(), damage);
+        }
+        spawnAbilityParticles(companion, ParticleTypes.FLAME, 14);
+      }),
+      // "Creates a glowing blue ring around Hector that damages anything that gets close."
+      CompanionAbility.gated("Circle Scissors", 20, Form.TALON_ROD, 5, (companion, owner) -> {
+        AABB area = owner.getBoundingBox().inflate(3.0);
+        float damage = (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * 0.5F;
+        for (LivingEntity target : companion.level().getEntitiesOfClass(LivingEntity.class, area,
+            e -> e != companion && e != owner && e.isAlive())) {
+          target.hurt(companion.damageSources().magic(), damage);
+        }
+        spawnAbilityParticles(owner, ParticleTypes.CRIT, 10);
+      }),
+      // "Freezes an enemy in a block of ice... causes ice damage."
       CompanionAbility.gated("Freeze", 30, Form.TALON_ROD, 5, (companion, owner) -> {
         LivingEntity target = findNearestTarget(companion, owner, SPELL_RADIUS);
         if (target == null) {
           return;
         }
 
-        target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 60, 3));
+        target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100, 3));
         target.hurt(companion.damageSources().mobAttack(companion),
             (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * 0.5F);
         spawnAbilityParticles(target, ParticleTypes.SNOWFLAKE, 10);
       }),
-      // wiki: base-kit ability alongside Lightning Strike; TODO: approximated as heavy AoE
-      // slowness, not a true freeze -> no such mechanic exists in vanilla
-      CompanionAbility.base("Time Stop", 40, (companion, owner) -> {
-        AABB area = companion.getBoundingBox().inflate(SPELL_RADIUS);
-        for (LivingEntity target : companion.level().getEntitiesOfClass(LivingEntity.class, area,
-            e -> e != companion && e != owner && e.isAlive())) {
-          target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 60, 9));
-        }
-        spawnAbilityParticles(companion, ParticleTypes.END_ROD, 10);
-      }),
-      // wiki: Talon Rod gets "Circle Scissors, Freeze"
-      CompanionAbility.gated("Circle Scissors", 25, Form.TALON_ROD, 5, (companion, owner) -> {
-        LivingEntity target = findNearestTarget(companion, owner, SPELL_RADIUS);
-        if (target == null) {
-          return;
-        }
-
-        float hit = (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * 0.6F;
-        target.hurt(companion.damageSources().magic(), hit); // two hits: "scissors"
-        target.hurt(companion.damageSources().magic(), hit);
-        spawnAbilityParticles(target, ParticleTypes.CRIT, 8);
-      }),
-      // elemental spell: Fire (Scissor Rod)
-      CompanionAbility.gated("Fire Bolt", 25, Form.SCISSOR_ROD, 5, (companion, owner) -> {
-        LivingEntity target = findNearestTarget(companion, owner, SPELL_RADIUS);
-        if (target == null) {
-          return;
-        }
-
-        target.setRemainingFireTicks(60);
-        target.hurt(companion.damageSources().magic(), (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * 0.5F);
-        spawnAbilityParticles(target, ParticleTypes.FLAME, 10);
-      }),
-      // elemental spell: Ice (Ogre Rod)
-      CompanionAbility.gated("Ice Bolt", 25, Form.OGRE_ROD, 8, (companion, owner) -> {
-        LivingEntity target = findNearestTarget(companion, owner, SPELL_RADIUS);
-        if (target == null) {
-          return;
-        }
-
-        target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100, 3));
-        target.hurt(companion.damageSources().magic(), (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * 0.5F);
-        spawnAbilityParticles(target, ParticleTypes.SNOWFLAKE, 10);
-      }),
-      // elemental spell: Thunder (Goat Head) -> visual-only bolt, damage dealt explicitly below
-      // to avoid double-dipping against LightningBolt's own strike damage
-      CompanionAbility.gated("Thunder Bolt", 30, Form.GOAT_HEAD, 8, (companion, owner) -> {
-        if (!(companion.level() instanceof ServerLevel serverLevel)) {
-          return;
-        }
-
-        LivingEntity target = findNearestTarget(companion, owner, SPELL_RADIUS);
-        Vec3 strikeAt = target != null ? target.position() : owner.position();
-        LightningBolt bolt = EntityType.LIGHTNING_BOLT.create(serverLevel);
-        if (bolt != null) {
-          bolt.moveTo(strikeAt.x, strikeAt.y, strikeAt.z);
-          bolt.setVisualOnly(true);
-          serverLevel.addFreshEntity(bolt);
-        }
-
-        if (target != null) {
-          target.hurt(companion.damageSources().magic(), (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE));
-        }
-      }),
-      // elemental spell: Light (Eyeball Rod)
-      CompanionAbility.gated("Light Bolt", 25, Form.EYEBALL_ROD, 10, (companion, owner) -> {
-        LivingEntity target = findNearestTarget(companion, owner, SPELL_RADIUS);
-        if (target == null) {
-          return;
-        }
-
-        target.addEffect(new MobEffectInstance(MobEffects.GLOWING, 100, 0));
-        target.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, 40, 0));
-        target.hurt(companion.damageSources().magic(), (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * 0.5F);
-        spawnAbilityParticles(target, ParticleTypes.END_ROD, 10);
-      }),
-      // elemental spell: Earth (Embryo Rod); TODO: no dedicated earth/rubble particle used
-      CompanionAbility.gated("Earth Bolt", 30, Form.EMBRYO_ROD, 10, (companion, owner) -> {
-        LivingEntity target = findNearestTarget(companion, owner, SPELL_RADIUS);
-        if (target == null) {
-          return;
-        }
-
-        target.knockback(1.0, 0.0, 0.0);
-        target.hurt(companion.damageSources().magic(), (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * 0.8F);
-        spawnAbilityParticles(target, ParticleTypes.CRIT, 10);
-      }),
-      // wiki: "the only attack that can permanently kill Blood Skeletons"; TODO: no Blood
-      // Skeleton equivalent mob exists yet, so this just hits hard for now
-      CompanionAbility.gated("Purify", 40, Form.NAUTILUS_ROD, 10, (companion, owner) -> {
+      // "This is the skill that allows the Mage ID to kill blood skeletons... affects all
+      // undead." TODO: no Blood Skeleton equivalent mob exists, just hits hard for now
+      CompanionAbility.gated("Purify", 40, Form.NAUTILUS_ROD, 8, (companion, owner) -> {
         LivingEntity target = findNearestTarget(companion, owner, SPELL_RADIUS);
         if (target == null) {
           return;
@@ -157,7 +109,111 @@ public class MageSummon extends AbstractFlyingCompanion {
 
         target.hurt(companion.damageSources().magic(), (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * 2.0F);
         spawnAbilityParticles(target, ParticleTypes.END_ROD, 14);
-      })
+      }),
+      // "Summons three small laser-cannons that shoot at enemies for decent damage."
+      CompanionAbility.gated("Satellite B", 20, Form.NAUTILUS_ROD, 8, (companion, owner) ->
+          companion.spawnOrbitingBits(3, 3.0, 0.4, 1.2,
+              (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * 0.5F, ParticleTypes.END_ROD, false, 100)),
+      // "Shoots out holy chain-lightning that hits enemies in front of it at random."
+      // -> hits up to 3 nearby targets in one cast
+      CompanionAbility.gated("Agnea", 20, Form.OGRE_ROD, 8, (companion, owner) -> {
+        AABB area = companion.getBoundingBox().inflate(SPELL_RADIUS);
+        float damage = (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * 0.6F;
+        companion.level().getEntitiesOfClass(LivingEntity.class, area, e -> e != companion && e != owner && e.isAlive())
+            .stream().sorted(Comparator.comparingDouble(companion::distanceToSqr)).limit(3)
+            .forEach(target -> {
+              target.hurt(companion.damageSources().magic(), damage);
+              spawnAbilityParticles(target, ParticleTypes.ELECTRIC_SPARK, 8);
+            });
+      }),
+      // "Summons three floating saucers that attack as Hector attacks."
+      CompanionAbility.gated("Synchron Saucer B", 20, Form.OGRE_ROD, 8, (companion, owner) ->
+          companion.spawnOrbitingBits(3, 2.0, 0.5, 0.8,
+              (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * 0.45F, ParticleTypes.ELECTRIC_SPARK, false, 100)),
+      // "Summons blades that rapidly fly around Hector, damaging any enemies that come
+      // near... also protect above Hector."
+      CompanionAbility.gated("Argent B", 20, Form.GOAT_HEAD, 8, (companion, owner) ->
+          companion.spawnOrbitingBits(4, 1.5, 0.8, 1.5,
+              (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * 0.4F, ParticleTypes.CRIT, false, 100)),
+      // "Summons a serpent of fire that hits enemies at random, popping in and out of the
+      // ground" -> hits up to 3 nearby targets
+      CompanionAbility.gated("Salamander", 30, Form.GOAT_HEAD, 8, (companion, owner) -> {
+        AABB area = companion.getBoundingBox().inflate(SPELL_RADIUS);
+        float damage = (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * 0.7F;
+        companion.level().getEntitiesOfClass(LivingEntity.class, area, e -> e != companion && e != owner && e.isAlive())
+            .stream().sorted(Comparator.comparingDouble(companion::distanceToSqr)).limit(3)
+            .forEach(target -> {
+              target.setRemainingFireTicks(60);
+              target.hurt(companion.damageSources().magic(), damage);
+              spawnAbilityParticles(target, ParticleTypes.FLAME, 10);
+            });
+      }),
+      // "Boosts Hector's ATK stat for a short time... the only Mage skill that directly
+      // enhances Hector's stats."
+      CompanionAbility.gated("Tension Boost", 20, Form.EYEBALL_ROD, 10, (companion, owner) -> {
+        owner.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 200, 1));
+        spawnAbilityParticles(owner, ParticleTypes.CRIT, 10);
+      }),
+      // "Fires homing lasers at enemies."
+      CompanionAbility.gated("Homing", 20, Form.EYEBALL_ROD, 10, (companion, owner) -> {
+        LivingEntity target = findNearestTarget(companion, owner, SPELL_RADIUS);
+        if (target == null) {
+          return;
+        }
+
+        float hit = (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * 0.4F;
+        for (int i = 0; i < 3; i++) {
+          target.hurt(companion.damageSources().magic(), hit);
+        }
+        spawnAbilityParticles(target, ParticleTypes.END_ROD, 10);
+      }),
+      // "Summons three floating orbs around Hector that explode on contact with an enemy,
+      // causing damage and knockback."
+      CompanionAbility.gated("Explosion B", 20, Form.EMBRYO_ROD, 10, (companion, owner) ->
+          companion.spawnOrbitingBits(3, 2.0, 0.35, 1.0,
+              (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * 1.2F, ParticleTypes.FLASH, true, 100)),
+      // "Unleashes a huge explosion that damages enemies over a huge range."
+      CompanionAbility.gated("Demonic Disaster", 35, Form.EMBRYO_ROD, 10, (companion, owner) -> {
+        AABB area = companion.getBoundingBox().inflate(SPELL_RADIUS * 1.5);
+        float damage = (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * 1.5F;
+        for (LivingEntity target : companion.level().getEntitiesOfClass(LivingEntity.class, area,
+            e -> e != companion && e != owner && e.isAlive())) {
+          target.hurt(companion.damageSources().magic(), damage);
+        }
+        spawnAbilityParticles(companion, ParticleTypes.EXPLOSION, 6);
+      }),
+      // "Blocks one enemy attack completely." -> proxied as Absorption hearts, not a literal
+      // one-hit block
+      CompanionAbility.gated("Shield", 20, Form.CRYSTAL_ROD, 10, (companion, owner) -> {
+        owner.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, 200, 1));
+        spawnAbilityParticles(owner, ParticleTypes.END_ROD, 10);
+      }),
+      // "Summons a meteor from the sky to crash down on an enemy."
+      CompanionAbility.gated("Meteo", 40, Form.CRYSTAL_ROD, 10, (companion, owner) -> {
+        LivingEntity target = findNearestTarget(companion, owner, SPELL_RADIUS);
+        if (target == null) {
+          return;
+        }
+
+        target.setRemainingFireTicks(60);
+        target.hurt(companion.damageSources().magic(), (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * 2.0F);
+        spawnAbilityParticles(target, ParticleTypes.FLAME, 16);
+      }),
+      // "Exactly the same as Meteo but with Holy element instead of Fire."
+      CompanionAbility.gated("Twinkle Star", 40, Form.TWINKLE_ROD, 10, (companion, owner) -> {
+        LivingEntity target = findNearestTarget(companion, owner, SPELL_RADIUS);
+        if (target == null) {
+          return;
+        }
+
+        target.hurt(companion.damageSources().magic(), (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * 2.0F);
+        spawnAbilityParticles(target, ParticleTypes.END_ROD, 16);
+      }),
+      // "Summons three smiley-faced stars that circle around Hector and do Holy damage to
+      // enemies that come close."
+      CompanionAbility.gated("Dancing Star", 20, Form.TWINKLE_ROD, 10, (companion, owner) ->
+          companion.spawnOrbitingBits(3, 2.2, 0.4, 1.0,
+              (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * 0.5F, ParticleTypes.END_ROD, false, 100))
   );
 
   public MageSummon(EntityType<? extends AbstractCompanion> entityType, Level level) {

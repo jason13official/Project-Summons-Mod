@@ -1,6 +1,7 @@
 package io.github.jason13official.summons.impl.common.entity;
 
 import io.github.jason13official.summons.impl.common.entity.ability.CompanionAbility;
+import io.github.jason13official.summons.impl.common.entity.ability.OrbitingBit;
 import io.github.jason13official.summons.impl.common.entity.ai.goal.target.CompanionOwnerHurtByTargetGoal;
 import io.github.jason13official.summons.impl.common.entity.ai.goal.target.CompanionOwnerHurtTargetGoal;
 import io.github.jason13official.summons.impl.common.evolution.EvoCrystalColor;
@@ -11,6 +12,7 @@ import io.github.jason13official.summons.impl.common.party.CompanionParty;
 import io.github.jason13official.summons.impl.common.party.CompanionType;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -101,10 +103,8 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
   private static final int ABILITY_USE_XP = 5;
   private static final int DIRECT_ATTACK_XP = 2;
 
-  /// "sparking wisp": at 0 Hearts the I.D. doesn't die, it goes inert and floats near the
-  /// owner until a Heart revives it. No dedicated wisp entity/model; renderers skip
-  /// drawing while this is true (see e.g. BattleSummonRenderer#render) and tick() below
-  /// emits particles at its position instead
+  /// at 0 Hearts the I.D. goes inert instead of dying; no wisp entity/model, renderers
+  /// skip drawing and tick() emits particles instead until a Heart revives it
   private static final EntityDataAccessor<Boolean> DATA_WISP_ID =
       SynchedEntityData.defineId(AbstractCompanion.class, EntityDataSerializers.BOOLEAN);
   private static final float WISP_REVIVE_HEALTH = 1.0F;
@@ -184,6 +184,8 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
       this.entityData.set(DATA_ABILITY_BUSY_ID, false);
     }
 
+    this.tickOrbitingBits();
+
     if (this.getMode() == CompanionMode.DEFEND) {
       if (this.getGuardFieldRadius() < GUARD_FIELD_MAX_RADIUS) {
         this.setGuardFieldRadius(this.getGuardFieldRadius() + GUARD_FIELD_REGEN_PER_TICK);
@@ -222,10 +224,8 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     this.level().addParticle(ParticleTypes.SOUL, x, y, z, 0.0, 0.02, 0.0);
   }
 
-  /// noAi skips goal-based movement entirely, so a wisp needs its own hand-rolled "hover
-  /// near the owner" -> ease pos toward a point near owner head, no
-  /// gravity/collision/physics. teleportToOwner() above still covers big distance
-  /// (far away, different dimension); this handles ordinary following
+  /// noAi skips goal-based movement, so a wisp needs hand-rolled hover; eases toward the
+  /// owner's head, no gravity/collision. teleportToOwner() above covers big jumps instead
   private void floatTowardOwner() {
     LivingEntity owner = this.getOwner();
     if (owner == null) {
@@ -314,10 +314,8 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     return this.entityData.get(DATA_WISP_ID);
   }
 
-  /// intercepts a lethal hit: I.D.s "cannot permanently die" (wiki), they go inert instead.
-  /// The *only* way to fully remove a companion is the "dismiss" keybind; even a bypass-
-  /// invulnerability source (void, /kill, creative) doesn't discard it here, it just gets
-  /// snapshotted back into the party like a "dismiss" key press, flagged as a wisp for next time.
+  /// intercepts a lethal hit; I.D.s go inert instead of dying. Only the dismiss keybind
+  /// fully removes one; a bypass-invulnerability source snapshots it back as a wisp instead
   @Override
   public void die(DamageSource source) {
     if (this.level().isClientSide || this.isWisp()) {
@@ -335,10 +333,8 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     this.setNoAi(true);
   }
 
-  /// used when something would otherwise truly remove the entity (void, /kill, creative);
-  /// stores it back in its party slot exactly like the dismiss keybind, but pre-marked as a
-  /// wisp so the next summon still needs a Heart. Falls back to a real discard only if there's
-  /// no owner to return it to (e.g. the owning player no longer exists).
+  /// stores the companion back in its party slot like the dismiss keybind, pre-marked as a
+  /// wisp; falls back to a real discard if there's no owner left to return it to
   private void retreatToPartyAsWisp() {
     if (!(this.getOwner() instanceof ServerPlayer player)) {
       super.die(this.damageSources().generic());
@@ -783,6 +779,68 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
       // at head
       level.sendParticles(particle, target.getX(), target.getY() + target.getBbHeight(), target.getZ(), count,
           randOffsetThird(level), randOffsetThird(level), randOffsetThird(level), 0.0);
+    }
+  }
+
+  private final List<OrbitingBit> orbitingBits = new ArrayList<>();
+
+  /// `count` bits orbiting the owner at `radius`/`angularSpeed`, dealing `damage` on contact
+  /// (10-tick per-bit cooldown); despawns after `lifespanTicks`, or on first hit if
+  /// `explodeOnHit`. Backs Mage's "B" spells (Floating B, Satellite B, etc).
+  public final void spawnOrbitingBits(int count, double radius, double angularSpeed, double heightOffset,
+                                       float damage, ParticleOptions particle, boolean explodeOnHit, int lifespanTicks) {
+    for (int i = 0; i < count; i++) {
+      double startAngle = (2.0 * Math.PI / count) * i;
+      this.orbitingBits.add(new OrbitingBit(startAngle, radius, angularSpeed, heightOffset, damage, particle, explodeOnHit, lifespanTicks));
+    }
+  }
+
+  private void tickOrbitingBits() {
+    if (this.orbitingBits.isEmpty()) {
+      return;
+    }
+
+    LivingEntity owner = this.getOwner();
+    if (owner == null) {
+      this.orbitingBits.clear();
+      return;
+    }
+
+    ServerLevel serverLevel = this.level() instanceof ServerLevel level ? level : null;
+    Iterator<OrbitingBit> iterator = this.orbitingBits.iterator();
+    while (iterator.hasNext()) {
+      OrbitingBit bit = iterator.next();
+      bit.angle += bit.angularSpeed;
+      bit.lifespanTicks--;
+      if (bit.hitCooldown > 0) {
+        bit.hitCooldown--;
+      }
+
+      double x = owner.getX() + Math.cos(bit.angle) * bit.radius;
+      double y = owner.getY() + bit.heightOffset;
+      double z = owner.getZ() + Math.sin(bit.angle) * bit.radius;
+
+      if (serverLevel != null) {
+        serverLevel.sendParticles(bit.particle, x, y, z, 1, 0.0, 0.0, 0.0, 0.0);
+      }
+
+      if (bit.hitCooldown == 0) {
+        AABB hitBox = new AABB(x - 0.5, y - 0.5, z - 0.5, x + 0.5, y + 0.5, z + 0.5);
+        for (LivingEntity target : this.level().getEntitiesOfClass(LivingEntity.class, hitBox,
+            e -> e != owner && e != this && e.isAlive())) {
+          target.hurt(this.damageSources().magic(), bit.damage);
+          target.knockback(0.3, x - target.getX(), z - target.getZ());
+          bit.hitCooldown = 10;
+          if (bit.explodeOnHit) {
+            bit.lifespanTicks = 0;
+          }
+          break;
+        }
+      }
+
+      if (bit.lifespanTicks <= 0) {
+        iterator.remove();
+      }
     }
   }
 

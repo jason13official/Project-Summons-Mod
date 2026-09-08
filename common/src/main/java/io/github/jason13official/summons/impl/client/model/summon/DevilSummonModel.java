@@ -84,10 +84,8 @@ public class DevilSummonModel extends HierarchicalModel<AbstractCompanion> {
 			return;
 		}
 
-		// continuous leg swing off limbSwingAmount, not a discrete onGround flip -> onGround()
-		// flickers for a tick or two while landing, which snapped legs between poses before.
-		// Scaled way down while airborne: horizontal flight speed alone still drives
-		// limbSwingAmount, and full ground-walk amplitude looked like flailing mid-air.
+		// continuous limbSwingAmount, not onGround() (flickers while landing); scaled way
+		// down while airborne since flight speed alone still drives limbSwingAmount
 		float legScale = entity.onGround() ? 1.0F : 0.15F;
 		this.leftLeg.xRot = Mth.triangleWave(limbSwing, 13.0F) * limbSwingAmount * legScale;
 		this.rightLeg.xRot = -Mth.triangleWave(limbSwing, 13.0F) * limbSwingAmount * legScale;

@@ -31,9 +31,6 @@ public class CompanionCubeModel extends EntityModel<AbstractCompanion> {
 		MeshDefinition meshdefinition = new MeshDefinition();
 		PartDefinition partdefinition = meshdefinition.getRoot();
 
-		// PartDefinition body = partdefinition.addOrReplaceChild("body", CubeListBuilder.create().texOffs(0, 0).addBox(-4.0F, -4.0F, -4.0F, 8.0F, 8.0F, 8.0F, new CubeDeformation(0.0F)), PartPose.offset(0.0F, 16.0F, 0.0F));
-
-    // no part pose offset
     PartDefinition body = partdefinition.addOrReplaceChild("body",
         CubeListBuilder.create().texOffs(0, 0)
             .addBox(-4.0F, -4.0F, -4.0F, 8.0F, 8.0F, 8.0F, new CubeDeformation(0.0F)),
@@ -41,16 +38,6 @@ public class CompanionCubeModel extends EntityModel<AbstractCompanion> {
 
 		return LayerDefinition.create(meshdefinition, 32, 32);
 	}
-
-//	@Override
-//	public void setupAnim(CompanionCube entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
-//
-//	}
-//
-//	@Override
-//	public void renderToBuffer(PoseStack poseStack, VertexConsumer vertexConsumer, int packedLight, int packedOverlay, float red, float green, float blue, float alpha) {
-//		body.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
-//	}
 
   @Override
   public void setupAnim(AbstractCompanion companionCube, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {

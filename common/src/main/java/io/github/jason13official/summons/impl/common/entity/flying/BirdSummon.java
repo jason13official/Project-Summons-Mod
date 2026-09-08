@@ -7,7 +7,6 @@ import io.github.jason13official.summons.impl.common.evolution.EvoCrystalColor;
 import io.github.jason13official.summons.impl.common.evolution.EvolutionForm;
 import io.github.jason13official.summons.impl.common.evolution.EvolutionThreshold;
 import java.util.List;
-import java.util.Set;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -33,11 +32,32 @@ public class BirdSummon extends AbstractFlyingCompanion {
   private static final int DIVE_ATTACK_COOLDOWN = 20;
 
   private static final List<CompanionAbility> ABILITIES = List.of(
+      // "Uses legs to propel Hector long distances. Allows access to places a normal jump
+      // cannot reach." -> grabbing/carrying is a movement/input feature, not a Command
+      // effect, so proxied as Slow Falling
       CompanionAbility.base("Glide", 100, (companion, owner) -> {
         owner.addEffect(new MobEffectInstance(MobEffects.SLOW_FALLING, 100));
         spawnAbilityParticles(owner, ParticleTypes.CLOUD, 8);
       }),
-      // wiki: Skull Wing gets "Carpet Bombs, Bone Shot"
+      // "Spreads explosive caltrops, which explode after a brief period." TODO: no delayed
+      // detonation, proxied as an immediate AoE hit around the target instead
+      CompanionAbility.gated("Caltrops", 30, Form.GOLDFINCH, 5, (companion, owner) -> {
+        LivingEntity target = findNearestTarget(companion, owner, CARPET_BOMBS_FIND_RADIUS);
+        if (target == null) {
+          return;
+        }
+
+        AABB blastArea = target.getBoundingBox().inflate(2.5);
+        float damage = (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * 0.8F;
+        for (LivingEntity t : companion.level().getEntitiesOfClass(LivingEntity.class, blastArea,
+            e -> e != companion && e != owner && e.isAlive())) {
+          t.hurt(companion.damageSources().mobAttack(companion), damage);
+          t.knockback(0.4, companion.getX() - t.getX(), companion.getZ() - t.getZ());
+        }
+
+        spawnAbilityParticles(target, ParticleTypes.CRIT, 10);
+      }),
+      // "Drops a carpet of bone-bombs for a brief period."
       CompanionAbility.gated("Carpet Bombs", 30, Form.SKULL_WING, 5, (companion, owner) -> {
         LivingEntity primary = findNearestTarget(companion, owner, CARPET_BOMBS_FIND_RADIUS);
         if (primary == null) {
@@ -53,16 +73,17 @@ public class BirdSummon extends AbstractFlyingCompanion {
 
         spawnAbilityParticles(primary, ParticleTypes.POOF, 6);
       }),
-      // wiki: Skull Wing gets "Carpet Bombs, Bone Shot" -> a real fired arrow, since the
-      // basic direct attack is now a physical swoop/dive-bomb instead (see registerGoals)
+      // "Sends countless sharpened bones ripping through foes." -> a real fired arrow, since
+      // the basic direct attack is now a physical swoop/dive-bomb instead (see registerGoals)
       CompanionAbility.gated("Bone Shot", 20, Form.SKULL_WING, 5, (companion, owner) -> {
         LivingEntity target = findNearestTarget(companion, owner, CARPET_BOMBS_FIND_RADIUS);
         if (target != null) {
           shootArrow(companion, target);
         }
       }),
-      // Khaos's darkness-elemental attack
-      CompanionAbility.gated("Shadow Talon", 25, Form.KHAOS, 5, (companion, owner) -> {
+      // "Gathers latent rage in surrounding areas & spits it out as a sphere that slowly
+      // moves toward foes." TODO: no homing projectile entity, proxied as an instant hit
+      CompanionAbility.gated("Sphere of Darkness", 25, Form.KHAOS, 5, (companion, owner) -> {
         LivingEntity target = findNearestTarget(companion, owner, CARPET_BOMBS_FIND_RADIUS);
         if (target == null) {
           return;
@@ -72,9 +93,10 @@ public class BirdSummon extends AbstractFlyingCompanion {
         target.hurt(companion.damageSources().mobAttack(companion), (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE));
         spawnAbilityParticles(target, ParticleTypes.SQUID_INK, 8);
       }),
-      // wiki: Phoenix/Crimson's fire-elemental "Big Bang" -> "the only attack besides Purify
-      // that can kill Isaac's Abel," and it also kills the Phoenix/Crimson using it
-      new CompanionAbility("Big Bang", 60, Set.of(Form.PHOENIX, Form.CRIMSON), 8, (companion, owner) -> {
+      // "Trades own life for a massive explosion that completely wipes out all enemies in
+      // the vicinity." -> "the only attack besides Purify that can kill Isaac's Abel," and
+      // it also kills the Phoenix using it
+      CompanionAbility.gated("Big Bang", 60, Form.PHOENIX, 8, (companion, owner) -> {
         AABB area = companion.getBoundingBox().inflate(4.0);
         float damage = (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * 2.0F;
 
@@ -85,22 +107,121 @@ public class BirdSummon extends AbstractFlyingCompanion {
 
         spawnAbilityParticles(companion, ParticleTypes.FLAME, 16);
       }),
-      // Indigo's ice-elemental attack
-      CompanionAbility.gated("Frost Beak", 25, Form.INDIGO, 5, (companion, owner) -> {
+      // "Smashes into foes with its flaming body, burning them to a crisp."
+      CompanionAbility.gated("Fire Bird", 25, Form.PHOENIX, 8, (companion, owner) -> {
         LivingEntity target = findNearestTarget(companion, owner, CARPET_BOMBS_FIND_RADIUS);
         if (target == null) {
           return;
         }
 
-        target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 80, 2));
-        target.hurt(companion.damageSources().mobAttack(companion),
-            (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * 0.75F);
-        spawnAbilityParticles(target, ParticleTypes.SNOWFLAKE, 8);
+        target.setRemainingFireTicks(100);
+        target.hurt(companion.damageSources().mobAttack(companion), (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * 1.5F);
+        spawnAbilityParticles(target, ParticleTypes.FLAME, 12);
       }),
-      // wiki: Wingosaurus's upgraded Glide, reaching the Tower of Evermore
+      // "Uses legs to propel Hector long distances" (upgraded) -> reaches the Tower of Evermore
       CompanionAbility.gated("Long Glide", 200, Form.WINGOSAURUS, 8, (companion, owner) -> {
         owner.addEffect(new MobEffectInstance(MobEffects.SLOW_FALLING, 200));
         spawnAbilityParticles(owner, ParticleTypes.CLOUD, 12);
+      }),
+      // "Drains HP & gives it to Hector."
+      CompanionAbility.gated("Deadly Absorb", 30, Form.WINGOSAURUS, 8, (companion, owner) -> {
+        LivingEntity target = findNearestTarget(companion, owner, CARPET_BOMBS_FIND_RADIUS);
+        if (target == null) {
+          return;
+        }
+
+        float damage = (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE);
+        target.hurt(companion.damageSources().mobAttack(companion), damage);
+        owner.heal(damage * 0.5F);
+        spawnAbilityParticles(target, ParticleTypes.HEART, 6);
+      }),
+      // "Attacks enemies with a series of deadly kicks."
+      CompanionAbility.gated("Beat Progress", 30, Form.BLAGSDEATH, 10, (companion, owner) -> {
+        LivingEntity target = findNearestTarget(companion, owner, CARPET_BOMBS_FIND_RADIUS);
+        if (target == null) {
+          return;
+        }
+
+        float hit = (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * 0.5F;
+        for (int i = 0; i < 3; i++) {
+          target.hurt(companion.damageSources().mobAttack(companion), hit);
+        }
+        target.knockback(0.5, companion.getX() - target.getX(), companion.getZ() - target.getZ());
+        spawnAbilityParticles(target, ParticleTypes.CRIT, 10);
+      }),
+      // "Puts everything into one mighty kick, so energized that contact with the foe
+      // causes an explosion."
+      CompanionAbility.gated("Conflict Fall", 35, Form.GARGOYLE, 10, (companion, owner) -> {
+        LivingEntity target = findNearestTarget(companion, owner, CARPET_BOMBS_FIND_RADIUS);
+        if (target == null) {
+          return;
+        }
+
+        AABB blastArea = target.getBoundingBox().inflate(3.0);
+        float damage = (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * 2.0F;
+        for (LivingEntity t : companion.level().getEntitiesOfClass(LivingEntity.class, blastArea,
+            e -> e != companion && e != owner && e.isAlive())) {
+          t.hurt(companion.damageSources().mobAttack(companion), damage);
+          t.knockback(1.0, companion.getX() - t.getX(), companion.getZ() - t.getZ());
+        }
+
+        spawnAbilityParticles(target, ParticleTypes.EXPLOSION, 4);
+      }),
+      // "Transforms into a Magic Circle & launches countless beams at the foe."
+      CompanionAbility.gated("Force Cannon", 30, Form.GARGOYLE, 10, (companion, owner) -> {
+        LivingEntity target = findNearestTarget(companion, owner, CARPET_BOMBS_FIND_RADIUS);
+        if (target == null) {
+          return;
+        }
+
+        float hit = (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * 0.4F;
+        for (int i = 0; i < 5; i++) {
+          target.hurt(companion.damageSources().magic(), hit);
+        }
+        spawnAbilityParticles(target, ParticleTypes.END_ROD, 14);
+      }),
+      // "A sharpened solid icicle rips foes apart."
+      CompanionAbility.gated("Icicle Shot", 25, Form.INDIGO, 10, (companion, owner) -> {
+        LivingEntity target = findNearestTarget(companion, owner, CARPET_BOMBS_FIND_RADIUS);
+        if (target == null) {
+          return;
+        }
+
+        target.hurt(companion.damageSources().mobAttack(companion), (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * 1.5F);
+        spawnAbilityParticles(target, ParticleTypes.SNOWFLAKE, 10);
+      }),
+      // "Frozen breath turns foes into ice." -> AoE, unlike the single-target Icicle Shot
+      CompanionAbility.gated("Blizzard Breath", 35, Form.INDIGO, 10, (companion, owner) -> {
+        AABB area = companion.getBoundingBox().inflate(4.0);
+        for (LivingEntity target : companion.level().getEntitiesOfClass(LivingEntity.class, area,
+            e -> e != companion && e != owner && e.isAlive())) {
+          target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100, 4));
+          target.hurt(companion.damageSources().mobAttack(companion), (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * 0.6F);
+        }
+
+        spawnAbilityParticles(companion, ParticleTypes.SNOWFLAKE, 16);
+      }),
+      // "Launches a flaming ball towards the foe, sending up a pillar of fire where it lands."
+      CompanionAbility.gated("Ignition Blow", 25, Form.CRIMSON, 10, (companion, owner) -> {
+        LivingEntity target = findNearestTarget(companion, owner, CARPET_BOMBS_FIND_RADIUS);
+        if (target == null) {
+          return;
+        }
+
+        target.setRemainingFireTicks(100);
+        target.hurt(companion.damageSources().mobAttack(companion), (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * 1.5F);
+        spawnAbilityParticles(target, ParticleTypes.FLAME, 10);
+      }),
+      // "Flaming breath burns up all foes in the vicinity." -> AoE, unlike single-target Ignition Blow
+      CompanionAbility.gated("Flame Breath", 35, Form.CRIMSON, 10, (companion, owner) -> {
+        AABB area = companion.getBoundingBox().inflate(4.0);
+        for (LivingEntity target : companion.level().getEntitiesOfClass(LivingEntity.class, area,
+            e -> e != companion && e != owner && e.isAlive())) {
+          target.setRemainingFireTicks(80);
+          target.hurt(companion.damageSources().mobAttack(companion), (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * 0.6F);
+        }
+
+        spawnAbilityParticles(companion, ParticleTypes.FLAME, 16);
       })
   );
 

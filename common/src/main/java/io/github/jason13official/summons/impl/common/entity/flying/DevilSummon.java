@@ -1,12 +1,16 @@
 package io.github.jason13official.summons.impl.common.entity.flying;
 
+import io.github.jason13official.summons.Summons;
 import io.github.jason13official.summons.impl.common.entity.ability.CompanionAbility;
 import io.github.jason13official.summons.impl.common.evolution.EvolutionForm;
 import io.github.jason13official.summons.impl.common.evolution.EvolutionThreshold;
 import java.util.List;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
@@ -14,27 +18,31 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 
 /// Devil-Type: balance of Battle- and Bird-Type, high mobility and attack power, aggressive.
-/// TODO: "Magic Circle" (lets Hector slide under low openings) proxy with a knockback pulse for now, since the real ability is traversal, heavy WIP
 public class DevilSummon extends AbstractFlyingCompanion {
 
   private static final double MAGIC_CIRCLE_RADIUS = 3.0;
-  private static final double MAGIC_CIRCLE_KNOCKBACK = 0.6;
+  // wiki: Magic Circle turns Hector (and the I.D.) into a magic circle to slide under low
+  // gaps -> proxied as temporarily shrinking the owner via the SCALE attribute instead of a
+  // real traversal mechanic
+  private static final int MAGIC_CIRCLE_DURATION = 100;
+  private static final double MAGIC_CIRCLE_SCALE_DELTA = -0.5;
+  private static final ResourceLocation MAGIC_CIRCLE_SCALE_MODIFIER_ID = Summons.identifier("magic_circle_scale");
+
+  private int magicCircleTicksRemaining;
 
   private static final List<CompanionAbility> ABILITIES = List.of(
-      CompanionAbility.base("Magic Circle", 20, (companion, owner) -> {
-        AABB area = companion.getBoundingBox().inflate(MAGIC_CIRCLE_RADIUS);
-        float damage = (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * 0.5F;
-
-        for (LivingEntity target : companion.level().getEntitiesOfClass(LivingEntity.class, area,
-            e -> e != companion && e != owner && e.isAlive())) {
-          target.hurt(companion.damageSources().mobAttack(companion), damage);
-          target.knockback(MAGIC_CIRCLE_KNOCKBACK, companion.getX() - target.getX(), companion.getZ() - target.getZ());
+      CompanionAbility.base("Magic Circle", 30, (companion, owner) -> {
+        AttributeInstance scale = owner.getAttribute(Attributes.SCALE);
+        if (scale != null) {
+          scale.addOrUpdateTransientModifier(
+              new AttributeModifier(MAGIC_CIRCLE_SCALE_MODIFIER_ID, MAGIC_CIRCLE_SCALE_DELTA, AttributeModifier.Operation.ADD_VALUE));
         }
 
-        spawnAbilityParticles(companion, ParticleTypes.PORTAL, 12);
+        ((DevilSummon) companion).magicCircleTicksRemaining = MAGIC_CIRCLE_DURATION;
+        spawnAbilityParticles(owner, ParticleTypes.PORTAL, 12);
       }),
-      // wiki: Brow gets "M. Circle Scissors, Needle Magic Circle"
-      CompanionAbility.gated("Needle Magic Circle", 30, Form.BROW, 5, (companion, owner) -> {
+      // Devil-Type FAQ: Brow gets "Scissor M. Circle, Needle M. Circle"
+      CompanionAbility.gated("Needle M. Circle", 30, Form.BROW, 5, (companion, owner) -> {
         LivingEntity target = findNearestTarget(companion, owner, MAGIC_CIRCLE_RADIUS * 2.0);
         if (target == null) {
           return;
@@ -44,8 +52,8 @@ public class DevilSummon extends AbstractFlyingCompanion {
         target.hurt(companion.damageSources().mobAttack(companion), damage);
         spawnAbilityParticles(target, ParticleTypes.PORTAL, 6);
       }),
-      // wiki: Brow gets "M. Circle Scissors, Needle Magic Circle" -> wider AoE, two hits each
-      CompanionAbility.gated("M. Circle Scissors", 25, Form.BROW, 8, (companion, owner) -> {
+      // wider AoE, two hits each
+      CompanionAbility.gated("Scissor M. Circle", 25, Form.BROW, 8, (companion, owner) -> {
         AABB area = companion.getBoundingBox().inflate(MAGIC_CIRCLE_RADIUS * 1.5);
         float damage = (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * 0.75F;
 
@@ -76,6 +84,22 @@ public class DevilSummon extends AbstractFlyingCompanion {
   protected void registerGoals() {
     super.registerGoals();
     this.goalSelector.addGoal(1, new MeleeAttackGoal(this, 1.3, true));
+  }
+
+  @Override
+  public void tick() {
+    super.tick();
+    if (this.level().isClientSide) {
+      return;
+    }
+
+    if (this.magicCircleTicksRemaining > 0 && --this.magicCircleTicksRemaining == 0) {
+      LivingEntity owner = this.getOwner();
+      AttributeInstance scale = owner != null ? owner.getAttribute(Attributes.SCALE) : null;
+      if (scale != null) {
+        scale.removeModifier(MAGIC_CIRCLE_SCALE_MODIFIER_ID);
+      }
+    }
   }
 
   @Override

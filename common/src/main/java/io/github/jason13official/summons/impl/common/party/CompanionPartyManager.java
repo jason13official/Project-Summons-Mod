@@ -17,10 +17,8 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.entity.EntityTypeTest;
 import org.jetbrains.annotations.Nullable;
 
-/// Logical-side "only one active companion at a time" rule for [CompanionParty].
-/// Other owners (e.g. a boss that controls several [AbstractCompanion]s at
-/// once) spawn and own them directly and never touch this class -> the restriction is
-/// only for player parties, not something baked into the summons
+/// Logical-side "only one active companion at a time" rule for [CompanionParty]; other
+/// owners (bosses, etc) spawn [AbstractCompanion]s directly and never touch this class.
 public class CompanionPartyManager {
 
   /// accepts `Level` rather than `ServerLevel` so it can resolve client-side too (e.g. for our HUD)
