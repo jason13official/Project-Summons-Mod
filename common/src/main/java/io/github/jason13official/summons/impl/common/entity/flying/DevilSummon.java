@@ -43,7 +43,22 @@ public class DevilSummon extends AbstractFlyingCompanion {
         float damage = (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * 1.5F;
         target.hurt(companion.damageSources().mobAttack(companion), damage);
         spawnAbilityParticles(target, ParticleTypes.PORTAL, 6);
+      }),
+      // wiki: Brow gets "M. Circle Scissors, Needle Magic Circle" -> wider AoE, two hits each
+      CompanionAbility.gated("M. Circle Scissors", 25, Form.BROW, 8, (companion, owner) -> {
+        AABB area = companion.getBoundingBox().inflate(MAGIC_CIRCLE_RADIUS * 1.5);
+        float damage = (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * 0.75F;
+
+        for (LivingEntity target : companion.level().getEntitiesOfClass(LivingEntity.class, area,
+            e -> e != companion && e != owner && e.isAlive())) {
+          target.hurt(companion.damageSources().mobAttack(companion), damage);
+          target.hurt(companion.damageSources().mobAttack(companion), damage);
+        }
+
+        spawnAbilityParticles(companion, ParticleTypes.PORTAL, 16);
       })
+      // wiki: The End's "Exploding M. Circle" needs the Chauve-souris weapon and The End is
+      // already permanently unreachable (no item-requirement infra) -> intentionally not added
   );
 
   public DevilSummon(EntityType<? extends AbstractFlyingCompanion> entityType, Level level) {

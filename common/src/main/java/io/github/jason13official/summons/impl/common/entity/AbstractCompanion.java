@@ -28,6 +28,7 @@ import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.OwnableEntity;
@@ -119,6 +120,15 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     return Mob.createMobAttributes().add(Attributes.MAX_HEALTH, 10.0D).add(Attributes.MOVEMENT_SPEED, 0.2D);
   }
 
+  /// Monster.class calls this from its own aiStep() override to drive attackAnim/
+  /// getAttackAnim(); plain Mob/PathfinderMob never do, so without this override
+  /// getAttackAnim() would stay stuck at 0 forever despite swing() being called correctly.
+  @Override
+  public void aiStep() {
+    this.updateSwingTime();
+    super.aiStep();
+  }
+
   @Override
   protected void registerGoals() {
     this.targetSelector.addGoal(1, new CompanionOwnerHurtByTargetGoal(this));
@@ -204,7 +214,7 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     this.level().addParticle(ParticleTypes.END_ROD, x, this.getY() + 0.05, z, 0.0, 0.03, 0.0);
   }
 
-  /// the only "visual" a sparking wisp has - a few sparkles drifting around its position
+  /// the only "visual" a sparking wisp has -> a few sparkles drifting around its position
   private void spawnWispParticles() {
     double x = this.getX() + (this.random.nextDouble() - 0.5) * 0.6;
     double y = this.getY() + this.random.nextDouble() * this.getBbHeight();
@@ -528,6 +538,7 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
   /// poison tick) override this instead of adding a plain MeleeAttackGoal.
   @Override
   public boolean doHurtTarget(Entity entity) {
+    this.swing(InteractionHand.MAIN_HAND); // drives client-side getAttackAnim() for the swing pose
     boolean success = super.doHurtTarget(entity);
     if (success) {
       this.grantDirectAttackExperience();
@@ -655,7 +666,7 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     this.entityData.set(DATA_MODE_ID, (byte) mode.ordinal());
 
     // DEFEND disables AI (no wander/chase/attack); direct teleports still work.
-    // A wisp stays noAi regardless - a mode change shouldn't wake it back up.
+    // A wisp stays noAi regardless -> a mode change shouldn't wake it back up.
     if (!this.level().isClientSide && !this.isWisp()) {
       this.setNoAi(mode == CompanionMode.DEFEND);
     }

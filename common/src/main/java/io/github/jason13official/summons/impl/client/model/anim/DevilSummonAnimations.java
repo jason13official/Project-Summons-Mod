@@ -61,17 +61,36 @@ public class DevilSummonAnimations {
 		.build();
 
 	public static final AnimationDefinition MOVE = AnimationDefinition.Builder.withLength(0.0F).looping()
-		.addAnimation("leftArm", new AnimationChannel(AnimationChannel.Targets.ROTATION, 
+		.addAnimation("leftArm", new AnimationChannel(AnimationChannel.Targets.ROTATION,
 			new Keyframe(0.0F, KeyframeAnimations.degreeVec(0.0F, 0.0F, 0.0F), AnimationChannel.Interpolations.LINEAR)
 		))
-		.addAnimation("leftLeg", new AnimationChannel(AnimationChannel.Targets.ROTATION, 
+		.addAnimation("leftLeg", new AnimationChannel(AnimationChannel.Targets.ROTATION,
 			new Keyframe(0.0F, KeyframeAnimations.degreeVec(0.0F, 0.0F, 0.0F), AnimationChannel.Interpolations.LINEAR)
 		))
-		.addAnimation("rightArm", new AnimationChannel(AnimationChannel.Targets.ROTATION, 
+		.addAnimation("rightArm", new AnimationChannel(AnimationChannel.Targets.ROTATION,
 			new Keyframe(0.0F, KeyframeAnimations.degreeVec(0.0F, 0.0F, 0.0F), AnimationChannel.Interpolations.LINEAR)
 		))
-		.addAnimation("rightLeg", new AnimationChannel(AnimationChannel.Targets.ROTATION, 
+		.addAnimation("rightLeg", new AnimationChannel(AnimationChannel.Targets.ROTATION,
 			new Keyframe(0.0F, KeyframeAnimations.degreeVec(0.0F, 0.0F, 0.0F), AnimationChannel.Interpolations.LINEAR)
+		))
+		.build();
+
+	public static final AnimationDefinition WALK = AnimationDefinition.Builder.withLength(0.0F).looping()
+		.addAnimation("leftLeg", new AnimationChannel(AnimationChannel.Targets.ROTATION,
+			new Keyframe(0.0F, KeyframeAnimations.degreeVec(25.0F, 0.0F, 0.0F), AnimationChannel.Interpolations.LINEAR)
+		))
+		.addAnimation("rightLeg", new AnimationChannel(AnimationChannel.Targets.ROTATION,
+			new Keyframe(0.0F, KeyframeAnimations.degreeVec(-25.0F, 0.0F, 0.0F), AnimationChannel.Interpolations.LINEAR)
+		))
+		.build();
+
+	/// Command-mode ability cast pose (Magic Circle/Needle Magic Circle)
+	public static final AnimationDefinition ABILITY = AnimationDefinition.Builder.withLength(0.0F).looping()
+		.addAnimation("leftArm", new AnimationChannel(AnimationChannel.Targets.ROTATION,
+			new Keyframe(0.0F, KeyframeAnimations.degreeVec(-100.0F, 0.0F, -20.0F), AnimationChannel.Interpolations.LINEAR)
+		))
+		.addAnimation("rightArm", new AnimationChannel(AnimationChannel.Targets.ROTATION,
+			new Keyframe(0.0F, KeyframeAnimations.degreeVec(-100.0F, 0.0F, 20.0F), AnimationChannel.Interpolations.LINEAR)
 		))
 		.build();
 }

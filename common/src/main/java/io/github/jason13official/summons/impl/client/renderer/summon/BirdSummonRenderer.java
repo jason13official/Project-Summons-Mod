@@ -45,7 +45,8 @@ public class BirdSummonRenderer extends EntityRenderer<AbstractCompanion> {
     poseStack.mulPose(Axis.YP.rotationDegrees(180.0F - entityYaw)); // BoatRenderer: face model in look direction
     poseStack.scale(-1.0F, -1.0F, 1.0F); // BoatRenderer: invert coordinate space
 
-    this.model.setupAnim(cube, partialTick, 0.0F, -0.1F, 0.0F, 0.0F); // BoatRenderer: do animations/rotations?
+    this.model.setupAnim(cube, cube.walkAnimation.position(partialTick), Math.min(cube.walkAnimation.speed(partialTick), 1.0F),
+        cube.tickCount + partialTick, 0.0F, 0.0F);
     this.model.renderToBuffer(poseStack, bufferSource.getBuffer(RenderType.entityCutout(TEXTURE_LOCATION)), packedLight, OverlayTexture.NO_OVERLAY);
     poseStack.popPose();
 

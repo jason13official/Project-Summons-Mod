@@ -12,12 +12,14 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.AnimationState;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 /// Mage-Type: physically weak, casts powerful area-of-effect spells (unimplemented).
@@ -26,6 +28,11 @@ public class MageSummon extends AbstractFlyingCompanion {
   private static final double SPELL_RADIUS = 12.0;
   private static final double DIRECT_ATTACK_RADIUS = 10.0;
   private static final int DIRECT_ATTACK_COOLDOWN = 40;
+
+  /// client-side render animation phase; one model instance is shared by every Mage
+  /// Summon, so this state has to live on the entity, not the model.
+  public final AnimationState idleAnimationState = new AnimationState();
+  public final AnimationState flyAnimationState = new AnimationState();
 
   private static final List<CompanionAbility> ABILITIES = List.of(
       CompanionAbility.base("Lightning Strike", 30, (companion, owner) -> {
@@ -52,6 +59,104 @@ public class MageSummon extends AbstractFlyingCompanion {
         target.hurt(companion.damageSources().mobAttack(companion),
             (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * 0.5F);
         spawnAbilityParticles(target, ParticleTypes.SNOWFLAKE, 10);
+      }),
+      // wiki: base-kit ability alongside Lightning Strike; TODO: approximated as heavy AoE
+      // slowness, not a true freeze -> no such mechanic exists in vanilla
+      CompanionAbility.base("Time Stop", 40, (companion, owner) -> {
+        AABB area = companion.getBoundingBox().inflate(SPELL_RADIUS);
+        for (LivingEntity target : companion.level().getEntitiesOfClass(LivingEntity.class, area,
+            e -> e != companion && e != owner && e.isAlive())) {
+          target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 60, 9));
+        }
+        spawnAbilityParticles(companion, ParticleTypes.END_ROD, 10);
+      }),
+      // wiki: Talon Rod gets "Circle Scissors, Freeze"
+      CompanionAbility.gated("Circle Scissors", 25, Form.TALON_ROD, 5, (companion, owner) -> {
+        LivingEntity target = findNearestTarget(companion, owner, SPELL_RADIUS);
+        if (target == null) {
+          return;
+        }
+
+        float hit = (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * 0.6F;
+        target.hurt(companion.damageSources().magic(), hit); // two hits: "scissors"
+        target.hurt(companion.damageSources().magic(), hit);
+        spawnAbilityParticles(target, ParticleTypes.CRIT, 8);
+      }),
+      // elemental spell: Fire (Scissor Rod)
+      CompanionAbility.gated("Fire Bolt", 25, Form.SCISSOR_ROD, 5, (companion, owner) -> {
+        LivingEntity target = findNearestTarget(companion, owner, SPELL_RADIUS);
+        if (target == null) {
+          return;
+        }
+
+        target.setRemainingFireTicks(60);
+        target.hurt(companion.damageSources().magic(), (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * 0.5F);
+        spawnAbilityParticles(target, ParticleTypes.FLAME, 10);
+      }),
+      // elemental spell: Ice (Ogre Rod)
+      CompanionAbility.gated("Ice Bolt", 25, Form.OGRE_ROD, 8, (companion, owner) -> {
+        LivingEntity target = findNearestTarget(companion, owner, SPELL_RADIUS);
+        if (target == null) {
+          return;
+        }
+
+        target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100, 3));
+        target.hurt(companion.damageSources().magic(), (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * 0.5F);
+        spawnAbilityParticles(target, ParticleTypes.SNOWFLAKE, 10);
+      }),
+      // elemental spell: Thunder (Goat Head) -> visual-only bolt, damage dealt explicitly below
+      // to avoid double-dipping against LightningBolt's own strike damage
+      CompanionAbility.gated("Thunder Bolt", 30, Form.GOAT_HEAD, 8, (companion, owner) -> {
+        if (!(companion.level() instanceof ServerLevel serverLevel)) {
+          return;
+        }
+
+        LivingEntity target = findNearestTarget(companion, owner, SPELL_RADIUS);
+        Vec3 strikeAt = target != null ? target.position() : owner.position();
+        LightningBolt bolt = EntityType.LIGHTNING_BOLT.create(serverLevel);
+        if (bolt != null) {
+          bolt.moveTo(strikeAt.x, strikeAt.y, strikeAt.z);
+          bolt.setVisualOnly(true);
+          serverLevel.addFreshEntity(bolt);
+        }
+
+        if (target != null) {
+          target.hurt(companion.damageSources().magic(), (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE));
+        }
+      }),
+      // elemental spell: Light (Eyeball Rod)
+      CompanionAbility.gated("Light Bolt", 25, Form.EYEBALL_ROD, 10, (companion, owner) -> {
+        LivingEntity target = findNearestTarget(companion, owner, SPELL_RADIUS);
+        if (target == null) {
+          return;
+        }
+
+        target.addEffect(new MobEffectInstance(MobEffects.GLOWING, 100, 0));
+        target.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, 40, 0));
+        target.hurt(companion.damageSources().magic(), (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * 0.5F);
+        spawnAbilityParticles(target, ParticleTypes.END_ROD, 10);
+      }),
+      // elemental spell: Earth (Embryo Rod); TODO: no dedicated earth/rubble particle used
+      CompanionAbility.gated("Earth Bolt", 30, Form.EMBRYO_ROD, 10, (companion, owner) -> {
+        LivingEntity target = findNearestTarget(companion, owner, SPELL_RADIUS);
+        if (target == null) {
+          return;
+        }
+
+        target.knockback(1.0, 0.0, 0.0);
+        target.hurt(companion.damageSources().magic(), (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * 0.8F);
+        spawnAbilityParticles(target, ParticleTypes.CRIT, 10);
+      }),
+      // wiki: "the only attack that can permanently kill Blood Skeletons"; TODO: no Blood
+      // Skeleton equivalent mob exists yet, so this just hits hard for now
+      CompanionAbility.gated("Purify", 40, Form.NAUTILUS_ROD, 10, (companion, owner) -> {
+        LivingEntity target = findNearestTarget(companion, owner, SPELL_RADIUS);
+        if (target == null) {
+          return;
+        }
+
+        target.hurt(companion.damageSources().magic(), (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * 2.0F);
+        spawnAbilityParticles(target, ParticleTypes.END_ROD, 14);
       })
   );
 

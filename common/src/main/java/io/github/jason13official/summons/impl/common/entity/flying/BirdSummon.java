@@ -2,15 +2,17 @@ package io.github.jason13official.summons.impl.common.entity.flying;
 
 import io.github.jason13official.summons.impl.common.entity.AbstractCompanion;
 import io.github.jason13official.summons.impl.common.entity.ability.CompanionAbility;
-import io.github.jason13official.summons.impl.common.entity.ai.goal.attack.CompanionRangedAttackGoal;
+import io.github.jason13official.summons.impl.common.entity.ai.goal.attack.CompanionDiveAttackGoal;
 import io.github.jason13official.summons.impl.common.evolution.EvoCrystalColor;
 import io.github.jason13official.summons.impl.common.evolution.EvolutionForm;
 import io.github.jason13official.summons.impl.common.evolution.EvolutionThreshold;
 import java.util.List;
+import java.util.Set;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
@@ -27,8 +29,8 @@ public class BirdSummon extends AbstractFlyingCompanion {
 
   private static final double CARPET_BOMBS_FIND_RADIUS = 10.0;
   private static final double CARPET_BOMBS_AOE_RADIUS = 2.0;
-  private static final double DIRECT_ATTACK_RADIUS = 10.0;
-  private static final int DIRECT_ATTACK_COOLDOWN = 30;
+  private static final double DIVE_ATTACK_HIT_RADIUS = 1.5;
+  private static final int DIVE_ATTACK_COOLDOWN = 20;
 
   private static final List<CompanionAbility> ABILITIES = List.of(
       CompanionAbility.base("Glide", 100, (companion, owner) -> {
@@ -50,6 +52,55 @@ public class BirdSummon extends AbstractFlyingCompanion {
         }
 
         spawnAbilityParticles(primary, ParticleTypes.POOF, 6);
+      }),
+      // wiki: Skull Wing gets "Carpet Bombs, Bone Shot" -> a real fired arrow, since the
+      // basic direct attack is now a physical swoop/dive-bomb instead (see registerGoals)
+      CompanionAbility.gated("Bone Shot", 20, Form.SKULL_WING, 5, (companion, owner) -> {
+        LivingEntity target = findNearestTarget(companion, owner, CARPET_BOMBS_FIND_RADIUS);
+        if (target != null) {
+          shootArrow(companion, target);
+        }
+      }),
+      // Khaos's darkness-elemental attack
+      CompanionAbility.gated("Shadow Talon", 25, Form.KHAOS, 5, (companion, owner) -> {
+        LivingEntity target = findNearestTarget(companion, owner, CARPET_BOMBS_FIND_RADIUS);
+        if (target == null) {
+          return;
+        }
+
+        target.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, 60, 0));
+        target.hurt(companion.damageSources().mobAttack(companion), (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE));
+        spawnAbilityParticles(target, ParticleTypes.SQUID_INK, 8);
+      }),
+      // wiki: Phoenix/Crimson's fire-elemental "Big Bang" -> "the only attack besides Purify
+      // that can kill Isaac's Abel," and it also kills the Phoenix/Crimson using it
+      new CompanionAbility("Big Bang", 60, Set.of(Form.PHOENIX, Form.CRIMSON), 8, (companion, owner) -> {
+        AABB area = companion.getBoundingBox().inflate(4.0);
+        float damage = (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * 2.0F;
+
+        for (LivingEntity target : companion.level().getEntitiesOfClass(LivingEntity.class, area,
+            e -> e != owner && e.isAlive())) {
+          target.hurt(companion.damageSources().mobAttack(companion), damage); // includes the companion itself
+        }
+
+        spawnAbilityParticles(companion, ParticleTypes.FLAME, 16);
+      }),
+      // Indigo's ice-elemental attack
+      CompanionAbility.gated("Frost Beak", 25, Form.INDIGO, 5, (companion, owner) -> {
+        LivingEntity target = findNearestTarget(companion, owner, CARPET_BOMBS_FIND_RADIUS);
+        if (target == null) {
+          return;
+        }
+
+        target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 80, 2));
+        target.hurt(companion.damageSources().mobAttack(companion),
+            (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * 0.75F);
+        spawnAbilityParticles(target, ParticleTypes.SNOWFLAKE, 8);
+      }),
+      // wiki: Wingosaurus's upgraded Glide, reaching the Tower of Evermore
+      CompanionAbility.gated("Long Glide", 200, Form.WINGOSAURUS, 8, (companion, owner) -> {
+        owner.addEffect(new MobEffectInstance(MobEffects.SLOW_FALLING, 200));
+        spawnAbilityParticles(owner, ParticleTypes.CLOUD, 12);
       })
   );
 
@@ -68,14 +119,26 @@ public class BirdSummon extends AbstractFlyingCompanion {
   protected void registerGoals() {
     super.registerGoals();
     this.goalSelector.addGoal(1,
-        new CompanionRangedAttackGoal(this, 1.0, DIRECT_ATTACK_COOLDOWN, DIRECT_ATTACK_RADIUS, BirdSummon::shootArrow));
+        new CompanionDiveAttackGoal(this, 1.4, DIVE_ATTACK_HIT_RADIUS, DIVE_ATTACK_COOLDOWN, BirdSummon::diveAttack));
   }
 
+  /// physical swoop/dive-bomb -> Bird's basic direct attack
+  private static void diveAttack(AbstractCompanion companion, LivingEntity target) {
+    companion.swing(InteractionHand.MAIN_HAND);
+    float damage = (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE);
+    target.hurt(companion.damageSources().mobAttack(companion), damage);
+    target.knockback(0.6, companion.getX() - target.getX(), companion.getZ() - target.getZ());
+    spawnAbilityParticles(target, ParticleTypes.CLOUD, 4);
+    companion.grantDirectAttackExperience();
+  }
+
+  /// fires a real Arrow entity -> used by the Bone Shot ability
   private static void shootArrow(AbstractCompanion companion, LivingEntity target) {
     if (!(companion.level() instanceof ServerLevel serverLevel)) {
       return;
     }
 
+    companion.swing(InteractionHand.MAIN_HAND);
     Arrow arrow = new Arrow(serverLevel, companion, new ItemStack(Items.ARROW), null);
     arrow.setBaseDamage(companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * 0.5);
 
@@ -86,7 +149,6 @@ public class BirdSummon extends AbstractFlyingCompanion {
     arrow.shoot(dx, dy + horizontalDistance * 0.2, dz, 1.6F, 6.0F);
 
     serverLevel.addFreshEntity(arrow);
-    companion.grantDirectAttackExperience();
   }
 
   @Override

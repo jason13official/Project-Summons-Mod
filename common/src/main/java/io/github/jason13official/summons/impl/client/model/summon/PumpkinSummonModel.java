@@ -1,10 +1,10 @@
 package io.github.jason13official.summons.impl.client.model.summon;
 
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexConsumer;
 import io.github.jason13official.summons.Summons;
+import io.github.jason13official.summons.impl.client.model.anim.PumpkinSummonAnimations;
 import io.github.jason13official.summons.impl.common.entity.AbstractCompanion;
-import net.minecraft.client.model.EntityModel;
+import net.minecraft.client.model.HierarchicalModel;
+import net.minecraft.util.Mth;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
@@ -14,11 +14,12 @@ import net.minecraft.client.model.geom.builders.LayerDefinition;
 import net.minecraft.client.model.geom.builders.MeshDefinition;
 import net.minecraft.client.model.geom.builders.PartDefinition;
 
-public class PumpkinSummonModel extends EntityModel<AbstractCompanion> {
+public class PumpkinSummonModel extends HierarchicalModel<AbstractCompanion> {
 
   // This layer location should be baked with EntityRendererProvider.Context in the entity renderer and passed into this model's constructor
   public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(Summons.identifier("pumpkin"), "main");
 
+	private final ModelPart root;
 	private final ModelPart piece2;
 	private final ModelPart piece1;
 	private final ModelPart head;
@@ -27,6 +28,7 @@ public class PumpkinSummonModel extends EntityModel<AbstractCompanion> {
 	private final ModelPart arm2;
 
 	public PumpkinSummonModel(ModelPart root) {
+		this.root = root;
 		this.piece2 = root.getChild("piece2");
 		this.piece1 = this.piece2.getChild("piece1");
 		this.head = this.piece1.getChild("head");
@@ -55,12 +57,29 @@ public class PumpkinSummonModel extends EntityModel<AbstractCompanion> {
 	}
 
   @Override
-  public void setupAnim(AbstractCompanion entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
-
+  public ModelPart root() {
+    return this.root;
   }
 
   @Override
-  public void renderToBuffer(PoseStack poseStack, VertexConsumer vertexConsumer, int packedLight, int packedOverlay, int color) {
-    piece2.render(poseStack, vertexConsumer, packedLight, packedOverlay);
+  public void setupAnim(AbstractCompanion entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
+    this.root().getAllParts().forEach(ModelPart::resetPose);
+
+    if (entity.isAbilityBusy()) {
+      this.applyStatic(PumpkinSummonAnimations.POSE);
+      return;
+    }
+
+    float swing = entity.getAttackAnim(1.0F);
+    if (swing > 0.0F) {
+      float amount = Mth.sin(swing * (float) Math.PI) * -0.8F;
+      this.arm1.xRot += amount;
+      this.arm2.xRot += amount;
+    } else {
+      // no torso lean -> only the arms sway with limbSwing, piece1 stays put
+      float sway = Mth.triangleWave(limbSwing, 13.0F) * limbSwingAmount * 0.3F;
+      this.arm1.zRot += sway;
+      this.arm2.zRot -= sway;
+    }
   }
 }

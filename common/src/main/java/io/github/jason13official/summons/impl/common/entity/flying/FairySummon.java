@@ -9,12 +9,14 @@ import java.util.List;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.AABB;
 
 /// Fairy-Type: support only, heals/cures the owner. Per wiki, most forms don't attack at
 /// all; here it learns a weak poison-tick basic attack at [#DIRECT_ATTACK_MIN_LEVEL].
@@ -27,7 +29,7 @@ public class FairySummon extends AbstractFlyingCompanion {
         owner.heal(2.0F);
         spawnAbilityParticles(owner, ParticleTypes.HEART, 5);
       }),
-      // wiki: Leaffle gets "Time Heal, Poison Powder" - we only have Time Heal implemented
+      // wiki: Leaffle gets "Time Heal, Poison Powder" -> we only have Time Heal implemented
       CompanionAbility.gated("Time Heal", 100, Form.LEAFFLE, 5, (companion, owner) -> {
         owner.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 100, 1)); // ~4.0F over the duration
         spawnAbilityParticles(owner, ParticleTypes.HEART, 5);
@@ -41,7 +43,26 @@ public class FairySummon extends AbstractFlyingCompanion {
         owner.removeEffect(MobEffects.POISON);
         owner.removeEffect(MobEffects.WITHER);
         spawnAbilityParticles(owner, ParticleTypes.HEART, 5);
-      })
+      }),
+      // wiki: Leaffle gets "Time Heal, Poison Powder" -> small AoE poison around the companion
+      CompanionAbility.gated("Poison Powder", 30, Form.LEAFFLE, 5, (companion, owner) -> {
+        AABB area = companion.getBoundingBox().inflate(3.0);
+        for (LivingEntity target : companion.level().getEntitiesOfClass(LivingEntity.class, area,
+            e -> e != companion && e != owner && e.isAlive())) {
+          target.addEffect(new MobEffectInstance(MobEffects.POISON, 60, 0));
+        }
+        spawnAbilityParticles(companion, ParticleTypes.WITCH, 8);
+      }),
+      // wiki-mentioned but no exact form given; placed here as a mid-tier heal upgrade
+      CompanionAbility.gated("Healing Field", 60, Form.HONEY_BEE, 8, (companion, owner) -> {
+        owner.heal(4.0F);
+        spawnAbilityParticles(owner, ParticleTypes.HEART, 10);
+      }),
+      // wiki: base-kit ability alongside Heal Lv.1; TODO: no chest-opening logic yet, stub only
+      CompanionAbility.base("Unlock", 20, (companion, owner) -> spawnAbilityParticles(owner, ParticleTypes.HAPPY_VILLAGER, 5)),
+      // wiki: "reads Sage Eneomaos inscriptions"; TODO: no such structure exists, stub only
+      CompanionAbility.gated("Decipher", 40, Form.PROBOSCIS_FAIRY, 10,
+          (companion, owner) -> spawnAbilityParticles(owner, ParticleTypes.ENCHANT, 10))
   );
 
   public FairySummon(EntityType<? extends AbstractFlyingCompanion> entityType, Level level) {
@@ -63,6 +84,7 @@ public class FairySummon extends AbstractFlyingCompanion {
 
   @Override
   public boolean doHurtTarget(Entity entity) {
+    this.swing(InteractionHand.MAIN_HAND);
     if (!(entity instanceof LivingEntity target)) {
       return false;
     }

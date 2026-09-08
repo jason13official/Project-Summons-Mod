@@ -1,10 +1,11 @@
 package io.github.jason13official.summons.impl.client.model.summon;
 
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexConsumer;
 import io.github.jason13official.summons.Summons;
+import io.github.jason13official.summons.impl.client.model.anim.DevilSummonAnimations;
 import io.github.jason13official.summons.impl.common.entity.AbstractCompanion;
-import net.minecraft.client.model.EntityModel;
+import io.github.jason13official.summons.impl.common.party.CompanionMode;
+import net.minecraft.client.model.HierarchicalModel;
+import net.minecraft.util.Mth;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
@@ -14,11 +15,12 @@ import net.minecraft.client.model.geom.builders.LayerDefinition;
 import net.minecraft.client.model.geom.builders.MeshDefinition;
 import net.minecraft.client.model.geom.builders.PartDefinition;
 
-public class DevilSummonModel extends EntityModel<AbstractCompanion> {
+public class DevilSummonModel extends HierarchicalModel<AbstractCompanion> {
 
   // This layer location should be baked with EntityRendererProvider.Context in the entity renderer and passed into this model's constructor
-  public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(Summons.identifier("cube"), "main");
+  public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(Summons.identifier("devil"), "main");
 
+  private final ModelPart root;
   private final ModelPart body;
 	private final ModelPart head;
 	private final ModelPart hat;
@@ -29,6 +31,7 @@ public class DevilSummonModel extends EntityModel<AbstractCompanion> {
 	private final ModelPart leftLeg;
 
 	public DevilSummonModel(ModelPart root) {
+		this.root = root;
 		this.body = root.getChild("body");
 		this.head = this.body.getChild("head");
 		this.hat = this.head.getChild("hat");
@@ -63,12 +66,39 @@ public class DevilSummonModel extends EntityModel<AbstractCompanion> {
 	}
 
 	@Override
-	public void setupAnim(AbstractCompanion entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
-
+	public ModelPart root() {
+		return this.root;
 	}
 
 	@Override
-	public void renderToBuffer(PoseStack poseStack, VertexConsumer vertexConsumer, int packedLight, int packedOverlay, int color) {
-		body.render(poseStack, vertexConsumer, packedLight, packedOverlay);
+	public void setupAnim(AbstractCompanion entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
+		this.root().getAllParts().forEach(ModelPart::resetPose);
+
+		if (entity.getMode() == CompanionMode.DEFEND) {
+			this.applyStatic(DevilSummonAnimations.SCARY_FACE);
+			return;
+		}
+
+		if (entity.isAbilityBusy()) {
+			this.applyStatic(DevilSummonAnimations.ABILITY);
+			return;
+		}
+
+		// continuous leg swing off limbSwingAmount, not a discrete onGround flip -> onGround()
+		// flickers for a tick or two while landing, which snapped legs between poses before.
+		// Scaled way down while airborne: horizontal flight speed alone still drives
+		// limbSwingAmount, and full ground-walk amplitude looked like flailing mid-air.
+		float legScale = entity.onGround() ? 1.0F : 0.15F;
+		this.leftLeg.xRot = Mth.triangleWave(limbSwing, 13.0F) * limbSwingAmount * legScale;
+		this.rightLeg.xRot = -Mth.triangleWave(limbSwing, 13.0F) * limbSwingAmount * legScale;
+
+		float swing = entity.getAttackAnim(1.0F);
+		if (swing > 0.0F) {
+			float amount = Mth.sin(swing * (float) Math.PI) * -1.2F;
+			this.leftArm.xRot = amount;
+			this.rightArm.xRot = amount;
+		} else {
+			this.applyStatic(DevilSummonAnimations.BOB); // subtle idle/hover arm sway
+		}
 	}
 }

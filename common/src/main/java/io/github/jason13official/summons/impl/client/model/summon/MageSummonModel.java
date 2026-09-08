@@ -1,10 +1,10 @@
 package io.github.jason13official.summons.impl.client.model.summon;
 
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexConsumer;
 import io.github.jason13official.summons.Summons;
+import io.github.jason13official.summons.impl.client.model.anim.MageSummonAnimations;
 import io.github.jason13official.summons.impl.common.entity.AbstractCompanion;
-import net.minecraft.client.model.EntityModel;
+import io.github.jason13official.summons.impl.common.entity.flying.MageSummon;
+import net.minecraft.client.model.HierarchicalModel;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
@@ -14,7 +14,7 @@ import net.minecraft.client.model.geom.builders.LayerDefinition;
 import net.minecraft.client.model.geom.builders.MeshDefinition;
 import net.minecraft.client.model.geom.builders.PartDefinition;
 
-public class MageSummonModel extends EntityModel<AbstractCompanion> {
+public class MageSummonModel extends HierarchicalModel<AbstractCompanion> {
 
   // This layer location should be baked with EntityRendererProvider.Context in the entity renderer and passed into this model's constructor
   public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(Summons.identifier("mage"), "main");
@@ -64,12 +64,28 @@ public class MageSummonModel extends EntityModel<AbstractCompanion> {
 	}
 
   @Override
-  public void setupAnim(AbstractCompanion entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
-
+  public ModelPart root() {
+    return this.root;
   }
 
   @Override
-  public void renderToBuffer(PoseStack poseStack, VertexConsumer vertexConsumer, int packedLight, int packedOverlay, int color) {
-    root.render(poseStack, vertexConsumer, packedLight, packedOverlay);
+  public void setupAnim(AbstractCompanion entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
+    this.root().getAllParts().forEach(ModelPart::resetPose);
+
+    if (!(entity instanceof MageSummon mage)) {
+      return;
+    }
+
+    boolean busy = mage.isAbilityBusy() || mage.isAggressive();
+    boolean flying = !mage.onGround();
+
+    mage.idleAnimationState.animateWhen(!busy && !flying, mage.tickCount);
+    mage.flyAnimationState.animateWhen(!busy && flying, mage.tickCount);
+    this.animate(mage.idleAnimationState, MageSummonAnimations.IDLE, ageInTicks);
+    this.animate(mage.flyAnimationState, MageSummonAnimations.FLY, ageInTicks);
+
+    if (busy) {
+      this.applyStatic(MageSummonAnimations.HOLD_ITEM);
+    }
   }
 }

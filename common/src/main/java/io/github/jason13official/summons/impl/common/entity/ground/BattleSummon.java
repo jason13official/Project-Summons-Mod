@@ -6,7 +6,10 @@ import io.github.jason13official.summons.impl.common.evolution.EvoCrystalColor;
 import io.github.jason13official.summons.impl.common.evolution.EvolutionForm;
 import io.github.jason13official.summons.impl.common.evolution.EvolutionThreshold;
 import java.util.List;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
@@ -14,6 +17,8 @@ import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.AABB;
 
 /// Battle-Type: physically strong, lots of health and hits heavy
@@ -44,6 +49,35 @@ public class BattleSummon extends AbstractGroundCompanion {
         target.hurt(companion.damageSources().mobAttack(companion), damage);
         target.knockback(0.8, companion.getX() - target.getX(), companion.getZ() - target.getZ());
         spawnAbilityParticles(target, ParticleTypes.CRIT, 8);
+      }),
+      // wiki: Golem gets "Hip Press, Hip Press Lv.2"
+      CompanionAbility.gated("Hip Press Lv.2", 30, Form.GOLEM, 10, (companion, owner) -> {
+        LivingEntity target = findNearestTarget(companion, owner, AURA_BLAST_RADIUS);
+        if (target == null) {
+          return;
+        }
+
+        float damage = (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * 2.0F;
+        target.hurt(companion.damageSources().mobAttack(companion), damage);
+        target.knockback(1.2, companion.getX() - target.getX(), companion.getZ() - target.getZ());
+        spawnAbilityParticles(target, ParticleTypes.CRIT, 12);
+      }),
+      // wiki: "breaks sealed iron doors, gained after first Trevor Belmont fight"
+      CompanionAbility.gated("Brute Force", 40, Form.SPEED_MAIL, 5, (companion, owner) -> {
+        BlockPos center = companion.blockPosition();
+        for (BlockPos pos : BlockPos.betweenClosed(center.offset(-1, -1, -1), center.offset(1, 2, 1))) {
+          Block block = companion.level().getBlockState(pos).getBlock();
+          if (block == Blocks.IRON_DOOR || block == Blocks.IRON_TRAPDOOR) {
+            companion.level().removeBlock(pos, false);
+            spawnAbilityParticles(companion, ParticleTypes.POOF, 10);
+            break;
+          }
+        }
+      }),
+      // wiki: "come later," no form given; TODO: no owner-riding mechanic exists yet, stub only
+      CompanionAbility.gated("Shoulder Ride", 60, Form.JUGGERNAUT, 10, (companion, owner) -> {
+        owner.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 100, 1));
+        spawnAbilityParticles(owner, ParticleTypes.CLOUD, 6);
       })
   );
 

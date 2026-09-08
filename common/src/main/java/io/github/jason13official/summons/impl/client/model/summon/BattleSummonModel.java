@@ -1,10 +1,11 @@
 package io.github.jason13official.summons.impl.client.model.summon;
 
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexConsumer;
 import io.github.jason13official.summons.Summons;
+import io.github.jason13official.summons.impl.client.model.anim.BattleSummonAnimations;
 import io.github.jason13official.summons.impl.common.entity.AbstractCompanion;
-import net.minecraft.client.model.EntityModel;
+import io.github.jason13official.summons.impl.common.party.CompanionMode;
+import net.minecraft.client.model.HierarchicalModel;
+import net.minecraft.util.Mth;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
@@ -14,11 +15,12 @@ import net.minecraft.client.model.geom.builders.LayerDefinition;
 import net.minecraft.client.model.geom.builders.MeshDefinition;
 import net.minecraft.client.model.geom.builders.PartDefinition;
 
-public class BattleSummonModel extends EntityModel<AbstractCompanion> {
+public class BattleSummonModel extends HierarchicalModel<AbstractCompanion> {
 
   // This layer location should be baked with EntityRendererProvider.Context in the entity renderer and passed into this model's constructor
   public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(Summons.identifier("battle"), "main");
 
+  private final ModelPart root;
   private final ModelPart body;
 	private final ModelPart head;
 	private final ModelPart arm0;
@@ -27,6 +29,7 @@ public class BattleSummonModel extends EntityModel<AbstractCompanion> {
 	private final ModelPart leg1;
 
 	public BattleSummonModel(ModelPart root) {
+		this.root = root;
 		this.body = root.getChild("body");
 		this.head = this.body.getChild("head");
 		this.arm0 = this.body.getChild("arm0");
@@ -71,12 +74,36 @@ public class BattleSummonModel extends EntityModel<AbstractCompanion> {
 	}
 
 	@Override
-	public void setupAnim(AbstractCompanion entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
-
+	public ModelPart root() {
+		return this.root;
 	}
 
 	@Override
-	public void renderToBuffer(PoseStack poseStack, VertexConsumer vertexConsumer, int packedLight, int packedOverlay, int color) {
-		body.render(poseStack, vertexConsumer, packedLight, packedOverlay);
+	public void setupAnim(AbstractCompanion entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
+		this.root().getAllParts().forEach(ModelPart::resetPose);
+
+		if (entity.getMode() == CompanionMode.DEFEND) {
+			this.applyStatic(BattleSummonAnimations.FLOWER);
+			return;
+		}
+
+		if (entity.isAbilityBusy()) {
+			this.applyStatic(BattleSummonAnimations.MOVE_TO_TARGET);
+			return;
+		}
+
+		// IronGolem.class: legs always follow limbSwing/limbSwingAmount, not a discrete walk pose
+		this.leg0.xRot = -1.5F * Mth.triangleWave(limbSwing, 13.0F) * limbSwingAmount;
+		this.leg1.xRot = 1.5F * Mth.triangleWave(limbSwing, 13.0F) * limbSwingAmount;
+
+		float swing = entity.getAttackAnim(1.0F);
+		if (swing > 0.0F) {
+			float amount = Mth.sin(swing * (float) Math.PI) * -1.2F; // one swing-down-and-back cycle over the hit
+			this.arm0.xRot = amount;
+			this.arm1.xRot = amount;
+		} else {
+			this.arm0.xRot = (-0.2F + 1.5F * Mth.triangleWave(limbSwing, 13.0F)) * limbSwingAmount;
+			this.arm1.xRot = (-0.2F - 1.5F * Mth.triangleWave(limbSwing, 13.0F)) * limbSwingAmount;
+		}
 	}
 }

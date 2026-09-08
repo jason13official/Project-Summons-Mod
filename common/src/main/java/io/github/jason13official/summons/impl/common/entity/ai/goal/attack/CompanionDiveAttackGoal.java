@@ -6,24 +6,24 @@ import java.util.function.BiConsumer;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.goal.Goal;
 
-/// Generic ranged basic attack: closes to `attackRadius`, then fires `effect` on cooldown.
-/// Used by types whose basic attack isn't melee (Bird's arrows, Mage's zap).
-public class CompanionRangedAttackGoal extends Goal {
+/// Physical swoop/dive-bomb basic attack for flying types: closes on the target directly
+/// (no ground pathfinding) and fires `onHit` on contact, cooldown-gated.
+public class CompanionDiveAttackGoal extends Goal {
 
   private final AbstractCompanion companion;
   private final double speed;
-  private final int cooldownTicks;
-  private final double attackRadius;
-  private final BiConsumer<AbstractCompanion, LivingEntity> effect;
+  private final double hitRadius;
+  private final int hitCooldownTicks;
+  private final BiConsumer<AbstractCompanion, LivingEntity> onHit;
   private int cooldown;
 
-  public CompanionRangedAttackGoal(AbstractCompanion companion, double speed, int cooldownTicks,
-                                    double attackRadius, BiConsumer<AbstractCompanion, LivingEntity> effect) {
+  public CompanionDiveAttackGoal(AbstractCompanion companion, double speed, double hitRadius, int hitCooldownTicks,
+                                  BiConsumer<AbstractCompanion, LivingEntity> onHit) {
     this.companion = companion;
     this.speed = speed;
-    this.cooldownTicks = cooldownTicks;
-    this.attackRadius = attackRadius;
-    this.effect = effect;
+    this.hitRadius = hitRadius;
+    this.hitCooldownTicks = hitCooldownTicks;
+    this.onHit = onHit;
     this.setFlags(EnumSet.of(Flag.MOVE, Flag.LOOK));
   }
 
@@ -46,8 +46,8 @@ public class CompanionRangedAttackGoal extends Goal {
 
   @Override
   public void stop() {
-    this.companion.getNavigation().stop();
     this.companion.setAggressive(false);
+    this.companion.getNavigation().stop();
   }
 
   @Override
@@ -58,23 +58,16 @@ public class CompanionRangedAttackGoal extends Goal {
     }
 
     this.companion.getLookControl().setLookAt(target, 30.0F, 30.0F);
-    double radiusSqr = this.attackRadius * this.attackRadius;
-    double distanceSqr = this.companion.distanceToSqr(target);
-
-    if (distanceSqr > radiusSqr) {
-      this.companion.getNavigation().moveTo(target, this.speed);
-    } else {
-      this.companion.getNavigation().stop();
-    }
+    this.companion.getNavigation().moveTo(target, this.speed);
 
     if (this.cooldown > 0) {
       this.cooldown--;
       return;
     }
 
-    if (distanceSqr <= radiusSqr && this.companion.hasLineOfSight(target)) {
-      this.effect.accept(this.companion, target);
-      this.cooldown = this.cooldownTicks;
+    if (this.companion.distanceTo(target) <= this.hitRadius) {
+      this.onHit.accept(this.companion, target);
+      this.cooldown = this.hitCooldownTicks;
     }
   }
 }

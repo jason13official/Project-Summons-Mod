@@ -1,10 +1,10 @@
 package io.github.jason13official.summons.impl.client.model.summon;
 
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexConsumer;
 import io.github.jason13official.summons.Summons;
+import io.github.jason13official.summons.impl.client.model.anim.BirdSummonAnimations;
 import io.github.jason13official.summons.impl.common.entity.AbstractCompanion;
-import net.minecraft.client.model.EntityModel;
+import net.minecraft.client.model.HierarchicalModel;
+import net.minecraft.util.Mth;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
@@ -14,11 +14,12 @@ import net.minecraft.client.model.geom.builders.LayerDefinition;
 import net.minecraft.client.model.geom.builders.MeshDefinition;
 import net.minecraft.client.model.geom.builders.PartDefinition;
 
-public class BirdSummonModel extends EntityModel<AbstractCompanion> {
+public class BirdSummonModel extends HierarchicalModel<AbstractCompanion> {
 
   // This layer location should be baked with EntityRendererProvider.Context in the entity renderer and passed into this model's constructor
   public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(Summons.identifier("bird"), "main");
 
+	private final ModelPart root;
 	private final ModelPart body;
 	private final ModelPart wing0;
 	private final ModelPart wing1;
@@ -28,6 +29,7 @@ public class BirdSummonModel extends EntityModel<AbstractCompanion> {
 	private final ModelPart leg1;
 
 	public BirdSummonModel(ModelPart root) {
+		this.root = root;
 		this.body = root.getChild("body");
 		this.wing0 = this.body.getChild("wing0");
 		this.wing1 = this.body.getChild("wing1");
@@ -63,16 +65,34 @@ public class BirdSummonModel extends EntityModel<AbstractCompanion> {
 	}
 
 	@Override
-	public void setupAnim(AbstractCompanion entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
-
+	public ModelPart root() {
+		return this.root;
 	}
 
 	@Override
-	public void renderToBuffer(PoseStack poseStack, VertexConsumer vertexConsumer, int packedLight, int packedOverlay, int color) {
-		body.render(poseStack, vertexConsumer, packedLight, packedOverlay);
-		head.render(poseStack, vertexConsumer, packedLight, packedOverlay);
-		tail.render(poseStack, vertexConsumer, packedLight, packedOverlay);
-		leg0.render(poseStack, vertexConsumer, packedLight, packedOverlay);
-		leg1.render(poseStack, vertexConsumer, packedLight, packedOverlay);
+	public void setupAnim(AbstractCompanion entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
+		this.root().getAllParts().forEach(ModelPart::resetPose);
+
+		if (entity.isAbilityBusy()) {
+			this.applyStatic(BirdSummonAnimations.ABILITY);
+		} else if (entity.getAttackAnim(1.0F) > 0.0F) {
+			this.applyStatic(BirdSummonAnimations.ATTACK);
+		} else if (!entity.onGround()) {
+			this.applyStatic(BirdSummonAnimations.FLYING);
+		} else if (limbSwingAmount > 0.05F) {
+			this.applyStatic(BirdSummonAnimations.MOVING);
+			this.leg0.xRot += Mth.cos(limbSwing * 0.6662F) * 1.4F * limbSwingAmount;
+			this.leg1.xRot += Mth.cos(limbSwing * 0.6662F + (float) Math.PI) * 1.4F * limbSwingAmount;
+		} else {
+			this.applyStatic(BirdSummonAnimations.STANDING);
+		}
+
+		// bounded flap while flying, subtle idle sway while grounded -> a static pose alone
+		// has zero motion. Explicitly clamped so it can never rotate the wing into the body.
+		float amplitude = !entity.onGround() ? 0.9F : 0.15F;
+		float rate = !entity.onGround() ? 2.0F : 0.5F;
+		float delta = Mth.sin(ageInTicks * rate) * amplitude;
+		this.wing0.zRot = Mth.clamp(this.wing0.zRot - delta, -1.2F, 1.2F);
+		this.wing1.zRot = Mth.clamp(this.wing1.zRot + delta, -1.2F, 1.2F);
 	}
 }
