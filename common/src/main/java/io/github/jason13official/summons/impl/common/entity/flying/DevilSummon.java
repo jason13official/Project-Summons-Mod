@@ -1,6 +1,7 @@
 package io.github.jason13official.summons.impl.common.entity.flying;
 
 import io.github.jason13official.summons.Summons;
+import io.github.jason13official.summons.impl.common.entity.OwnerStatBonusKit;
 import io.github.jason13official.summons.impl.common.entity.ability.CompanionAbility;
 import io.github.jason13official.summons.impl.common.evolution.EvolutionForm;
 import io.github.jason13official.summons.impl.common.evolution.EvolutionThreshold;
@@ -19,6 +20,9 @@ import net.minecraft.world.phys.AABB;
 
 /// Devil-Type: balance of Battle- and Bird-Type, high mobility and attack power, aggressive.
 public class DevilSummon extends AbstractFlyingCompanion {
+
+  // wiki: STR +4/CON +2/LCK +1 initial, +14/+4/+5 growth
+  private static final OwnerStatBonusKit OWNER_STAT_BONUS = new OwnerStatBonusKit(4, 14, 2, 4, 1, 5);
 
   private static final double MAGIC_CIRCLE_RADIUS = 3.0;
   // wiki: Magic Circle turns Hector (and the I.D.) into a magic circle to slide under low
@@ -105,6 +109,11 @@ public class DevilSummon extends AbstractFlyingCompanion {
   @Override
   protected List<CompanionAbility> allAbilities() {
     return ABILITIES;
+  }
+
+  @Override
+  public OwnerStatBonusKit ownerStatBonus() {
+    return OWNER_STAT_BONUS;
   }
 
   @Override

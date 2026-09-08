@@ -1,6 +1,7 @@
 package io.github.jason13official.summons.impl.common.entity.ground;
 
 import io.github.jason13official.summons.impl.common.entity.AbstractCompanion;
+import io.github.jason13official.summons.impl.common.entity.OwnerStatBonusKit;
 import io.github.jason13official.summons.impl.common.entity.ability.CompanionAbility;
 import io.github.jason13official.summons.impl.common.evolution.EvoCrystalColor;
 import io.github.jason13official.summons.impl.common.evolution.EvolutionForm;
@@ -20,6 +21,9 @@ import net.minecraft.world.phys.AABB;
 public class PumpkinSummon extends AbstractGroundCompanion {
 
   private static final double POSE_RADIUS = 2.0;
+
+  // wiki: STR +10/CON +4/LCK +5 initial, +60/+18/+50 growth; biggest owner buff of any type
+  private static final OwnerStatBonusKit OWNER_STAT_BONUS = new OwnerStatBonusKit(10, 60, 4, 18, 5, 50);
 
   /// "They only have one ability, Pose, which inflicts minimum damage to nearby enemies,
   /// although Pumpkin will be completely vulnerable while performing it."
@@ -56,6 +60,11 @@ public class PumpkinSummon extends AbstractGroundCompanion {
   @Override
   protected List<CompanionAbility> allAbilities() {
     return ABILITIES;
+  }
+
+  @Override
+  public OwnerStatBonusKit ownerStatBonus() {
+    return OWNER_STAT_BONUS;
   }
 
   @Override

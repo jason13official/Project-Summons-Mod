@@ -11,7 +11,9 @@
     "LivingEntityEvoCrystalDropMixin",
     "ItemEntityEvoCrystalPickupMixin",
     "LivingEntityHeartDropMixin",
-    "ItemEntityHeartPickupMixin"
+    "ItemEntityHeartPickupMixin",
+    "LivingEntityEffectResistMixin",
+    "LivingEntityLuckyDropMixin"
   ],
   "client": [
     "MinecraftMixin"

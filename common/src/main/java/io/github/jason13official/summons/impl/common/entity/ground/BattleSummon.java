@@ -1,6 +1,7 @@
 package io.github.jason13official.summons.impl.common.entity.ground;
 
 import io.github.jason13official.summons.impl.common.entity.AbstractCompanion;
+import io.github.jason13official.summons.impl.common.entity.OwnerStatBonusKit;
 import io.github.jason13official.summons.impl.common.entity.ability.CompanionAbility;
 import io.github.jason13official.summons.impl.common.evolution.EvoCrystalColor;
 import io.github.jason13official.summons.impl.common.evolution.EvolutionForm;
@@ -27,8 +28,10 @@ public class BattleSummon extends AbstractGroundCompanion {
 
   private static final double AURA_BLAST_RADIUS = 3.0;
 
-  // guide_paste.md's Battle-Type FAQ is the source of truth for names/effects here, not just
-  // the wiki's ability-name list.
+  // wiki: STR +10 initial, +40 growth
+  private static final OwnerStatBonusKit OWNER_STAT_BONUS = new OwnerStatBonusKit(10, 40, 0, 0, 0, 0);
+
+  /// Battle-Type https://gamefaqs.gamespot.com/ps2/925894-castlevania-curse-of-darkness/faqs
   private static final List<CompanionAbility> ABILITIES = List.of(
       // "Sends out a wave of energy that damages surrounding opponents."
       CompanionAbility.base("Aura Blast", 20, (companion, owner) -> {
@@ -245,6 +248,11 @@ public class BattleSummon extends AbstractGroundCompanion {
   @Override
   protected List<CompanionAbility> allAbilities() {
     return ABILITIES;
+  }
+
+  @Override
+  public OwnerStatBonusKit ownerStatBonus() {
+    return OWNER_STAT_BONUS;
   }
 
   @Override

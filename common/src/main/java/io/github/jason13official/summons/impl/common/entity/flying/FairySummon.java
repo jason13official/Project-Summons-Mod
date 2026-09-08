@@ -1,5 +1,6 @@
 package io.github.jason13official.summons.impl.common.entity.flying;
 
+import io.github.jason13official.summons.impl.common.entity.OwnerStatBonusKit;
 import io.github.jason13official.summons.impl.common.entity.ability.CompanionAbility;
 import io.github.jason13official.summons.impl.common.entity.ai.goal.attack.CompanionLevelGatedMeleeAttackGoal;
 import io.github.jason13official.summons.impl.common.evolution.EvoCrystalColor;
@@ -32,9 +33,10 @@ public class FairySummon extends AbstractFlyingCompanion {
 
   private static final int DIRECT_ATTACK_MIN_LEVEL = 4;
 
-  // guide_paste.md's in-game ability FAQ is the source of truth for names/effects here, not
-  // just the wiki's ability-name list (e.g. it's what surfaces the real Killer Bee/Hornet
-  // kits, and that Proboscis Fairy really does get 4 abilities, not 2).
+  // wiki: LCK +1 initial, +14 growth
+  private static final OwnerStatBonusKit OWNER_STAT_BONUS = new OwnerStatBonusKit(0, 0, 0, 0, 1, 14);
+
+  /// Fairy-type https://gamefaqs.gamespot.com/ps2/925894-castlevania-curse-of-darkness/faqs
   private static final List<CompanionAbility> ABILITIES = List.of(
       // "Allows Hector to open chests." TODO: no chest-opening logic exists, proxied as a
       // temporary Luck boost (better loot access)
@@ -242,6 +244,11 @@ public class FairySummon extends AbstractFlyingCompanion {
   @Override
   protected List<CompanionAbility> allAbilities() {
     return ABILITIES;
+  }
+
+  @Override
+  public OwnerStatBonusKit ownerStatBonus() {
+    return OWNER_STAT_BONUS;
   }
 
   @Override

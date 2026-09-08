@@ -1,6 +1,7 @@
 package io.github.jason13official.summons.impl.common.entity.flying;
 
 import io.github.jason13official.summons.impl.common.entity.AbstractCompanion;
+import io.github.jason13official.summons.impl.common.entity.OwnerStatBonusKit;
 import io.github.jason13official.summons.impl.common.entity.ability.CompanionAbility;
 import io.github.jason13official.summons.impl.common.entity.ai.goal.attack.CompanionRangedAttackGoal;
 import io.github.jason13official.summons.impl.common.entity.ground.AbstractGroundCompanion;
@@ -26,6 +27,9 @@ import net.minecraft.world.phys.Vec3;
 /// Mage-Type: physically weak, casts powerful area-of-effect spells (unimplemented).
 public class MageSummon extends AbstractFlyingCompanion {
 
+  // wiki: STR +5/CON +2 initial, +20/+6 growth
+  private static final OwnerStatBonusKit OWNER_STAT_BONUS = new OwnerStatBonusKit(5, 20, 2, 6, 0, 0);
+
   private static final double SPELL_RADIUS = 12.0;
   private static final double DIRECT_ATTACK_RADIUS = 10.0;
   private static final int DIRECT_ATTACK_COOLDOWN = 40;
@@ -35,8 +39,7 @@ public class MageSummon extends AbstractFlyingCompanion {
   public final AnimationState idleAnimationState = new AnimationState();
   public final AnimationState flyAnimationState = new AnimationState();
 
-  // names/effects sourced from guide_paste.md's in-game FAQ, not just the wiki's bare
-  // ability names; "B" spells use real orbiting hitboxes, see AbstractCompanion#spawnOrbitingBits
+  /// Mage-type https://gamefaqs.gamespot.com/ps2/925894-castlevania-curse-of-darkness/faqs
   private static final List<CompanionAbility> ABILITIES = List.of(
       // "Stops time for enemies, leaving Hector to beat on them unopposed." TODO: no true
       // freeze exists, proxied as heavy AoE slowness
@@ -222,9 +225,11 @@ public class MageSummon extends AbstractFlyingCompanion {
 
   public static AttributeSupplier.Builder createAttributes() {
 
+    // physically weak per lore ("low DEF... open to enemy attacks"); ATTACK_DAMAGE still
+    // carries spell power for the ability kit above, so it's toned down, not gutted
     return AbstractFlyingCompanion.createAttributes().add(Attributes.MAX_HEALTH, (double) 12.0F)
         .add(Attributes.FLYING_SPEED, (double) 0.45F).add(Attributes.MOVEMENT_SPEED, (double) 0.28F)
-        .add(Attributes.ATTACK_DAMAGE, (double) 10.0F).add(Attributes.KNOCKBACK_RESISTANCE, (double) 0.3F);
+        .add(Attributes.ATTACK_DAMAGE, (double) 6.0F).add(Attributes.KNOCKBACK_RESISTANCE, (double) 0.0F);
   }
 
   @Override
@@ -246,6 +251,11 @@ public class MageSummon extends AbstractFlyingCompanion {
   @Override
   protected List<CompanionAbility> allAbilities() {
     return ABILITIES;
+  }
+
+  @Override
+  public OwnerStatBonusKit ownerStatBonus() {
+    return OWNER_STAT_BONUS;
   }
 
   @Override

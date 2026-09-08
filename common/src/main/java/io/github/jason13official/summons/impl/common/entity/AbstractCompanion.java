@@ -1,5 +1,6 @@
 package io.github.jason13official.summons.impl.common.entity;
 
+import io.github.jason13official.summons.Summons;
 import io.github.jason13official.summons.impl.common.entity.ability.CompanionAbility;
 import io.github.jason13official.summons.impl.common.entity.ability.OrbitingBit;
 import io.github.jason13official.summons.impl.common.entity.ai.goal.target.CompanionOwnerHurtByTargetGoal;
@@ -19,11 +20,13 @@ import java.util.Set;
 import java.util.UUID;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.core.Holder;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.DamageTypeTags;
@@ -36,6 +39,9 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.OwnableEntity;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.TraceableEntity;
+import net.minecraft.world.entity.ai.attributes.Attribute;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
@@ -185,6 +191,10 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     }
 
     this.tickOrbitingBits();
+
+    if (this.tickCount % 20 == 0) {
+      this.refreshOwnerAttributeBonuses();
+    }
 
     if (this.getMode() == CompanionMode.DEFEND) {
       if (this.getGuardFieldRadius() < GUARD_FIELD_MAX_RADIUS) {
@@ -842,6 +852,58 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
         iterator.remove();
       }
     }
+  }
+
+  private static final ResourceLocation OWNER_STR_MODIFIER_ID = Summons.identifier("owner_str_bonus");
+  private static final ResourceLocation OWNER_CON_MODIFIER_ID = Summons.identifier("owner_con_bonus");
+
+  /// STR/CON/LCK owner buffs; empty (no bonus) for the CUBE/PRISM placeholder types.
+  public OwnerStatBonusKit ownerStatBonus() {
+    return OwnerStatBonusKit.NONE;
+  }
+
+  /// STR -> owner ATTACK_DAMAGE, CON -> owner MAX_HEALTH; both real vanilla attributes.
+  /// CON also cuts harmful-effect duration (see LivingEntityEffectResistMixin), and LCK is
+  /// read on demand by LivingEntityLuckyDropMixin; neither has a vanilla attribute to hold.
+  private void refreshOwnerAttributeBonuses() {
+    LivingEntity owner = this.getOwner();
+    if (owner == null) {
+      return;
+    }
+
+    OwnerStatBonusKit bonus = this.ownerStatBonus();
+    summons$applyModifier(owner, Attributes.ATTACK_DAMAGE, OWNER_STR_MODIFIER_ID, bonus.str(this.getLevel()));
+    summons$applyModifier(owner, Attributes.MAX_HEALTH, OWNER_CON_MODIFIER_ID, bonus.con(this.getLevel()));
+  }
+
+  private static void summons$applyModifier(LivingEntity owner, Holder<Attribute> attribute, ResourceLocation id, double amount) {
+    AttributeInstance instance = owner.getAttribute(attribute);
+    if (instance != null) {
+      instance.addOrUpdateTransientModifier(new AttributeModifier(id, amount, AttributeModifier.Operation.ADD_VALUE));
+    }
+  }
+
+  private void removeOwnerAttributeBonuses() {
+    LivingEntity owner = this.getOwner();
+    if (owner == null) {
+      return;
+    }
+
+    AttributeInstance strAttribute = owner.getAttribute(Attributes.ATTACK_DAMAGE);
+    if (strAttribute != null) {
+      strAttribute.removeModifier(OWNER_STR_MODIFIER_ID);
+    }
+
+    AttributeInstance conAttribute = owner.getAttribute(Attributes.MAX_HEALTH);
+    if (conAttribute != null) {
+      conAttribute.removeModifier(OWNER_CON_MODIFIER_ID);
+    }
+  }
+
+  @Override
+  public void remove(RemovalReason reason) {
+    this.removeOwnerAttributeBonuses();
+    super.remove(reason);
   }
 
   /// nearest living target to `companion` within `radius`, excluding itself and `owner`

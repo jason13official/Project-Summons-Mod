@@ -1,6 +1,7 @@
 package io.github.jason13official.summons.impl.common.entity.flying;
 
 import io.github.jason13official.summons.impl.common.entity.AbstractCompanion;
+import io.github.jason13official.summons.impl.common.entity.OwnerStatBonusKit;
 import io.github.jason13official.summons.impl.common.entity.ability.CompanionAbility;
 import io.github.jason13official.summons.impl.common.entity.ai.goal.attack.CompanionDiveAttackGoal;
 import io.github.jason13official.summons.impl.common.evolution.EvoCrystalColor;
@@ -25,6 +26,9 @@ import net.minecraft.world.phys.AABB;
 /// Bird-Type: air mobility, lifts/carries the owner and juggles light enemies.
 /// TODO: "Glide" (carry Hector over gaps) mimicked with Slow Falling (for now); gliding is a movement/input feature and not a Command-mode effect so heavy WIP
 public class BirdSummon extends AbstractFlyingCompanion {
+
+  // wiki: CON +4 initial, +12 growth
+  private static final OwnerStatBonusKit OWNER_STAT_BONUS = new OwnerStatBonusKit(0, 0, 4, 12, 0, 0);
 
   private static final double CARPET_BOMBS_FIND_RADIUS = 10.0;
   private static final double CARPET_BOMBS_AOE_RADIUS = 2.0;
@@ -275,6 +279,11 @@ public class BirdSummon extends AbstractFlyingCompanion {
   @Override
   protected List<CompanionAbility> allAbilities() {
     return ABILITIES;
+  }
+
+  @Override
+  public OwnerStatBonusKit ownerStatBonus() {
+    return OWNER_STAT_BONUS;
   }
 
   @Override
