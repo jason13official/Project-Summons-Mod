@@ -38,17 +38,21 @@ public class BirdSummon extends AbstractFlyingCompanion {
   private static final double DIVE_ATTACK_HIT_RADIUS = 1.5;
   private static final int DIVE_ATTACK_COOLDOWN = 20;
   private static final double GLIDE_BOOST_SPEED = 1.2;
-  private static final double GLIDE_UP_BURST = 0.6;
+  // private static final double GLIDE_UP_BURST = 0.6;
+  private static final double GLIDE_UP_BURST = 1.2;
+  private static final double GLIDE_DESCENT_PER_TICK = 0.015; // custom drag; noGravity replaces vanilla's ~0.08/tick
+  private static final int GLIDE_GROUND_CHECK_GRACE_TICKS = 10; // skip ground-touch checks right after launch
 
   /// direction locked in at cast time (owner's look, horizontal only); held constant every
   /// tick for the ride, since the owner's own look can drift once they're along for the ride
   private Vec3 glideDirection = Vec3.ZERO;
+  private int glideGraceTicks;
 
   private static final List<CompanionAbility> ABILITIES = List.of(
       // "Uses legs to propel Hector long distances. Allows access to places a normal jump
       // cannot reach." - a real ride: owner mounts, gets launched in their look direction,
       // and the companion counters gravity for a slow glide-down instead of a hard drop
-      CompanionAbility.base("Glide", 100, (companion, owner) -> beginGlide(companion, owner, GLIDE_BOOST_SPEED)),
+      CompanionAbility.base("Glide", 60, (companion, owner) -> beginGlide(companion, owner, GLIDE_BOOST_SPEED)),
       // "Spreads explosive caltrops, which explode after a brief period." TODO: no delayed
       // detonation, proxied as an immediate AoE hit around the target instead
       CompanionAbility.gated("Caltrops", 30, Form.GOLDFINCH, 5, (companion, owner) -> {
@@ -130,7 +134,7 @@ public class BirdSummon extends AbstractFlyingCompanion {
       }),
       // "Uses legs to propel Hector long distances" (upgraded) -> reaches the Tower of
       // Evermore; same real ride as Glide, longer and with more launch speed
-      CompanionAbility.gated("Long Glide", 200, Form.WINGOSAURUS, 8, (companion, owner) ->
+      CompanionAbility.gated("Long Glide", 100, Form.WINGOSAURUS, 8, (companion, owner) ->
           beginGlide(companion, owner, GLIDE_BOOST_SPEED * 1.3)),
       // "Drains HP & gives it to Hector."
       CompanionAbility.gated("Deadly Absorb", 30, Form.WINGOSAURUS, 8, (companion, owner) -> {
@@ -260,14 +264,39 @@ public class BirdSummon extends AbstractFlyingCompanion {
     }
 
     if (this.isVehicle() && this.isAbilityBusy()) {
-      // horizontal is re-set (not added) every tick so drag can't bleed it off; vertical is
-      // left alone so the initial up-burst arcs and settles under normal gravity instead of
-      // climbing forever
+      // noGravity + our own much-shallower descent, since vanilla's ~0.08/tick gravity would
+      // fight the glide feel; horizontal is re-set (not added) every tick so drag can't
+      // bleed it off; sustained forward glide
       Vec3 velocity = this.getDeltaMovement();
-      this.setDeltaMovement(this.glideDirection.x, velocity.y, this.glideDirection.z);
+      this.setDeltaMovement(this.glideDirection.x, velocity.y - GLIDE_DESCENT_PER_TICK, this.glideDirection.z);
+
+      if (this.glideGraceTicks > 0) {
+        this.glideGraceTicks--;
+      } else if (this.summons$riderTouchingGround()) {
+        this.setAbilityBusy(0); // rider's own hitbox found ground/purchase; end the glide now
+      }
     } else if (this.isVehicle()) {
-      this.ejectPassengers(); // glide duration (busyTicks) ran out
+      this.stopGliding();
     }
+  }
+
+  /// `getBoundingBox()` already reflects the rider's current position (vanilla keeps
+  /// passengers synced to their vehicle every tick); a small probe box just below its feet
+  /// -> real block collision, not just a fixed Y threshold, so slopes/overhangs work too
+  private boolean summons$riderTouchingGround() {
+    LivingEntity owner = this.getOwner();
+    if (owner == null) {
+      return false;
+    }
+
+    AABB rider = owner.getBoundingBox();
+    AABB probe = new AABB(rider.minX, rider.minY - 0.1, rider.minZ, rider.maxX, rider.minY, rider.maxZ);
+    return !this.level().noCollision(probe);
+  }
+
+  private void stopGliding() {
+    this.setNoGravity(false);
+    this.ejectPassengers();
   }
 
   /// no `setNoAi` here; that ties into `isControlledByLocalInstance()`, which
@@ -281,6 +310,8 @@ public class BirdSummon extends AbstractFlyingCompanion {
     BirdSummon bird = (BirdSummon) companion;
     Vec3 look = owner.getLookAngle();
     bird.glideDirection = new Vec3(look.x, 0.0, look.z).normalize().scale(boostSpeed);
+    bird.glideGraceTicks = GLIDE_GROUND_CHECK_GRACE_TICKS;
+    companion.setNoGravity(true);
     companion.setDeltaMovement(0.0, GLIDE_UP_BURST, 0.0); // small up-burst; forward comes from #tick
     owner.startRiding(companion, true);
   }
@@ -288,7 +319,8 @@ public class BirdSummon extends AbstractFlyingCompanion {
   /// renders/positions the rider below the companion, gripping its legs, instead of on top
   @Override
   protected Vec3 getPassengerAttachmentPoint(Entity entity, EntityDimensions dimensions, float partialTick) {
-    return new Vec3(0.0, -0.6, 0.0);
+    // return new Vec3(0.0, -0.6, 0.0);
+    return new Vec3(0.0, -1.2, 0.0);
   }
 
   /// physical swoop/dive-bomb -> Bird's basic direct attack
