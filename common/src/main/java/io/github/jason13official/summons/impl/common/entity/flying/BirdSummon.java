@@ -314,6 +314,7 @@ public class BirdSummon extends AbstractFlyingCompanion {
 
     AABB rider = owner.getBoundingBox();
     AABB probe = new AABB(rider.minX, rider.minY - 0.1, rider.minZ, rider.maxX, rider.minY, rider.maxZ);
+    probe.deflate(0, 1, 0);
     return !this.level().noCollision(probe);
   }
 
