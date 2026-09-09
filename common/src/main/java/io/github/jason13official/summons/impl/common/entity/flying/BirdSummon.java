@@ -10,6 +10,7 @@ import io.github.jason13official.summons.impl.common.evolution.EvolutionThreshol
 import java.util.List;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.Mth;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.InteractionHand;
@@ -269,6 +270,7 @@ public class BirdSummon extends AbstractFlyingCompanion {
       // bleed it off; sustained forward glide
       Vec3 velocity = this.getDeltaMovement();
       this.setDeltaMovement(this.glideDirection.x, velocity.y - GLIDE_DESCENT_PER_TICK, this.glideDirection.z);
+      this.summons$faceGlideDirection();
 
       if (this.glideGraceTicks > 0) {
         this.glideGraceTicks--;
@@ -277,6 +279,27 @@ public class BirdSummon extends AbstractFlyingCompanion {
       }
     } else if (this.isVehicle()) {
       this.stopGliding();
+    }
+  }
+
+  /// goals (LookAtPlayerGoal, wander) still run and would otherwise slowly rotate the
+  /// companion off its travel heading despite velocity staying locked; forces both
+  /// companion and rider to visibly face `glideDirection` every tick instead
+  private void summons$faceGlideDirection() {
+    if (this.glideDirection.lengthSqr() < 1.0E-4) {
+      return;
+    }
+
+    float yaw = (float) (Mth.atan2(this.glideDirection.z, this.glideDirection.x) * (180.0 / Math.PI)) - 90.0F;
+    this.setYRot(yaw);
+    this.setYHeadRot(yaw);
+    this.yBodyRot = yaw;
+
+    LivingEntity owner = this.getOwner();
+    if (owner != null) {
+      owner.setYRot(yaw);
+      owner.setYHeadRot(yaw);
+      owner.yBodyRot = yaw;
     }
   }
 
@@ -304,7 +327,13 @@ public class BirdSummon extends AbstractFlyingCompanion {
   /// companion to the owner first (Curse of Darkness's warp-to-Hector visual), not vice versa.
   private static void beginGlide(AbstractCompanion companion, LivingEntity owner, double boostSpeed) {
     spawnAbilityParticles(companion, ParticleTypes.POOF, 10);
-    companion.moveTo(owner.getX(), owner.getY() + 1.0, owner.getZ(), owner.getYRot(), 0.0F);
+
+    // absorb any existing fall speed (mid-air activation shouldn't carry momentum into the
+    // glide) and fold it into the launch, so jumping/falling in doesn't fight the take-off
+    double fallSpeed = Math.max(0.0, -owner.getDeltaMovement().y);
+    owner.setDeltaMovement(owner.getDeltaMovement().x, 0.0, owner.getDeltaMovement().z);
+
+    companion.moveTo(owner.getX(), owner.getY() + 1.2, owner.getZ(), owner.getYRot(), 0.0F);
     spawnAbilityParticles(companion, ParticleTypes.CLOUD, 10);
 
     BirdSummon bird = (BirdSummon) companion;
@@ -312,7 +341,7 @@ public class BirdSummon extends AbstractFlyingCompanion {
     bird.glideDirection = new Vec3(look.x, 0.0, look.z).normalize().scale(boostSpeed);
     bird.glideGraceTicks = GLIDE_GROUND_CHECK_GRACE_TICKS;
     companion.setNoGravity(true);
-    companion.setDeltaMovement(0.0, GLIDE_UP_BURST, 0.0); // small up-burst; forward comes from #tick
+    companion.setDeltaMovement(0.0, GLIDE_UP_BURST + fallSpeed * 0.5, 0.0); // up-burst; forward comes from #tick
     owner.startRiding(companion, true);
   }
 
