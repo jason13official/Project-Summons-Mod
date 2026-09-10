@@ -24,9 +24,6 @@ public final class ChainAttackTracker {
 
   private static final Map<UUID, State> STATES = new HashMap<>();
 
-  private ChainAttackTracker() {
-  }
-
   private static final class State {
     UUID targetId;
     Item weapon;

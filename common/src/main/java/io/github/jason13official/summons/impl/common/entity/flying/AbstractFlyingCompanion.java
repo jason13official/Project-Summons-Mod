@@ -1,6 +1,7 @@
 package io.github.jason13official.summons.impl.common.entity.flying;
 
 import io.github.jason13official.summons.impl.common.entity.AbstractCompanion;
+import io.github.jason13official.summons.impl.common.entity.ai.goal.movement.CompanionFollowOwnerGoal;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.sounds.SoundEvent;
@@ -14,7 +15,6 @@ import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.control.FlyingMoveControl;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
-import net.minecraft.world.entity.ai.goal.FollowMobGoal;
 import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomFlyingGoal;
 import net.minecraft.world.entity.ai.navigation.FlyingPathNavigation;
@@ -55,10 +55,11 @@ public abstract class AbstractFlyingCompanion extends AbstractCompanion implemen
     this.goalSelector.addGoal(0, new FloatGoal(this));
     this.goalSelector.addGoal(1, new LookAtPlayerGoal(this, Player.class, 8.0F));
     // this.goalSelector.addGoal(2, new SitWhenOrderedToGoal(this));
-    // this.goalSelector.addGoal(2, new FollowOwnerGoal(this, (double)1.0F, 5.0F, 1.0F));
-    this.goalSelector.addGoal(2, new CustomWanderGoal(this, (double)1.0F));
+    // priority 2, ahead of wander(3): keeping the owner in range should win over idle
+    // wandering, not the other way around -> see CompanionFollowOwnerGoal note
+    this.goalSelector.addGoal(2, new CompanionFollowOwnerGoal(this, 1.0, 6.0F, 3.0F));
     // this.goalSelector.addGoal(3, new LandOnOwnersShoulderGoal(this));
-    this.goalSelector.addGoal(3, new FollowMobGoal(this, (double)1.0F, 3.0F, 7.0F));
+    this.goalSelector.addGoal(3, new CustomWanderGoal(this, (double)1.0F));
   }
 
   // region flight

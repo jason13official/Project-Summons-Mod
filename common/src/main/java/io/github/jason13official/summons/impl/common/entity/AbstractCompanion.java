@@ -1,8 +1,7 @@
 package io.github.jason13official.summons.impl.common.entity;
 
-import io.github.jason13official.summons.Summons;
 import io.github.jason13official.summons.impl.common.entity.ability.CompanionAbility;
-import io.github.jason13official.summons.impl.common.entity.ability.OrbitingBit;
+import io.github.jason13official.summons.impl.common.entity.ability.OrbitingBitManager;
 import io.github.jason13official.summons.impl.common.entity.ai.goal.target.CompanionOwnerHurtByTargetGoal;
 import io.github.jason13official.summons.impl.common.entity.ai.goal.target.CompanionOwnerHurtTargetGoal;
 import io.github.jason13official.summons.impl.common.evolution.EvoCrystalColor;
@@ -13,20 +12,17 @@ import io.github.jason13official.summons.impl.common.party.CompanionParty;
 import io.github.jason13official.summons.impl.common.party.CompanionType;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.core.Holder;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.DamageTypeTags;
@@ -40,9 +36,6 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.OwnableEntity;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.TraceableEntity;
-import net.minecraft.world.entity.ai.attributes.Attribute;
-import net.minecraft.world.entity.ai.attributes.AttributeInstance;
-import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
@@ -204,10 +197,10 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
       this.entityData.set(DATA_CHAIN_ARMED_ID, false);
     }
 
-    this.tickOrbitingBits();
+    this.orbitingBits.tick(this);
 
     if (this.tickCount % 20 == 0) {
-      this.refreshOwnerAttributeBonuses();
+      OwnerAttributeBonuses.refresh(this);
     }
 
     if (this.getMode() == CompanionMode.DEFEND) {
@@ -836,117 +829,24 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     }
   }
 
-  private final List<OrbitingBit> orbitingBits = new ArrayList<>();
+  private final OrbitingBitManager orbitingBits = new OrbitingBitManager();
 
   /// `count` bits orbiting the owner at `radius`/`angularSpeed`, dealing `damage` on contact
   /// (10-tick per-bit cooldown); despawns after `lifespanTicks`, or on first hit if
   /// `explodeOnHit`. Backs Mage's "B" spells (Floating B, Satellite B, etc).
   public final void spawnOrbitingBits(int count, double radius, double angularSpeed, double heightOffset,
                                        float damage, ParticleOptions particle, boolean explodeOnHit, int lifespanTicks) {
-    for (int i = 0; i < count; i++) {
-      double startAngle = (2.0 * Math.PI / count) * i;
-      this.orbitingBits.add(new OrbitingBit(startAngle, radius, angularSpeed, heightOffset, damage, particle, explodeOnHit, lifespanTicks));
-    }
+    this.orbitingBits.spawn(count, radius, angularSpeed, heightOffset, damage, particle, explodeOnHit, lifespanTicks);
   }
-
-  private void tickOrbitingBits() {
-    if (this.orbitingBits.isEmpty()) {
-      return;
-    }
-
-    LivingEntity owner = this.getOwner();
-    if (owner == null) {
-      this.orbitingBits.clear();
-      return;
-    }
-
-    ServerLevel serverLevel = this.level() instanceof ServerLevel level ? level : null;
-    Iterator<OrbitingBit> iterator = this.orbitingBits.iterator();
-    while (iterator.hasNext()) {
-      OrbitingBit bit = iterator.next();
-      bit.angle += bit.angularSpeed;
-      bit.lifespanTicks--;
-      if (bit.hitCooldown > 0) {
-        bit.hitCooldown--;
-      }
-
-      double x = owner.getX() + Math.cos(bit.angle) * bit.radius;
-      double y = owner.getY() + bit.heightOffset;
-      double z = owner.getZ() + Math.sin(bit.angle) * bit.radius;
-
-      if (serverLevel != null) {
-        serverLevel.sendParticles(bit.particle, x, y, z, 1, 0.0, 0.0, 0.0, 0.0);
-      }
-
-      if (bit.hitCooldown == 0) {
-        AABB hitBox = new AABB(x - 0.5, y - 0.5, z - 0.5, x + 0.5, y + 0.5, z + 0.5);
-        for (LivingEntity target : this.level().getEntitiesOfClass(LivingEntity.class, hitBox,
-            e -> e != owner && e != this && e.isAlive())) {
-          target.hurt(this.damageSources().magic(), bit.damage);
-          target.knockback(0.3, x - target.getX(), z - target.getZ());
-          bit.hitCooldown = 10;
-          if (bit.explodeOnHit) {
-            bit.lifespanTicks = 0;
-          }
-          break;
-        }
-      }
-
-      if (bit.lifespanTicks <= 0) {
-        iterator.remove();
-      }
-    }
-  }
-
-  private static final ResourceLocation OWNER_STR_MODIFIER_ID = Summons.identifier("owner_str_bonus");
-  private static final ResourceLocation OWNER_CON_MODIFIER_ID = Summons.identifier("owner_con_bonus");
 
   /// STR/CON/LCK owner buffs; empty (no bonus) for the CUBE/PRISM placeholder types.
   public OwnerStatBonusKit ownerStatBonus() {
     return OwnerStatBonusKit.NONE;
   }
 
-  /// STR -> owner ATTACK_DAMAGE, CON -> owner MAX_HEALTH; both real vanilla attributes.
-  /// CON also cuts harmful-effect duration (see LivingEntityEffectResistMixin), and LCK is
-  /// read on demand by LivingEntityLuckyDropMixin; neither has a vanilla attribute to hold.
-  private void refreshOwnerAttributeBonuses() {
-    LivingEntity owner = this.getOwner();
-    if (owner == null) {
-      return;
-    }
-
-    OwnerStatBonusKit bonus = this.ownerStatBonus();
-    applyModifier(owner, Attributes.ATTACK_DAMAGE, OWNER_STR_MODIFIER_ID, bonus.str(this.getLevel()));
-    applyModifier(owner, Attributes.MAX_HEALTH, OWNER_CON_MODIFIER_ID, bonus.con(this.getLevel()));
-  }
-
-  private static void applyModifier(LivingEntity owner, Holder<Attribute> attribute, ResourceLocation id, double amount) {
-    AttributeInstance instance = owner.getAttribute(attribute);
-    if (instance != null) {
-      instance.addOrUpdateTransientModifier(new AttributeModifier(id, amount, AttributeModifier.Operation.ADD_VALUE));
-    }
-  }
-
-  private void removeOwnerAttributeBonuses() {
-    LivingEntity owner = this.getOwner();
-    if (owner == null) {
-      return;
-    }
-
-    AttributeInstance strAttribute = owner.getAttribute(Attributes.ATTACK_DAMAGE);
-    if (strAttribute != null) {
-      strAttribute.removeModifier(OWNER_STR_MODIFIER_ID);
-    }
-
-    AttributeInstance conAttribute = owner.getAttribute(Attributes.MAX_HEALTH);
-    if (conAttribute != null) {
-      conAttribute.removeModifier(OWNER_CON_MODIFIER_ID);
-    }
-  }
-
   @Override
   public void remove(RemovalReason reason) {
-    this.removeOwnerAttributeBonuses();
+    OwnerAttributeBonuses.remove(this);
     super.remove(reason);
   }
 

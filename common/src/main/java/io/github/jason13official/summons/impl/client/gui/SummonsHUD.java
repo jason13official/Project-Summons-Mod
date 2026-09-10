@@ -91,7 +91,4 @@ public class SummonsHUD {
     graphics.fill(centerX - halfWidth - 6, centerY - 6, centerX + halfWidth + 6, centerY + 10, 0xAA331A00);
     graphics.drawCenteredString(font, text, centerX, centerY, 0xFFA500);
   }
-
-  private SummonsHUD() {
-  }
 }
