@@ -872,11 +872,11 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     }
 
     OwnerStatBonusKit bonus = this.ownerStatBonus();
-    summons$applyModifier(owner, Attributes.ATTACK_DAMAGE, OWNER_STR_MODIFIER_ID, bonus.str(this.getLevel()));
-    summons$applyModifier(owner, Attributes.MAX_HEALTH, OWNER_CON_MODIFIER_ID, bonus.con(this.getLevel()));
+    applyModifier(owner, Attributes.ATTACK_DAMAGE, OWNER_STR_MODIFIER_ID, bonus.str(this.getLevel()));
+    applyModifier(owner, Attributes.MAX_HEALTH, OWNER_CON_MODIFIER_ID, bonus.con(this.getLevel()));
   }
 
-  private static void summons$applyModifier(LivingEntity owner, Holder<Attribute> attribute, ResourceLocation id, double amount) {
+  private static void applyModifier(LivingEntity owner, Holder<Attribute> attribute, ResourceLocation id, double amount) {
     AttributeInstance instance = owner.getAttribute(attribute);
     if (instance != null) {
       instance.addOrUpdateTransientModifier(new AttributeModifier(id, amount, AttributeModifier.Operation.ADD_VALUE));

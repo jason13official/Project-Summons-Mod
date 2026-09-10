@@ -270,11 +270,11 @@ public class BirdSummon extends AbstractFlyingCompanion {
       // bleed it off; sustained forward glide
       Vec3 velocity = this.getDeltaMovement();
       this.setDeltaMovement(this.glideDirection.x, velocity.y - GLIDE_DESCENT_PER_TICK, this.glideDirection.z);
-      this.summons$faceGlideDirection();
+      this.faceGlideDirection();
 
       if (this.glideGraceTicks > 0) {
         this.glideGraceTicks--;
-      } else if (this.summons$riderTouchingGround()) {
+      } else if (this.riderTouchingGround()) {
         this.setAbilityBusy(0); // rider's own hitbox found ground/purchase; end the glide now
       }
     } else if (this.isVehicle()) {
@@ -285,7 +285,7 @@ public class BirdSummon extends AbstractFlyingCompanion {
   /// goals (LookAtPlayerGoal, wander) still run and would otherwise slowly rotate the
   /// companion off its travel heading despite velocity staying locked; forces both
   /// companion and rider to visibly face `glideDirection` every tick instead
-  private void summons$faceGlideDirection() {
+  private void faceGlideDirection() {
     if (this.glideDirection.lengthSqr() < 1.0E-4) {
       return;
     }
@@ -306,15 +306,14 @@ public class BirdSummon extends AbstractFlyingCompanion {
   /// `getBoundingBox()` already reflects the rider's current position (vanilla keeps
   /// passengers synced to their vehicle every tick); a small probe box just below its feet
   /// -> real block collision, not just a fixed Y threshold, so slopes/overhangs work too
-  private boolean summons$riderTouchingGround() {
+  private boolean riderTouchingGround() {
     LivingEntity owner = this.getOwner();
     if (owner == null) {
       return false;
     }
 
     AABB rider = owner.getBoundingBox();
-    AABB probe = new AABB(rider.minX, rider.minY - 0.1, rider.minZ, rider.maxX, rider.minY, rider.maxZ);
-    probe.deflate(0, 1, 0);
+    AABB probe = new AABB(rider.minX, rider.minY - 0.1, rider.minZ, rider.maxX, rider.minY, rider.maxZ).deflate(0, 1, 0);
     return !this.level().noCollision(probe);
   }
 
