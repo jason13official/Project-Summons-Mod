@@ -19,6 +19,7 @@ public class SummonsKeyBindings {
   public static final KeyMapping ABILITY_LEFT = new KeyMapping("key.summons.ability_left", GLFW.GLFW_KEY_LEFT, CATEGORY);
   public static final KeyMapping ABILITY_RIGHT = new KeyMapping("key.summons.ability_right", GLFW.GLFW_KEY_RIGHT, CATEGORY);
   public static final KeyMapping COMMAND = new KeyMapping("key.summons.command", GLFW.GLFW_KEY_J, CATEGORY);
+  public static final KeyMapping ABILITY_SCROLL_MODIFIER = new KeyMapping("key.summons.ability_scroll_modifier", GLFW.GLFW_KEY_LEFT_ALT, CATEGORY);
 
   public static KeyMapping[] all() {
 
@@ -29,7 +30,8 @@ public class SummonsKeyBindings {
         MODE_DOWN,
         ABILITY_LEFT,
         ABILITY_RIGHT,
-        COMMAND
+        COMMAND,
+        ABILITY_SCROLL_MODIFIER
     };
   }
 
