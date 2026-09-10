@@ -8,7 +8,6 @@ import io.github.jason13official.summons.impl.common.evolution.EvoCrystalColor;
 import io.github.jason13official.summons.impl.common.evolution.EvolutionForm;
 import io.github.jason13official.summons.impl.common.evolution.EvolutionThreshold;
 import io.github.jason13official.summons.impl.common.party.CompanionMode;
-import io.github.jason13official.summons.impl.common.party.CompanionParty;
 import io.github.jason13official.summons.impl.common.party.CompanionType;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -17,14 +16,11 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import net.minecraft.core.particles.ParticleOptions;
-import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
@@ -38,10 +34,8 @@ import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.TraceableEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
-import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
 public abstract class AbstractCompanion extends PathfinderMob implements TraceableEntity, OwnableEntity {
@@ -79,8 +73,6 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
 
   public static final float GUARD_FIELD_MAX_RADIUS = 3.0F;
   public static final float GUARD_FIELD_MIN_RADIUS = 0.75F;
-  private static final float GUARD_FIELD_SHRINK_PER_HIT = 0.75F;
-  private static final float GUARD_FIELD_REGEN_PER_TICK = 0.01F; // ~4.5s min->max
 
   private static final double TELEPORT_TO_OWNER_DISTANCE = 24.0;
 
@@ -115,8 +107,6 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
   /// skip drawing and tick() emits particles instead until a Heart revives it
   private static final EntityDataAccessor<Boolean> DATA_WISP_ID =
       SynchedEntityData.defineId(AbstractCompanion.class, EntityDataSerializers.BOOLEAN);
-  private static final float WISP_REVIVE_HEALTH = 1.0F;
-  private static final float HEART_HEAL_AMOUNT = 4.0F;
 
   public AbstractCompanion(EntityType<? extends AbstractCompanion> entityType, Level level) {
     super(entityType, level);
@@ -173,9 +163,9 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
 
     if (this.level().isClientSide) {
       if (this.isWisp()) {
-        this.spawnWispParticles();
+        CompanionWisp.spawnParticles(this);
       } else if (this.getMode() == CompanionMode.DEFEND) {
-        this.spawnGuardFieldParticles();
+        CompanionGuardField.spawnParticles(this);
       }
       return;
     }
@@ -186,7 +176,7 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     }
 
     if (this.isWisp()) {
-      this.floatTowardOwner(); // noAi skips normal goal-based movement entirely
+      CompanionWisp.floatTowardOwner(this); // noAi skips normal goal-based movement entirely
     }
 
     if (this.abilityBusyTicks > 0 && --this.abilityBusyTicks == 0) {
@@ -203,60 +193,7 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
       OwnerAttributeBonuses.refresh(this);
     }
 
-    if (this.getMode() == CompanionMode.DEFEND) {
-      if (this.getGuardFieldRadius() < GUARD_FIELD_MAX_RADIUS) {
-        this.setGuardFieldRadius(this.getGuardFieldRadius() + GUARD_FIELD_REGEN_PER_TICK);
-      }
-    } else if (this.getGuardFieldRadius() != GUARD_FIELD_MAX_RADIUS) {
-      this.setGuardFieldRadius(GUARD_FIELD_MAX_RADIUS); // reset so re-entering DEFEND always starts full
-    }
-  }
-
-  /// light rising around the Guard Field edge, plus a few inside it
-  private void spawnGuardFieldParticles() {
-    float radius = this.getGuardFieldRadius();
-
-    if (this.random.nextInt(4) == 0) {
-      this.spawnGuardFieldParticle(radius);
-    }
-
-    if (this.random.nextInt(8) == 0) {
-      // sqrt so points land uniformly across the disc's area, not bunched at the center
-      this.spawnGuardFieldParticle(radius * (float) Math.sqrt(this.random.nextDouble()));
-    }
-  }
-
-  private void spawnGuardFieldParticle(float distanceFromCenter) {
-    double angle = this.random.nextDouble() * Math.PI * 2.0;
-    double x = this.getX() + Math.cos(angle) * distanceFromCenter;
-    double z = this.getZ() + Math.sin(angle) * distanceFromCenter;
-    this.level().addParticle(ParticleTypes.END_ROD, x, this.getY() + 0.05, z, 0.0, 0.03, 0.0);
-  }
-
-  /// the only "visual" a sparking wisp has -> a few sparkles drifting around its position
-  private void spawnWispParticles() {
-    double x = this.getX() + (this.random.nextDouble() - 0.5) * 0.6;
-    double y = this.getY() + this.random.nextDouble() * this.getBbHeight();
-    double z = this.getZ() + (this.random.nextDouble() - 0.5) * 0.6;
-    this.level().addParticle(ParticleTypes.SOUL, x, y, z, 0.0, 0.02, 0.0);
-  }
-
-  /// noAi skips goal-based movement, so a wisp needs hand-rolled hover; eases toward the
-  /// owner's head, no gravity/collision. teleportToOwner() above covers big jumps instead
-  private void floatTowardOwner() {
-    LivingEntity owner = this.getOwner();
-    if (owner == null) {
-      return;
-    }
-
-    Vec3 target = new Vec3(owner.getX(), owner.getY() + owner.getEyeHeight() + 0.5, owner.getZ());
-    Vec3 delta = target.subtract(this.position());
-    if (delta.lengthSqr() < 0.04) {
-      return;
-    }
-
-    Vec3 step = delta.scale(0.08);
-    this.setPos(this.getX() + step.x, this.getY() + step.y, this.getZ() + step.z);
+    CompanionGuardField.tick(this);
   }
 
   /// safety net for dimension changes, respawns, or falling too far behind
@@ -285,7 +222,7 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     return this.entityData.get(DATA_GUARD_FIELD_RADIUS_ID);
   }
 
-  private void setGuardFieldRadius(float radius) {
+  void setGuardFieldRadius(float radius) {
     this.entityData.set(DATA_GUARD_FIELD_RADIUS_ID,
         Math.min(GUARD_FIELD_MAX_RADIUS, Math.max(GUARD_FIELD_MIN_RADIUS, radius)));
   }
@@ -300,7 +237,7 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
       }
 
       if (this.getMode() == CompanionMode.DEFEND) {
-        this.setGuardFieldRadius(this.getGuardFieldRadius() - GUARD_FIELD_SHRINK_PER_HIT);
+        CompanionGuardField.shrink(this);
         return false;
       }
     }
@@ -311,18 +248,7 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
   /// protects an owner standing inside a DEFEND-mode companion's field; also shrinks it,
   /// same as a direct hit would
   public static boolean isProtectedByGuardField(LivingEntity owner) {
-    List<AbstractCompanion> nearby = owner.level().getEntitiesOfClass(AbstractCompanion.class,
-        owner.getBoundingBox().inflate(GUARD_FIELD_MAX_RADIUS),
-        companion -> companion.getMode() == CompanionMode.DEFEND && owner.getUUID().equals(companion.getOwnerUUID()));
-
-    for (AbstractCompanion companion : nearby) {
-      if (companion.distanceTo(owner) <= companion.getGuardFieldRadius()) {
-        companion.setGuardFieldRadius(companion.getGuardFieldRadius() - GUARD_FIELD_SHRINK_PER_HIT);
-        return true;
-      }
-    }
-
-    return false;
+    return CompanionGuardField.isProtecting(owner);
   }
   // endregion guard field
 
@@ -331,55 +257,29 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     return this.entityData.get(DATA_WISP_ID);
   }
 
-  /// intercepts a lethal hit; I.D.s go inert instead of dying. Only the dismiss keybind
-  /// fully removes one; a bypass-invulnerability source snapshots it back as a wisp instead
-  @Override
-  public void die(DamageSource source) {
-    if (this.level().isClientSide || this.isWisp()) {
-      super.die(source);
-      return;
-    }
-
-    if (source.is(DamageTypeTags.BYPASSES_INVULNERABILITY)) {
-      this.retreatToPartyAsWisp();
-      return;
-    }
-
-    this.entityData.set(DATA_WISP_ID, true);
-    this.setHealth(WISP_REVIVE_HEALTH);
-    this.setNoAi(true);
+  void setWisp(boolean wisp) {
+    this.entityData.set(DATA_WISP_ID, wisp);
   }
 
-  /// stores the companion back in its party slot like the dismiss keybind, pre-marked as a
-  /// wisp; falls back to a real discard if there's no owner left to return it to
-  private void retreatToPartyAsWisp() {
-    if (!(this.getOwner() instanceof ServerPlayer player)) {
-      super.die(this.damageSources().generic());
-      return;
-    }
+  /// bridges CompanionWisp back to the real vanilla death (`x.super.method()` isn't legal
+  /// from outside this class, hence the one-line forward)
+  void callSuperDie(DamageSource source) {
+    super.die(source);
+  }
 
-    this.entityData.set(DATA_WISP_ID, true);
-
-    CompanionParty party = CompanionParty.of(player);
-    party.putSnapshot(this.getCompanionType(), this.saveWithoutId(new CompoundTag()));
-    party.clearActiveType();
-    this.discard();
+  @Override
+  public void die(DamageSource source) {
+    CompanionWisp.die(this, source);
   }
 
   /// a Heart revives it; only meaningful while [#isWisp]
   public void reviveFromWisp() {
-    if (!this.isWisp()) {
-      return;
-    }
-
-    this.entityData.set(DATA_WISP_ID, false);
-    this.setNoAi(this.getMode() == CompanionMode.DEFEND);
+    CompanionWisp.revive(this);
   }
 
   /// what touching a Heart does: revives from wisp first if needed, then heals
   public void consumeHeart() {
-    this.reviveFromWisp();
-    this.heal(HEART_HEAL_AMOUNT);
+    CompanionWisp.consumeHeart(this);
   }
   // endregion wisp
 
@@ -394,7 +294,7 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     });
   }
 
-  private void setCrystalPoints(EvoCrystalColor color, int points) {
+  void setCrystalPoints(EvoCrystalColor color, int points) {
     this.entityData.set(switch (color) {
       case RED -> DATA_CRYSTAL_RED_ID;
       case BLUE -> DATA_CRYSTAL_BLUE_ID;
@@ -407,7 +307,7 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
   /// credits `amount` points of `color`, then checks for an evolution
   public void addCrystalPoints(EvoCrystalColor color, int amount) {
     this.setCrystalPoints(color, this.getCrystalPoints(color) + amount);
-    this.checkEvolution();
+    CompanionEvolution.checkEvolution(this);
   }
 
   private static final EvolutionForm NONE_FORM = new EvolutionForm() {
@@ -443,7 +343,7 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     return this.resolveForm(this.entityData.get(DATA_EVOLUTION_FORM_ID));
   }
 
-  private void setEvolutionForm(EvolutionForm form) {
+  void setEvolutionForm(EvolutionForm form) {
     this.entityData.set(DATA_EVOLUTION_FORM_ID, form.id());
   }
 
@@ -454,7 +354,7 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     return ("," + reached + ",").contains("," + form.id() + ",");
   }
 
-  private void markFormReached(EvolutionForm form) {
+  void markFormReached(EvolutionForm form) {
     if (this.hasReachedForm(form)) {
       return;
     }
@@ -467,54 +367,6 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     return List.of();
   }
 
-  /// TODO: no evolved-form entities/models exist yet, so this just updates the form, spends
-  /// the points, and announces the result.
-  private void checkEvolution() {
-    for (EvolutionThreshold threshold : this.evolutionThresholds()) {
-      int available = threshold.color() != null ? this.getCrystalPoints(threshold.color()) : this.totalCrystalPoints();
-      if (available < threshold.amount()) {
-        continue;
-      }
-
-      if (threshold.color() != null) {
-        this.setCrystalPoints(threshold.color(), available - threshold.amount());
-      } else {
-        this.spendCrystalPointsAcrossColors(threshold.amount());
-      }
-
-      this.setEvolutionForm(threshold.result());
-      this.markFormReached(threshold.result());
-
-      LivingEntity owner = this.getOwner();
-      if (owner instanceof Player player) {
-        player.displayClientMessage(Component.literal(this.getCompanionType().name() + "-Type evolved into "
-            + threshold.result().displayName() + "! (not yet implemented visually)"), false);
-      }
-      return;
-    }
-  }
-
-  private int totalCrystalPoints() {
-    int total = 0;
-    for (EvoCrystalColor color : EvoCrystalColor.values()) {
-      total += this.getCrystalPoints(color);
-    }
-    return total;
-  }
-
-  /// drains `amount` across colors in a fixed order; only used by "Any" thresholds
-  private void spendCrystalPointsAcrossColors(int amount) {
-    for (EvoCrystalColor color : EvoCrystalColor.values()) {
-      if (amount <= 0) {
-        break;
-      }
-
-      int have = this.getCrystalPoints(color);
-      int take = Math.min(have, amount);
-      this.setCrystalPoints(color, have - take);
-      amount -= take;
-    }
-  }
   // endregion evolution
 
   // region leveling
@@ -650,7 +502,7 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
       this.entityData.set(DATA_EXPERIENCE_ID, compound.getInt("Experience"));
     }
     if (compound.getBoolean("Wisp")) {
-      this.entityData.set(DATA_WISP_ID, true);
+      this.setWisp(true);
       this.setNoAi(true);
     }
   }
