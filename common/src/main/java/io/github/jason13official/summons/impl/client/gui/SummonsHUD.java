@@ -33,6 +33,10 @@ public class SummonsHUD {
     int companionColor = active.isWisp() ? 0xFF777777 : 0xFF3366CC;
     renderHealthBar(graphics, mc.font, 6, 10 + BAR_GAP, companionLabel, active.getHealth(), active.getMaxHealth(), companionColor);
 
+    if (active.isChainArmed()) {
+      renderChainPopup(graphics, mc.font, mc.getWindow().getGuiScaledWidth() / 2, mc.getWindow().getGuiScaledHeight() / 2 - 30);
+    }
+
     int x = 6;
     int y = mc.getWindow().getGuiScaledHeight() - 40;
 
@@ -77,6 +81,15 @@ public class SummonsHUD {
 
     String text = Math.round(current) + "/" + Math.round(max);
     graphics.drawCenteredString(font, text, x + BAR_WIDTH / 2, y + 1, 0xFFFFFF);
+  }
+
+  /// "the word 'Chain!' is flashed in an orange bubble" (wiki) -> small centered popup
+  /// while the active companion's Chain Attack window is open
+  private static void renderChainPopup(GuiGraphics graphics, Font font, int centerX, int centerY) {
+    String text = "Chain!";
+    int halfWidth = font.width(text) / 2;
+    graphics.fill(centerX - halfWidth - 6, centerY - 6, centerX + halfWidth + 6, centerY + 10, 0xAA331A00);
+    graphics.drawCenteredString(font, text, centerX, centerY, 0xFFA500);
   }
 
   private SummonsHUD() {

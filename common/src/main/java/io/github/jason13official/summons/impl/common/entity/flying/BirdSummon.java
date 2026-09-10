@@ -355,7 +355,7 @@ public class BirdSummon extends AbstractFlyingCompanion {
   /// physical swoop/dive-bomb -> Bird's basic direct attack
   private static void diveAttack(AbstractCompanion companion, LivingEntity target) {
     companion.swing(InteractionHand.MAIN_HAND);
-    float damage = (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE);
+    float damage = (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * companion.directAttackDamageMultiplier();
     target.hurt(companion.damageSources().mobAttack(companion), damage);
     target.knockback(0.6, companion.getX() - target.getX(), companion.getZ() - target.getZ());
     spawnAbilityParticles(target, ParticleTypes.CLOUD, 4);

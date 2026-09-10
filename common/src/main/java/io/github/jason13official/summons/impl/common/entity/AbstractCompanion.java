@@ -30,6 +30,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.DamageTypeTags;
+import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -70,6 +71,14 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
       SynchedEntityData.defineId(AbstractCompanion.class, EntityDataSerializers.BOOLEAN);
 
   private int abilityBusyTicks;
+
+  /// Chain Attack "window" (Battle/Devil only, see CompanionType#isChainAttackCapable):
+  /// true while the owner's next landed hit should trigger a bonus companion attack instead
+  /// of just damage, see ChainAttackTracker. Synced so SummonsHUD can show the popup.
+  private static final EntityDataAccessor<Boolean> DATA_CHAIN_ARMED_ID =
+      SynchedEntityData.defineId(AbstractCompanion.class, EntityDataSerializers.BOOLEAN);
+
+  private int chainArmedTicks;
 
   /// Guard field radius for DEFEND mode; shrinks per hit, regenerates over time.
   private static final EntityDataAccessor<Float> DATA_GUARD_FIELD_RADIUS_ID =
@@ -151,6 +160,7 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     builder.define(DATA_MODE_ID, (byte) CompanionMode.AUTO.ordinal());
     builder.define(DATA_ABILITY_INDEX_ID, (byte) 0);
     builder.define(DATA_ABILITY_BUSY_ID, false);
+    builder.define(DATA_CHAIN_ARMED_ID, false);
     builder.define(DATA_GUARD_FIELD_RADIUS_ID, GUARD_FIELD_MAX_RADIUS);
     builder.define(DATA_CRYSTAL_RED_ID, 0);
     builder.define(DATA_CRYSTAL_BLUE_ID, 0);
@@ -188,6 +198,10 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
 
     if (this.abilityBusyTicks > 0 && --this.abilityBusyTicks == 0) {
       this.entityData.set(DATA_ABILITY_BUSY_ID, false);
+    }
+
+    if (this.chainArmedTicks > 0 && --this.chainArmedTicks == 0) {
+      this.entityData.set(DATA_CHAIN_ARMED_ID, false);
     }
 
     this.tickOrbitingBits();
@@ -540,13 +554,32 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
   // endregion leveling
 
   // region direct attack
-  /// vanilla melee hit + XP; types with a different basic attack (ranged, or Fairy's
-  /// poison tick) override this instead of adding a plain MeleeAttackGoal.
+  private static final float DIRECT_ATTACK_GROWTH_PER_LEVEL = 0.01F; // +1%/level; level 99 ~ 2x
+
+  /// only the direct attack scales with level; ability damage stays flat (no wiki numbers
+  /// for this - it's this mod's own leveling design, not a Curse of Darkness mechanic).
+  public final float directAttackDamageMultiplier() {
+    return 1.0F + DIRECT_ATTACK_GROWTH_PER_LEVEL * (this.getLevel() - 1);
+  }
+
+  /// melee hit + XP, with `directAttackDamageMultiplier()` applied; types with a different
+  /// basic attack (ranged, or Fairy's poison tick) override this instead of adding a plain
+  /// MeleeAttackGoal. Doesn't call `super.doHurtTarget` (Mob's own version reads
+  /// ATTACK_DAMAGE fresh with no hook for a level scalar), replicates its damage+knockback
+  /// instead, skipping the enchantment/weapon-item hooks that don't apply to companions.
   @Override
   public boolean doHurtTarget(Entity entity) {
     this.swing(InteractionHand.MAIN_HAND); // drives client-side getAttackAnim() for the swing pose
-    boolean success = super.doHurtTarget(entity);
+    float damage = (float) this.getAttributeValue(Attributes.ATTACK_DAMAGE) * this.directAttackDamageMultiplier();
+    DamageSource damageSource = this.damageSources().mobAttack(this);
+    boolean success = entity.hurt(damageSource, damage);
     if (success) {
+      float knockback = this.getKnockback(entity, damageSource);
+      if (knockback > 0.0F && entity instanceof LivingEntity target) {
+        target.knockback(knockback * 0.5, Mth.sin(this.getYRot() * ((float) Math.PI / 180.0F)),
+            -Mth.cos(this.getYRot() * ((float) Math.PI / 180.0F)));
+      }
+      this.setLastHurtMob(entity);
       this.grantDirectAttackExperience();
     }
     return success;
@@ -743,6 +776,17 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
   protected void setAbilityBusy(int ticks) {
     this.abilityBusyTicks = ticks;
     this.entityData.set(DATA_ABILITY_BUSY_ID, ticks > 0);
+  }
+
+  /// see ChainAttackTracker; whether the owner's next landed hit should trigger this
+  /// companion's bonus Chain Attack, for SummonsHUD's popup
+  public boolean isChainArmed() {
+    return this.entityData.get(DATA_CHAIN_ARMED_ID);
+  }
+
+  public void setChainArmed(int ticks) {
+    this.chainArmedTicks = ticks;
+    this.entityData.set(DATA_CHAIN_ARMED_ID, ticks > 0);
   }
 
   public void cycleAbility(int direction) {

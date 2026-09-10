@@ -236,7 +236,10 @@ public class FairySummon extends AbstractFlyingCompanion {
       return false;
     }
 
-    target.addEffect(new MobEffectInstance(MobEffects.POISON, 30, 0));
+    // ATTACK_DAMAGE is 0 per lore, nothing to scale numerically -> poison duration scales
+    // with level instead, so leveling still means something for Fairy's direct attack
+    int duration = (int) (30 * this.directAttackDamageMultiplier());
+    target.addEffect(new MobEffectInstance(MobEffects.POISON, duration, 0));
     this.grantDirectAttackExperience();
     return true;
   }

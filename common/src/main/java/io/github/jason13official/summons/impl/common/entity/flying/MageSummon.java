@@ -242,7 +242,7 @@ public class MageSummon extends AbstractFlyingCompanion {
   /// small lightning zap: physically weak, so its basic attack is a light
   /// instant spell, a scaled fraction of ATTACK_DAMAGE, no projectile entity.
   private static void castZap(AbstractCompanion companion, LivingEntity target) {
-    float damage = (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * 0.3F;
+    float damage = (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * 0.3F * companion.directAttackDamageMultiplier();
     target.hurt(companion.damageSources().magic(), damage);
     spawnAbilityParticles(target, ParticleTypes.ELECTRIC_SPARK, 6);
     companion.grantDirectAttackExperience();
