@@ -1,5 +1,8 @@
 package io.github.jason13official.summons;
 
+import io.github.jason13official.summons.impl.common.network.CompanionIdentitySyncPayload;
+import io.github.jason13official.summons.impl.common.network.CompanionProgressSyncPayload;
+import io.github.jason13official.summons.impl.common.network.CompanionStateSyncPayload;
 import io.github.jason13official.summons.impl.common.network.SummonsNetworking;
 import io.github.jason13official.summons.impl.common.network.SummonsNetworking.CompanionInputPayload;
 import io.github.jason13official.summons.impl.common.registry.ModBlocks;
@@ -71,6 +74,12 @@ public class SummonsNeoForge {
           SummonsNetworking.handle(player, payload.action());
         }
       });
+      registrar.playToClient(CompanionProgressSyncPayload.TYPE, CompanionProgressSyncPayload.STREAM_CODEC,
+          (payload, context) -> SummonsNetworking.handleProgressSync(payload));
+      registrar.playToClient(CompanionStateSyncPayload.TYPE, CompanionStateSyncPayload.STREAM_CODEC,
+          (payload, context) -> SummonsNetworking.handleStateSync(payload));
+      registrar.playToClient(CompanionIdentitySyncPayload.TYPE, CompanionIdentitySyncPayload.STREAM_CODEC,
+          (payload, context) -> SummonsNetworking.handleIdentitySync(payload));
     });
 
     if (FMLLoader.getDist() == Dist.CLIENT) {

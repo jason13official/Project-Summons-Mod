@@ -1,10 +1,8 @@
 package io.github.jason13official.summons.impl.common.entity;
 
-/// Per-type passive owner buff, from the wiki's own formula:
-/// `total = initial + growth * (level-1) / 98` (level 99 = growth fully applied).
-/// STR -> owner ATTACK_DAMAGE (real attribute modifier); CON -> % duration reduction on
-/// harmful effects; LCK -> % chance to duplicate a kill's drop. Neither CON nor LCK map to
-/// a vanilla attribute, so they're read on demand by mixins instead (no attribute to hold).
+/// Per-type passive owner buff: `total = initial + growth * (level-1) / 98` (wiki formula).
+/// STR -> owner ATTACK_DAMAGE; CON -> % harmful-effect duration cut; LCK -> % chance to
+/// duplicate a kill's drop. Only STR maps to a real attribute; CON/LCK read on demand.
 public record OwnerStatBonusKit(double strInitial, double strGrowth, double conInitial, double conGrowth,
                                  double lckInitial, double lckGrowth) {
 

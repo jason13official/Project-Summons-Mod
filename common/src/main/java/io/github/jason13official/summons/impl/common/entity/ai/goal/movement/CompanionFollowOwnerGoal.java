@@ -5,10 +5,9 @@ import java.util.EnumSet;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.goal.Goal;
 
-/// keeps a companion near its owner. Replaces vanilla `FollowMobGoal`, which was being used
-/// for this but actually follows any nearby *different-species* mob - not the owner at all
-/// (`mob2 -> mob.getClass() != mob2.getClass()`, copied straight from Parrot) - the real
-/// reason companions wandered off and needed the 24-block teleport safety net so often.
+/// Keeps a companion near its owner. Replaces vanilla `FollowMobGoal`, which actually
+/// follows any nearby *different-species* mob, not the owner (copied from Parrot) -> the
+/// real reason companions wandered off and needed the teleport safety net so often.
 public class CompanionFollowOwnerGoal extends Goal {
   private final AbstractCompanion companion;
   private final double speedModifier;

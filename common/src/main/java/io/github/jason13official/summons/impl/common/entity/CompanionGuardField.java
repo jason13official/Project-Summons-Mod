@@ -6,9 +6,8 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.world.entity.LivingEntity;
 
 /// DEFEND-mode Guard Field: shrinks per hit, regenerates over time, blocks damage to the
-/// companion itself and (via #isProtecting) to an owner standing inside it. The radius
-/// entityData + its get/set stay on AbstractCompanion (thin SynchedEntityData wrapper also
-/// read by GuardFieldRenderer); this is the surrounding business logic.
+/// companion and (via #isProtecting) an owner standing inside it. The radius field itself
+/// stays on AbstractCompanion (also read by GuardFieldRenderer); this is the logic around it.
 final class CompanionGuardField {
   private static final float SHRINK_PER_HIT = 0.75F;
   private static final float REGEN_PER_TICK = 0.01F; // ~4.5s min->max

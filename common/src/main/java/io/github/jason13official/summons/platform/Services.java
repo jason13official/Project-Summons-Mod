@@ -3,6 +3,7 @@ package io.github.jason13official.summons.platform;
 import io.github.jason13official.summons.Constants;
 import io.github.jason13official.summons.platform.services.INetworkHelper;
 import io.github.jason13official.summons.platform.services.IPlatformHelper;
+import io.github.jason13official.summons.platform.services.IServerNetworkHelper;
 import java.util.ServiceConfigurationError;
 import java.util.ServiceLoader;
 
@@ -17,6 +18,15 @@ public class Services {
 
     if (network == null) network = load(INetworkHelper.class);
     return network;
+  }
+
+  private static IServerNetworkHelper serverNetwork;
+
+  /// lazy-loaded on first use; server -> tracking-clients, the mirror of #network()
+  public static IServerNetworkHelper serverNetwork() {
+
+    if (serverNetwork == null) serverNetwork = load(IServerNetworkHelper.class);
+    return serverNetwork;
   }
 
   private static <T> T load(Class<T> clazz) {

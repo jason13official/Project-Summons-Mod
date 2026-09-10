@@ -11,10 +11,9 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.phys.Vec3;
 
-/// Battle-/Devil-Type "Chain Attack" (wiki: land the final hit of a combo, a "Chain!"
-/// prompt appears, pressing attack again warps the companion in for a bonus hit). Per-player
-/// combo state kept here, not on the owner/companion entity; transient combat bookkeeping,
-/// not something that needs to survive a relog or round-trip through NBT.
+/// "Chain Attack" (wiki: land a combo's final hit, a "Chain!" prompt appears, attacking
+/// again warps the companion in for a bonus hit). Per-player combo state kept here, not on
+/// the entity; transient bookkeeping, no need to survive a relog or NBT round-trip.
 public final class ChainAttackTracker {
 
   private static final int COMBO_HITS_TO_ARM = 3; // consecutive same-weapon hits to arm Chain!

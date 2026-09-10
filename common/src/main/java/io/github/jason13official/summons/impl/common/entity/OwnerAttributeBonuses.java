@@ -10,9 +10,8 @@ import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 
 /// STR -> owner ATTACK_DAMAGE, CON -> owner MAX_HEALTH; the two OwnerStatBonusKit stats
-/// backed by a real vanilla attribute (CON also cuts harmful-effect duration via
-/// LivingEntityEffectResistMixin, and LCK is read on demand by LivingEntityLuckyDropMixin -
-/// neither of those needs a modifier here, so they're not handled by this class).
+/// backed by a real vanilla attribute. CON's effect-resist and LCK's drop-chance are
+/// handled elsewhere (LivingEntityEffectResistMixin/LivingEntityLuckyDropMixin), not here.
 final class OwnerAttributeBonuses {
   private static final ResourceLocation STR_MODIFIER_ID = Summons.identifier("owner_str_bonus");
   private static final ResourceLocation CON_MODIFIER_ID = Summons.identifier("owner_con_bonus");

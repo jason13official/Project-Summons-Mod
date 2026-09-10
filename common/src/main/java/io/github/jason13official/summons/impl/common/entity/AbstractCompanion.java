@@ -7,8 +7,12 @@ import io.github.jason13official.summons.impl.common.entity.ai.goal.target.Compa
 import io.github.jason13official.summons.impl.common.evolution.EvoCrystalColor;
 import io.github.jason13official.summons.impl.common.evolution.EvolutionForm;
 import io.github.jason13official.summons.impl.common.evolution.EvolutionThreshold;
+import io.github.jason13official.summons.impl.common.network.CompanionIdentitySyncPayload;
+import io.github.jason13official.summons.impl.common.network.CompanionProgressSyncPayload;
+import io.github.jason13official.summons.impl.common.network.CompanionStateSyncPayload;
 import io.github.jason13official.summons.impl.common.party.CompanionMode;
 import io.github.jason13official.summons.impl.common.party.CompanionType;
+import io.github.jason13official.summons.platform.Services;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -44,60 +48,46 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
   private static final EntityDataAccessor<Optional<UUID>> DATA_OWNER_UUID_ID =
       SynchedEntityData.defineId(AbstractCompanion.class, EntityDataSerializers.OPTIONAL_UUID);
 
+  // Everything below is OUR OWN sync, not vanilla's SynchedEntityData (mods can't safely
+  // register new EntityDataSerializers). Plain fields, mirrored to tracking clients via
+  // three payloads split by change frequency (see #tick, #build*/#apply*SyncPayload).
+  private boolean progressSyncDirty = true; // crystals/level/experience -> changes often
+  private boolean stateSyncDirty = true; // mode/ability/chain/guard field -> changes sometimes
+  private boolean identitySyncDirty = true; // type/evolution/wisp -> changes rarely
+  private static final int PROGRESS_SYNC_INTERVAL_TICKS = 20;
+  private static final int STATE_SYNC_INTERVAL_TICKS = 20;
+  private static final int IDENTITY_SYNC_INTERVAL_TICKS = 100; // fine to lag further behind
+
   // which Innocent Devil "slot" this instance represents; assigned by CompanionPartyManager
-  private static final EntityDataAccessor<Byte> DATA_COMPANION_TYPE_ID =
-      SynchedEntityData.defineId(AbstractCompanion.class, EntityDataSerializers.BYTE);
-
-  private static final EntityDataAccessor<Byte> DATA_MODE_ID =
-      SynchedEntityData.defineId(AbstractCompanion.class, EntityDataSerializers.BYTE);
-
-  private static final EntityDataAccessor<Byte> DATA_ABILITY_INDEX_ID =
-      SynchedEntityData.defineId(AbstractCompanion.class, EntityDataSerializers.BYTE);
-
-  private static final EntityDataAccessor<Boolean> DATA_ABILITY_BUSY_ID =
-      SynchedEntityData.defineId(AbstractCompanion.class, EntityDataSerializers.BOOLEAN);
-
+  private CompanionType companionType = CompanionType.FAIRY;
+  private CompanionMode mode = CompanionMode.AUTO;
+  private int abilityIndex;
+  private boolean abilityBusy;
   private int abilityBusyTicks;
 
   /// Chain Attack "window" (Battle/Devil only, see CompanionType#isChainAttackCapable):
   /// true while the owner's next landed hit should trigger a bonus companion attack instead
   /// of just damage, see ChainAttackTracker. Synced so SummonsHUD can show the popup.
-  private static final EntityDataAccessor<Boolean> DATA_CHAIN_ARMED_ID =
-      SynchedEntityData.defineId(AbstractCompanion.class, EntityDataSerializers.BOOLEAN);
-
+  private boolean chainArmed;
   private int chainArmedTicks;
-
-  /// Guard field radius for DEFEND mode; shrinks per hit, regenerates over time.
-  private static final EntityDataAccessor<Float> DATA_GUARD_FIELD_RADIUS_ID =
-      SynchedEntityData.defineId(AbstractCompanion.class, EntityDataSerializers.FLOAT);
 
   public static final float GUARD_FIELD_MAX_RADIUS = 3.0F;
   public static final float GUARD_FIELD_MIN_RADIUS = 0.75F;
 
+  /// Guard field radius for DEFEND mode; shrinks per hit, regenerates over time.
+  private float guardFieldRadius = GUARD_FIELD_MAX_RADIUS;
+
   private static final double TELEPORT_TO_OWNER_DISTANCE = 24.0;
 
-  private static final EntityDataAccessor<Integer> DATA_CRYSTAL_RED_ID =
-      SynchedEntityData.defineId(AbstractCompanion.class, EntityDataSerializers.INT);
-  private static final EntityDataAccessor<Integer> DATA_CRYSTAL_BLUE_ID =
-      SynchedEntityData.defineId(AbstractCompanion.class, EntityDataSerializers.INT);
-  private static final EntityDataAccessor<Integer> DATA_CRYSTAL_GREEN_ID =
-      SynchedEntityData.defineId(AbstractCompanion.class, EntityDataSerializers.INT);
-  private static final EntityDataAccessor<Integer> DATA_CRYSTAL_YELLOW_ID =
-      SynchedEntityData.defineId(AbstractCompanion.class, EntityDataSerializers.INT);
-  private static final EntityDataAccessor<Integer> DATA_CRYSTAL_WHITE_ID =
-      SynchedEntityData.defineId(AbstractCompanion.class, EntityDataSerializers.INT);
+  private CrystalPoints crystals = CrystalPoints.ZERO;
 
-  private static final EntityDataAccessor<String> DATA_EVOLUTION_FORM_ID =
-      SynchedEntityData.defineId(AbstractCompanion.class, EntityDataSerializers.STRING);
   // comma-joined form ids ever reached; abilities stay learned once unlocked, even past
   // whatever form originally granted them (matches the wiki: evolving never revokes one)
-  private static final EntityDataAccessor<String> DATA_REACHED_FORMS_ID =
-      SynchedEntityData.defineId(AbstractCompanion.class, EntityDataSerializers.STRING);
+  private String evolutionForm;
+  private String reachedForms;
 
-  private static final EntityDataAccessor<Integer> DATA_LEVEL_ID =
-      SynchedEntityData.defineId(AbstractCompanion.class, EntityDataSerializers.INT);
-  private static final EntityDataAccessor<Integer> DATA_EXPERIENCE_ID =
-      SynchedEntityData.defineId(AbstractCompanion.class, EntityDataSerializers.INT);
+  private int level = 1;
+  private int experience;
 
   public static final int MAX_LEVEL = 99;
   private static final int ABILITY_USE_XP = 5;
@@ -105,11 +95,12 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
 
   /// at 0 Hearts the I.D. goes inert instead of dying; no wisp entity/model, renderers
   /// skip drawing and tick() emits particles instead until a Heart revives it
-  private static final EntityDataAccessor<Boolean> DATA_WISP_ID =
-      SynchedEntityData.defineId(AbstractCompanion.class, EntityDataSerializers.BOOLEAN);
+  private boolean wisp;
 
   public AbstractCompanion(EntityType<? extends AbstractCompanion> entityType, Level level) {
     super(entityType, level);
+    this.evolutionForm = this.baseForm().id();
+    this.reachedForms = this.baseForm().id();
   }
 
   public static AttributeSupplier.Builder createAttributes() {
@@ -139,22 +130,6 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
   protected void defineSynchedData(SynchedEntityData.Builder builder) {
     super.defineSynchedData(builder);
     builder.define(DATA_OWNER_UUID_ID, Optional.empty());
-    builder.define(DATA_COMPANION_TYPE_ID, (byte) CompanionType.FAIRY.ordinal());
-    builder.define(DATA_MODE_ID, (byte) CompanionMode.AUTO.ordinal());
-    builder.define(DATA_ABILITY_INDEX_ID, (byte) 0);
-    builder.define(DATA_ABILITY_BUSY_ID, false);
-    builder.define(DATA_CHAIN_ARMED_ID, false);
-    builder.define(DATA_GUARD_FIELD_RADIUS_ID, GUARD_FIELD_MAX_RADIUS);
-    builder.define(DATA_CRYSTAL_RED_ID, 0);
-    builder.define(DATA_CRYSTAL_BLUE_ID, 0);
-    builder.define(DATA_CRYSTAL_GREEN_ID, 0);
-    builder.define(DATA_CRYSTAL_YELLOW_ID, 0);
-    builder.define(DATA_CRYSTAL_WHITE_ID, 0);
-    builder.define(DATA_EVOLUTION_FORM_ID, this.baseForm().id());
-    builder.define(DATA_REACHED_FORMS_ID, this.baseForm().id());
-    builder.define(DATA_LEVEL_ID, 1);
-    builder.define(DATA_EXPERIENCE_ID, 0);
-    builder.define(DATA_WISP_ID, false);
   }
 
   @Override
@@ -180,20 +155,77 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     }
 
     if (this.abilityBusyTicks > 0 && --this.abilityBusyTicks == 0) {
-      this.entityData.set(DATA_ABILITY_BUSY_ID, false);
+      this.abilityBusy = false;
+      this.stateSyncDirty = true;
     }
 
     if (this.chainArmedTicks > 0 && --this.chainArmedTicks == 0) {
-      this.entityData.set(DATA_CHAIN_ARMED_ID, false);
+      this.chainArmed = false;
+      this.stateSyncDirty = true;
     }
 
     this.orbitingBits.tick(this);
 
-    if (this.tickCount % 20 == 0) {
+    if (this.tickCount % PROGRESS_SYNC_INTERVAL_TICKS == 0) {
       OwnerAttributeBonuses.refresh(this);
     }
 
+    // each tier resends periodically regardless of its own dirty flag too, so a player who
+    // starts tracking this companion after its last change still converges on real state
+    if (this.progressSyncDirty || this.tickCount % PROGRESS_SYNC_INTERVAL_TICKS == 0) {
+      Services.serverNetwork().sendToTrackingClients(this, this.buildProgressSyncPayload());
+      this.progressSyncDirty = false;
+    }
+
+    if (this.stateSyncDirty || this.tickCount % STATE_SYNC_INTERVAL_TICKS == 0) {
+      Services.serverNetwork().sendToTrackingClients(this, this.buildStateSyncPayload());
+      this.stateSyncDirty = false;
+    }
+
+    if (this.identitySyncDirty || this.tickCount % IDENTITY_SYNC_INTERVAL_TICKS == 0) {
+      Services.serverNetwork().sendToTrackingClients(this, this.buildIdentitySyncPayload());
+      this.identitySyncDirty = false;
+    }
+
     CompanionGuardField.tick(this);
+  }
+
+  private CompanionProgressSyncPayload buildProgressSyncPayload() {
+    return new CompanionProgressSyncPayload(this.getId(), this.crystals, this.level, this.experience);
+  }
+
+  private CompanionStateSyncPayload buildStateSyncPayload() {
+    return new CompanionStateSyncPayload(this.getId(), (byte) this.mode.ordinal(), (byte) this.abilityIndex,
+        this.abilityBusy, this.chainArmed, this.guardFieldRadius);
+  }
+
+  private CompanionIdentitySyncPayload buildIdentitySyncPayload() {
+    return new CompanionIdentitySyncPayload(this.getId(), (byte) this.companionType.ordinal(),
+        this.evolutionForm, this.reachedForms, this.wisp);
+  }
+
+  /// client-side: overwrites the mirrored fields from a received snapshot directly,
+  /// bypassing the public setters (and whatever side effects they carry, like #setMode's
+  /// noAi toggle); applying synced state shouldn't re-trigger that kind of business logic
+  public void applyProgressSyncPayload(CompanionProgressSyncPayload payload) {
+    this.crystals = payload.crystals();
+    this.level = payload.level();
+    this.experience = payload.experience();
+  }
+
+  public void applyStateSyncPayload(CompanionStateSyncPayload payload) {
+    this.mode = CompanionMode.values()[payload.mode()];
+    this.abilityIndex = payload.abilityIndex();
+    this.abilityBusy = payload.abilityBusy();
+    this.chainArmed = payload.chainArmed();
+    this.guardFieldRadius = payload.guardFieldRadius();
+  }
+
+  public void applyIdentitySyncPayload(CompanionIdentitySyncPayload payload) {
+    this.companionType = CompanionType.values()[payload.companionType()];
+    this.evolutionForm = payload.evolutionForm();
+    this.reachedForms = payload.reachedForms();
+    this.wisp = payload.wisp();
   }
 
   /// safety net for dimension changes, respawns, or falling too far behind
@@ -219,12 +251,15 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
 
   // region guard field
   public float getGuardFieldRadius() {
-    return this.entityData.get(DATA_GUARD_FIELD_RADIUS_ID);
+    return this.guardFieldRadius;
   }
 
   void setGuardFieldRadius(float radius) {
-    this.entityData.set(DATA_GUARD_FIELD_RADIUS_ID,
-        Math.min(GUARD_FIELD_MAX_RADIUS, Math.max(GUARD_FIELD_MIN_RADIUS, radius)));
+    float clamped = Math.min(GUARD_FIELD_MAX_RADIUS, Math.max(GUARD_FIELD_MIN_RADIUS, radius));
+    if (clamped != this.guardFieldRadius) {
+      this.guardFieldRadius = clamped;
+      this.stateSyncDirty = true;
+    }
   }
 
   /// a sparking wisp is already "spent"; DEFEND mode blocks damage and shrinks the field.
@@ -254,11 +289,14 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
 
   // region wisp
   public boolean isWisp() {
-    return this.entityData.get(DATA_WISP_ID);
+    return this.wisp;
   }
 
   void setWisp(boolean wisp) {
-    this.entityData.set(DATA_WISP_ID, wisp);
+    if (wisp != this.wisp) {
+      this.wisp = wisp;
+      this.identitySyncDirty = true;
+    }
   }
 
   /// bridges CompanionWisp back to the real vanilla death (`x.super.method()` isn't legal
@@ -285,23 +323,19 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
 
   // region evolution
   public int getCrystalPoints(EvoCrystalColor color) {
-    return this.entityData.get(switch (color) {
-      case RED -> DATA_CRYSTAL_RED_ID;
-      case BLUE -> DATA_CRYSTAL_BLUE_ID;
-      case GREEN -> DATA_CRYSTAL_GREEN_ID;
-      case YELLOW -> DATA_CRYSTAL_YELLOW_ID;
-      case WHITE -> DATA_CRYSTAL_WHITE_ID;
-    });
+    return this.crystals.get(color);
+  }
+
+  public CrystalPoints getCrystalPoints() {
+    return this.crystals;
   }
 
   void setCrystalPoints(EvoCrystalColor color, int points) {
-    this.entityData.set(switch (color) {
-      case RED -> DATA_CRYSTAL_RED_ID;
-      case BLUE -> DATA_CRYSTAL_BLUE_ID;
-      case GREEN -> DATA_CRYSTAL_GREEN_ID;
-      case YELLOW -> DATA_CRYSTAL_YELLOW_ID;
-      case WHITE -> DATA_CRYSTAL_WHITE_ID;
-    }, Math.max(0, points));
+    CrystalPoints updated = this.crystals.with(color, points);
+    if (!updated.equals(this.crystals)) {
+      this.crystals = updated;
+      this.progressSyncDirty = true;
+    }
   }
 
   /// credits `amount` points of `color`, then checks for an evolution
@@ -340,25 +374,28 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
   }
 
   public EvolutionForm getEvolutionForm() {
-    return this.resolveForm(this.entityData.get(DATA_EVOLUTION_FORM_ID));
+    return this.resolveForm(this.evolutionForm);
   }
 
   void setEvolutionForm(EvolutionForm form) {
-    this.entityData.set(DATA_EVOLUTION_FORM_ID, form.id());
+    if (!form.id().equals(this.evolutionForm)) {
+      this.evolutionForm = form.id();
+      this.identitySyncDirty = true;
+    }
   }
 
   /// has this companion ever reached `form` (including its current one)? Abilities check
   /// this rather than the current form alone, so evolving further never revokes one.
   public boolean hasReachedForm(EvolutionForm form) {
-    String reached = this.entityData.get(DATA_REACHED_FORMS_ID);
-    return ("," + reached + ",").contains("," + form.id() + ",");
+    return ("," + this.reachedForms + ",").contains("," + form.id() + ",");
   }
 
   void markFormReached(EvolutionForm form) {
     if (this.hasReachedForm(form)) {
       return;
     }
-    this.entityData.set(DATA_REACHED_FORMS_ID, this.entityData.get(DATA_REACHED_FORMS_ID) + "," + form.id());
+    this.reachedForms = this.reachedForms + "," + form.id();
+    this.identitySyncDirty = true;
   }
 
   /// evolution routes out of this companion's *current* form; override per type, switching
@@ -371,11 +408,11 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
 
   // region leveling
   public int getLevel() {
-    return this.entityData.get(DATA_LEVEL_ID);
+    return this.level;
   }
 
   public int getExperience() {
-    return this.entityData.get(DATA_EXPERIENCE_ID);
+    return this.experience;
   }
 
   /// XP needed to advance from `level` to `level + 1`
@@ -393,8 +430,9 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
       level++;
     }
 
-    this.entityData.set(DATA_LEVEL_ID, level);
-    this.entityData.set(DATA_EXPERIENCE_ID, level >= MAX_LEVEL ? 0 : xp);
+    this.level = level;
+    this.experience = level >= MAX_LEVEL ? 0 : xp;
+    this.progressSyncDirty = true;
   }
   // endregion leveling
 
@@ -402,16 +440,14 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
   private static final float DIRECT_ATTACK_GROWTH_PER_LEVEL = 0.01F; // +1%/level; level 99 ~ 2x
 
   /// only the direct attack scales with level; ability damage stays flat (no wiki numbers
-  /// for this - it's this mod's own leveling design, not a Curse of Darkness mechanic).
+  /// for this -> it's this mod's own leveling design, not a Curse of Darkness mechanic).
   public final float directAttackDamageMultiplier() {
     return 1.0F + DIRECT_ATTACK_GROWTH_PER_LEVEL * (this.getLevel() - 1);
   }
 
-  /// melee hit + XP, with `directAttackDamageMultiplier()` applied; types with a different
-  /// basic attack (ranged, or Fairy's poison tick) override this instead of adding a plain
-  /// MeleeAttackGoal. Doesn't call `super.doHurtTarget` (Mob's own version reads
-  /// ATTACK_DAMAGE fresh with no hook for a level scalar), replicates its damage+knockback
-  /// instead, skipping the enchantment/weapon-item hooks that don't apply to companions.
+  /// Melee hit + XP, with `directAttackDamageMultiplier()` applied; types with a different
+  /// basic attack override this instead. Doesn't call `super.doHurtTarget` (no hook there
+  /// for a level scalar); replicates its damage+knockback, skipping companion-irrelevant hooks.
   @Override
   public boolean doHurtTarget(Entity entity) {
     this.swing(InteractionHand.MAIN_HAND); // drives client-side getAttackAnim() for the swing pose
@@ -449,8 +485,8 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     for (EvoCrystalColor color : EvoCrystalColor.values()) {
       compound.putInt("Crystal" + color.name(), this.getCrystalPoints(color));
     }
-    compound.putString("EvolutionForm", this.entityData.get(DATA_EVOLUTION_FORM_ID));
-    compound.putString("ReachedForms", this.entityData.get(DATA_REACHED_FORMS_ID));
+    compound.putString("EvolutionForm", this.evolutionForm);
+    compound.putString("ReachedForms", this.reachedForms);
     compound.putInt("Level", this.getLevel());
     compound.putInt("Experience", this.getExperience());
     compound.putBoolean("Wisp", this.isWisp());
@@ -490,21 +526,25 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     }
 
     if (compound.contains("EvolutionForm")) {
-      this.entityData.set(DATA_EVOLUTION_FORM_ID, compound.getString("EvolutionForm"));
+      this.evolutionForm = compound.getString("EvolutionForm");
     }
     if (compound.contains("ReachedForms")) {
-      this.entityData.set(DATA_REACHED_FORMS_ID, compound.getString("ReachedForms"));
+      this.reachedForms = compound.getString("ReachedForms");
     }
     if (compound.contains("Level")) {
-      this.entityData.set(DATA_LEVEL_ID, compound.getInt("Level"));
+      this.level = compound.getInt("Level");
     }
     if (compound.contains("Experience")) {
-      this.entityData.set(DATA_EXPERIENCE_ID, compound.getInt("Experience"));
+      this.experience = compound.getInt("Experience");
     }
     if (compound.getBoolean("Wisp")) {
       this.setWisp(true);
       this.setNoAi(true);
     }
+    // loaded state needs to reach tracking clients on the next tick, across all three tiers
+    this.progressSyncDirty = true;
+    this.stateSyncDirty = true;
+    this.identitySyncDirty = true;
   }
 
   // TraceableEntity and OwnableEntity getOwner() collide once both are implemented;
@@ -533,21 +573,27 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
 
   // region party
   public CompanionType getCompanionType() {
-    return CompanionType.values()[this.entityData.get(DATA_COMPANION_TYPE_ID)];
+    return this.companionType;
   }
 
   public void setCompanionType(CompanionType type) {
-    this.entityData.set(DATA_COMPANION_TYPE_ID, (byte) type.ordinal());
+    if (type != this.companionType) {
+      this.companionType = type;
+      this.identitySyncDirty = true;
+    }
   }
   // endregion party
 
   // region mode
   public CompanionMode getMode() {
-    return CompanionMode.values()[this.entityData.get(DATA_MODE_ID)];
+    return this.mode;
   }
 
   public void setMode(CompanionMode mode) {
-    this.entityData.set(DATA_MODE_ID, (byte) mode.ordinal());
+    if (mode != this.mode) {
+      this.mode = mode;
+      this.stateSyncDirty = true;
+    }
 
     // DEFEND disables AI (no wander/chase/attack); direct teleports still work.
     // A wisp stays noAi regardless -> a mode change shouldn't wake it back up.
@@ -578,11 +624,14 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
   }
 
   public int getAbilityIndex() {
-    return this.entityData.get(DATA_ABILITY_INDEX_ID);
+    return this.abilityIndex;
   }
 
   public void setAbilityIndex(int index) {
-    this.entityData.set(DATA_ABILITY_INDEX_ID, (byte) index);
+    if (index != this.abilityIndex) {
+      this.abilityIndex = index;
+      this.stateSyncDirty = true;
+    }
   }
 
   /// this companion type's full Command-mode kit, gated or not; override per type, e.g.
@@ -615,23 +664,31 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
   }
 
   public boolean isAbilityBusy() {
-    return this.entityData.get(DATA_ABILITY_BUSY_ID);
+    return this.abilityBusy;
   }
 
   protected void setAbilityBusy(int ticks) {
     this.abilityBusyTicks = ticks;
-    this.entityData.set(DATA_ABILITY_BUSY_ID, ticks > 0);
+    boolean busy = ticks > 0;
+    if (busy != this.abilityBusy) {
+      this.abilityBusy = busy;
+      this.stateSyncDirty = true;
+    }
   }
 
   /// see ChainAttackTracker; whether the owner's next landed hit should trigger this
   /// companion's bonus Chain Attack, for SummonsHUD's popup
   public boolean isChainArmed() {
-    return this.entityData.get(DATA_CHAIN_ARMED_ID);
+    return this.chainArmed;
   }
 
   public void setChainArmed(int ticks) {
     this.chainArmedTicks = ticks;
-    this.entityData.set(DATA_CHAIN_ARMED_ID, ticks > 0);
+    boolean armed = ticks > 0;
+    if (armed != this.chainArmed) {
+      this.chainArmed = armed;
+      this.stateSyncDirty = true;
+    }
   }
 
   public void cycleAbility(int direction) {

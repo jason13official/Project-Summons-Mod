@@ -51,7 +51,7 @@ public class BirdSummon extends AbstractFlyingCompanion {
 
   private static final List<CompanionAbility> ABILITIES = List.of(
       // "Uses legs to propel Hector long distances. Allows access to places a normal jump
-      // cannot reach." - a real ride: owner mounts, gets launched in their look direction,
+      // cannot reach." -> a real ride: owner mounts, gets launched in their look direction,
       // and the companion counters gravity for a slow glide-down instead of a hard drop
       CompanionAbility.base("Glide", 60, (companion, owner) -> beginGlide(companion, owner, GLIDE_BOOST_SPEED)),
       // "Spreads explosive caltrops, which explode after a brief period." TODO: no delayed
