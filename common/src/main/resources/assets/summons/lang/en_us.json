@@ -16,6 +16,11 @@
 
   "item.summons.heart": "Heart",
 
+  "item.summons.deck_brush": "Deck Brush",
+  "item.summons.bamboo_lance": "Bamboo Lance",
+  "item.summons.dung": "Dung",
+  "item.summons.chauve_souris": "Chauve-souris",
+
   "key.categories.summons": "Summons",
   "key.summons.toggle_summon": "Summon/Dismiss Companion",
   "key.summons.cycle_party": "Cycle Party",
@@ -25,5 +30,12 @@
   "key.summons.ability_right": "Companion Ability (Right)",
   "key.summons.command": "Companion Command",
   "key.summons.ability_scroll_modifier": "Scroll Ability (Hold)",
-  "key.summons.open_menu": "Open Summons Menu"
+  "key.summons.open_menu": "Open Summons Menu",
+
+  "entity.summons.fairy": "Fairy-Type",
+  "entity.summons.battle": "Battle-Type",
+  "entity.summons.bird": "Bird-Type",
+  "entity.summons.mage": "Mage-Type",
+  "entity.summons.devil": "Devil-Type",
+  "entity.summons.pumpkin": "Pumpkin-Type"
 }

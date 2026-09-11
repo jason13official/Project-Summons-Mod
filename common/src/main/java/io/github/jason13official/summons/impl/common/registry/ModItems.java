@@ -4,6 +4,7 @@ import io.github.jason13official.summons.Summons;
 import io.github.jason13official.summons.impl.common.evolution.EvoCrystalColor;
 import io.github.jason13official.summons.impl.common.item.EvoCrystalItem;
 import io.github.jason13official.summons.impl.common.item.HeartItem;
+import io.github.jason13official.summons.impl.common.item.SpearItem;
 import io.github.jason13official.summons.platform.Services;
 import java.util.function.BiConsumer;
 import net.minecraft.resources.ResourceLocation;
@@ -27,6 +28,13 @@ public class ModItems {
 
   public static Item HEART;
 
+  // Spear-class weapons (wiki: pole weapons); DECK_BRUSH is the starter, CHAUVE_SOURIS is
+  // Devil-Type's final-evolution requirement
+  public static Item DECK_BRUSH;
+  public static Item BAMBOO_LANCE;
+  public static Item DUNG;
+  public static Item CHAUVE_SOURIS;
+
   public static void register(BiConsumer<Item, ResourceLocation> consumer) {
 
     FAIRY_SPAWN_EGG = Services.PLATFORM.createSpawnEggItem(() -> ModEntities.FAIRY, 0xFFAEE2, 0xFFFFFF, new Properties());
@@ -44,6 +52,11 @@ public class ModItems {
 
     HEART = new HeartItem(new Properties());
 
+    DECK_BRUSH = new SpearItem(4.0F, -2.6F, new Properties().stacksTo(1));
+    BAMBOO_LANCE = new SpearItem(5.0F, -2.6F, new Properties().stacksTo(1));
+    DUNG = new SpearItem(6.0F, -2.6F, new Properties().stacksTo(1));
+    CHAUVE_SOURIS = new SpearItem(10.0F, -2.6F, new Properties().stacksTo(1));
+
     consumer.accept(FAIRY_SPAWN_EGG, Summons.identifier("fairy_spawn_egg"));
     consumer.accept(BATTLE_SPAWN_EGG, Summons.identifier("battle_spawn_egg"));
     consumer.accept(BIRD_SPAWN_EGG, Summons.identifier("bird_spawn_egg"));
@@ -58,6 +71,11 @@ public class ModItems {
     consumer.accept(EVO_CRYSTAL_WHITE, Summons.identifier("evo_crystal_white"));
 
     consumer.accept(HEART, Summons.identifier("heart"));
+
+    consumer.accept(DECK_BRUSH, Summons.identifier("deck_brush"));
+    consumer.accept(BAMBOO_LANCE, Summons.identifier("bamboo_lance"));
+    consumer.accept(DUNG, Summons.identifier("dung"));
+    consumer.accept(CHAUVE_SOURIS, Summons.identifier("chauve_souris"));
   }
 
   public static Item forColor(EvoCrystalColor color) {

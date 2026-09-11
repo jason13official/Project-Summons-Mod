@@ -31,6 +31,10 @@ public class ModTabs {
           output.accept(ModItems.EVO_CRYSTAL_YELLOW);
           output.accept(ModItems.EVO_CRYSTAL_WHITE);
           output.accept(ModItems.HEART);
+          output.accept(ModItems.DECK_BRUSH);
+          output.accept(ModItems.BAMBOO_LANCE);
+          output.accept(ModItems.DUNG);
+          output.accept(ModItems.CHAUVE_SOURIS);
         }).build();
 
     consumer.accept(SUMMONS, Summons.identifier(Constants.MOD_ID));

@@ -64,7 +64,7 @@ final class CompanionWisp {
   }
 
   static void consumeHeart(AbstractCompanion companion) {
-    revive(companion);
+    if (companion.isWisp()) revive(companion);
     companion.heal(HEART_HEAL_AMOUNT);
   }
 

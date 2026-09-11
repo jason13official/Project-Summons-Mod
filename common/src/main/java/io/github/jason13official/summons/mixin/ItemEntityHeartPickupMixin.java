@@ -24,7 +24,7 @@ public class ItemEntityHeartPickupMixin {
 
     AbstractCompanion active = CompanionPartyManager.findActive(self.level(), player);
     if (active != null) {
-      active.consumeHeart();
+      active.consumeHeart(self.getItem().getCount());
     }
 
     self.discard();

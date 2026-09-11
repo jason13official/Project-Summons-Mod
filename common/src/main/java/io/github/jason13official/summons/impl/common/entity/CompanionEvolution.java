@@ -23,6 +23,12 @@ final class CompanionEvolution {
         continue;
       }
 
+      LivingEntity owner = companion.getOwner();
+      if (threshold.requiredWeapon() != null
+          && (owner == null || owner.getMainHandItem().getItem() != threshold.requiredWeapon())) {
+        continue;
+      }
+
       if (threshold.color() != null) {
         companion.setCrystalPoints(threshold.color(), available - threshold.amount());
       } else {
@@ -32,7 +38,6 @@ final class CompanionEvolution {
       companion.setEvolutionForm(threshold.result());
       companion.markFormReached(threshold.result());
 
-      LivingEntity owner = companion.getOwner();
       if (owner instanceof Player player) {
         player.displayClientMessage(Component.literal(companion.getCompanionType().name() + "-Type evolved into "
             + threshold.result().displayName() + "! (not yet implemented visually)"), false);

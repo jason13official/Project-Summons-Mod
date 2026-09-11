@@ -3,8 +3,10 @@ package io.github.jason13official.summons.impl.common.entity.flying;
 import io.github.jason13official.summons.Summons;
 import io.github.jason13official.summons.impl.common.entity.OwnerStatBonusKit;
 import io.github.jason13official.summons.impl.common.entity.ability.CompanionAbility;
+import io.github.jason13official.summons.impl.common.evolution.EvoCrystalColor;
 import io.github.jason13official.summons.impl.common.evolution.EvolutionForm;
 import io.github.jason13official.summons.impl.common.evolution.EvolutionThreshold;
+import io.github.jason13official.summons.impl.common.registry.ModItems;
 import java.util.List;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.resources.ResourceLocation;
@@ -35,7 +37,7 @@ public class DevilSummon extends AbstractFlyingCompanion {
   private int magicCircleTicksRemaining;
 
   private static final List<CompanionAbility> ABILITIES = List.of(
-      CompanionAbility.base("Magic Circle", 30, (companion, owner) -> {
+      CompanionAbility.base("Magic Circle", 30, "Turns Hector into a magic circle, letting him slide under low gaps.", (companion, owner) -> {
         AttributeInstance scale = owner.getAttribute(Attributes.SCALE);
         if (scale != null) {
           scale.addOrUpdateTransientModifier(
@@ -46,7 +48,7 @@ public class DevilSummon extends AbstractFlyingCompanion {
         spawnAbilityParticles(owner, ParticleTypes.PORTAL, 12);
       }),
       // Devil-Type FAQ: Brow gets "Scissor M. Circle, Needle M. Circle"
-      CompanionAbility.gated("Needle M. Circle", 30, Form.BROW, 5, (companion, owner) -> {
+      CompanionAbility.gated("Needle M. Circle", 30, Form.BROW, 5, "Fires piercing needles from the Magic Circle at a nearby foe.", (companion, owner) -> {
         LivingEntity target = findNearestTarget(companion, owner, MAGIC_CIRCLE_RADIUS * 2.0);
         if (target == null) {
           return;
@@ -57,7 +59,7 @@ public class DevilSummon extends AbstractFlyingCompanion {
         spawnAbilityParticles(target, ParticleTypes.PORTAL, 6);
       }),
       // wider AoE, two hits each
-      CompanionAbility.gated("Scissor M. Circle", 25, Form.BROW, 8, (companion, owner) -> {
+      CompanionAbility.gated("Scissor M. Circle", 25, Form.BROW, 8, "A wider Magic Circle blast that strikes everything nearby, twice.", (companion, owner) -> {
         AABB area = companion.getBoundingBox().inflate(MAGIC_CIRCLE_RADIUS * 1.5);
         float damage = (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * 0.75F;
 
@@ -68,9 +70,18 @@ public class DevilSummon extends AbstractFlyingCompanion {
         }
 
         spawnAbilityParticles(companion, ParticleTypes.PORTAL, 16);
+      }),
+      // wiki: The End "fires beams from its eyes" -> a long-range single-target hit
+      CompanionAbility.gated("Exploding M. Circle", 40, Form.THE_END, 12, "Fires beams from its eyes.", (companion, owner) -> {
+        LivingEntity target = findNearestTarget(companion, owner, MAGIC_CIRCLE_RADIUS * 6.0);
+        if (target == null) {
+          return;
+        }
+
+        float damage = (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * 2.0F;
+        target.hurt(companion.damageSources().mobAttack(companion), damage);
+        spawnAbilityParticles(target, ParticleTypes.EXPLOSION, 4);
       })
-      // wiki: The End's "Exploding M. Circle" needs the Chauve-souris weapon and The End is
-      // already permanently unreachable (no item-requirement infra) -> intentionally not added
   );
 
   public DevilSummon(EntityType<? extends AbstractFlyingCompanion> entityType, Level level) {
@@ -141,8 +152,8 @@ public class DevilSummon extends AbstractFlyingCompanion {
       // Gale -> Brow: 200 of any color combined (not alternates; the wiki's one example of a
       // non-branching, cumulative-across-colors threshold)
       case GALE -> List.of(EvolutionThreshold.any(200, Form.BROW));
-      // Brow -> The End needs the Chauve-souris weapon, not just crystals; we have no
-      // item-requirement infra or that weapon yet, so this stays unreachable for now
+      // wiki: 100 (GREEN, Spear-class) crystals while wielding the Chauve-souris
+      case BROW -> List.of(new EvolutionThreshold(EvoCrystalColor.GREEN, 100, Form.THE_END, ModItems.CHAUVE_SOURIS));
       default -> List.of();
     };
   }

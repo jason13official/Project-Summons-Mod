@@ -316,8 +316,11 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
   }
 
   /// what touching a Heart does: revives from wisp first if needed, then heals
-  public void consumeHeart() {
-    CompanionWisp.consumeHeart(this);
+  public void consumeHeart(int itemStackCount) {
+
+    for (int i=0; i<itemStackCount; i++) {
+      CompanionWisp.consumeHeart(this);
+    }
   }
   // endregion wisp
 
@@ -667,6 +670,11 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
   public final String getAbilityName(int index) {
     List<CompanionAbility> abilities = this.abilities();
     return index >= 0 && index < abilities.size() ? abilities.get(index).name() : "???";
+  }
+
+  public final String getAbilityDescription(int index) {
+    List<CompanionAbility> abilities = this.abilities();
+    return index >= 0 && index < abilities.size() ? abilities.get(index).description() : "";
   }
 
   public boolean isAbilityBusy() {

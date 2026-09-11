@@ -5,21 +5,34 @@ package io.github.jason13official.summons.impl.common.party;
 /// @see CompanionPartyManager
 public enum CompanionType {
 
-  FAIRY(false, false),
-  BATTLE(true, true),
-  BIRD(false, true),
-  MAGE(false, true),
-  DEVIL(true, true),
-  PUMPKIN(false, true),
+  FAIRY(false, false, "The first Innocent Devil Hector forges. Weak in a fight, but its "
+      + "healing and support magic keep him alive."),
+  BATTLE(true, true, "A hulking brawler built for melee. High HP and raw attack power, "
+      + "at the cost of speed and finesse."),
+  BIRD(false, true, "A swift flier that can lift Hector into the air to clear gaps. Agile "
+      + "against light foes, but struggles against armor."),
+  MAGE(false, true, "A frail spellcaster wielding a rod of arcane gadgets. Its elemental "
+      + "magic covers nearly every enemy's weakness."),
+  DEVIL(true, true, "A balance between Battle- and Bird-Type: fast, aggressive, and able "
+      + "to fly and Chain Attack alike."),
+  PUMPKIN(false, true, "Nearly useless in combat, but grants Hector the largest stat "
+      + "boost of any Innocent Devil."),
   ;
 
   private final boolean defendCapable;
   private final boolean chainAttackCapable;
+  private final String description;
 
-  CompanionType(boolean defendCapable, boolean chainAttackCapable) {
+  CompanionType(boolean defendCapable, boolean chainAttackCapable, String description) {
 
     this.defendCapable = defendCapable;
     this.chainAttackCapable = chainAttackCapable;
+    this.description = description;
+  }
+
+  /// one-line lore blurb for the Summons menu/stats screens
+  public String description() {
+    return this.description;
   }
 
   /// Battle and Devil Type Summons/Innocent Devils additionally have a Defend mode

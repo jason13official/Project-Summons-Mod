@@ -53,10 +53,10 @@ public class BirdSummon extends AbstractFlyingCompanion {
       // "Uses legs to propel Hector long distances. Allows access to places a normal jump
       // cannot reach." -> a real ride: owner mounts, gets launched in their look direction,
       // and the companion counters gravity for a slow glide-down instead of a hard drop
-      CompanionAbility.base("Glide", 60, (companion, owner) -> beginGlide(companion, owner, GLIDE_BOOST_SPEED)),
+      CompanionAbility.base("Glide", 60, "Uses its legs to propel Hector long distances, letting him clear gaps a normal jump can't reach.", (companion, owner) -> beginGlide(companion, owner, GLIDE_BOOST_SPEED)),
       // "Spreads explosive caltrops, which explode after a brief period." TODO: no delayed
       // detonation, proxied as an immediate AoE hit around the target instead
-      CompanionAbility.gated("Caltrops", 30, Form.GOLDFINCH, 5, (companion, owner) -> {
+      CompanionAbility.gated("Caltrops", 30, Form.GOLDFINCH, 5, "Spreads explosive caltrops that detonate after a brief delay.", (companion, owner) -> {
         LivingEntity target = findNearestTarget(companion, owner, CARPET_BOMBS_FIND_RADIUS);
         if (target == null) {
           return;
@@ -73,7 +73,7 @@ public class BirdSummon extends AbstractFlyingCompanion {
         spawnAbilityParticles(target, ParticleTypes.CRIT, 10);
       }),
       // "Drops a carpet of bone-bombs for a brief period."
-      CompanionAbility.gated("Carpet Bombs", 30, Form.SKULL_WING, 5, (companion, owner) -> {
+      CompanionAbility.gated("Carpet Bombs", 30, Form.SKULL_WING, 5, "Drops a carpet of bone-bombs for a brief period.", (companion, owner) -> {
         LivingEntity primary = findNearestTarget(companion, owner, CARPET_BOMBS_FIND_RADIUS);
         if (primary == null) {
           return;
@@ -90,7 +90,7 @@ public class BirdSummon extends AbstractFlyingCompanion {
       }),
       // "Sends countless sharpened bones ripping through foes." -> a real fired arrow, since
       // the basic direct attack is now a physical swoop/dive-bomb instead (see registerGoals)
-      CompanionAbility.gated("Bone Shot", 20, Form.SKULL_WING, 5, (companion, owner) -> {
+      CompanionAbility.gated("Bone Shot", 20, Form.SKULL_WING, 5, "Sends countless sharpened bones ripping through foes.", (companion, owner) -> {
         LivingEntity target = findNearestTarget(companion, owner, CARPET_BOMBS_FIND_RADIUS);
         if (target != null) {
           shootArrow(companion, target);
@@ -98,7 +98,7 @@ public class BirdSummon extends AbstractFlyingCompanion {
       }),
       // "Gathers latent rage in surrounding areas & spits it out as a sphere that slowly
       // moves toward foes." TODO: no homing projectile entity, proxied as an instant hit
-      CompanionAbility.gated("Sphere of Darkness", 25, Form.KHAOS, 5, (companion, owner) -> {
+      CompanionAbility.gated("Sphere of Darkness", 25, Form.KHAOS, 5, "Gathers latent rage from the surroundings and spits it out as a slow-moving sphere.", (companion, owner) -> {
         LivingEntity target = findNearestTarget(companion, owner, CARPET_BOMBS_FIND_RADIUS);
         if (target == null) {
           return;
@@ -111,7 +111,7 @@ public class BirdSummon extends AbstractFlyingCompanion {
       // "Trades own life for a massive explosion that completely wipes out all enemies in
       // the vicinity." -> "the only attack besides Purify that can kill Isaac's Abel," and
       // it also kills the Phoenix using it
-      CompanionAbility.gated("Big Bang", 60, Form.PHOENIX, 8, (companion, owner) -> {
+      CompanionAbility.gated("Big Bang", 60, Form.PHOENIX, 8, "Trades its own life for a massive explosion that wipes out every enemy nearby.", (companion, owner) -> {
         AABB area = companion.getBoundingBox().inflate(4.0);
         float damage = (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * 2.0F;
 
@@ -123,7 +123,7 @@ public class BirdSummon extends AbstractFlyingCompanion {
         spawnAbilityParticles(companion, ParticleTypes.FLAME, 16);
       }),
       // "Smashes into foes with its flaming body, burning them to a crisp."
-      CompanionAbility.gated("Fire Bird", 25, Form.PHOENIX, 8, (companion, owner) -> {
+      CompanionAbility.gated("Fire Bird", 25, Form.PHOENIX, 8, "Smashes into foes with its flaming body, burning them to a crisp.", (companion, owner) -> {
         LivingEntity target = findNearestTarget(companion, owner, CARPET_BOMBS_FIND_RADIUS);
         if (target == null) {
           return;
@@ -135,10 +135,10 @@ public class BirdSummon extends AbstractFlyingCompanion {
       }),
       // "Uses legs to propel Hector long distances" (upgraded) -> reaches the Tower of
       // Evermore; same real ride as Glide, longer and with more launch speed
-      CompanionAbility.gated("Long Glide", 100, Form.WINGOSAURUS, 8, (companion, owner) ->
+      CompanionAbility.gated("Long Glide", 100, Form.WINGOSAURUS, 8, "An upgraded Glide with more launch speed, reaching places the neutral Glide can't.", (companion, owner) ->
           beginGlide(companion, owner, GLIDE_BOOST_SPEED * 1.3)),
       // "Drains HP & gives it to Hector."
-      CompanionAbility.gated("Deadly Absorb", 30, Form.WINGOSAURUS, 8, (companion, owner) -> {
+      CompanionAbility.gated("Deadly Absorb", 30, Form.WINGOSAURUS, 8, "Drains HP from a foe and gives it to Hector.", (companion, owner) -> {
         LivingEntity target = findNearestTarget(companion, owner, CARPET_BOMBS_FIND_RADIUS);
         if (target == null) {
           return;
@@ -150,7 +150,7 @@ public class BirdSummon extends AbstractFlyingCompanion {
         spawnAbilityParticles(target, ParticleTypes.HEART, 6);
       }),
       // "Attacks enemies with a series of deadly kicks."
-      CompanionAbility.gated("Beat Progress", 30, Form.BLAGSDEATH, 10, (companion, owner) -> {
+      CompanionAbility.gated("Beat Progress", 30, Form.BLAGSDEATH, 10, "Attacks enemies with a series of deadly kicks.", (companion, owner) -> {
         LivingEntity target = findNearestTarget(companion, owner, CARPET_BOMBS_FIND_RADIUS);
         if (target == null) {
           return;
@@ -165,7 +165,7 @@ public class BirdSummon extends AbstractFlyingCompanion {
       }),
       // "Puts everything into one mighty kick, so energized that contact with the foe
       // causes an explosion."
-      CompanionAbility.gated("Conflict Fall", 35, Form.GARGOYLE, 10, (companion, owner) -> {
+      CompanionAbility.gated("Conflict Fall", 35, Form.GARGOYLE, 10, "Puts everything into one mighty kick, energized enough that contact causes an explosion.", (companion, owner) -> {
         LivingEntity target = findNearestTarget(companion, owner, CARPET_BOMBS_FIND_RADIUS);
         if (target == null) {
           return;
@@ -182,7 +182,7 @@ public class BirdSummon extends AbstractFlyingCompanion {
         spawnAbilityParticles(target, ParticleTypes.EXPLOSION, 4);
       }),
       // "Transforms into a Magic Circle & launches countless beams at the foe."
-      CompanionAbility.gated("Force Cannon", 30, Form.GARGOYLE, 10, (companion, owner) -> {
+      CompanionAbility.gated("Force Cannon", 30, Form.GARGOYLE, 10, "Transforms into a Magic Circle and launches countless beams at the foe.", (companion, owner) -> {
         LivingEntity target = findNearestTarget(companion, owner, CARPET_BOMBS_FIND_RADIUS);
         if (target == null) {
           return;
@@ -195,7 +195,7 @@ public class BirdSummon extends AbstractFlyingCompanion {
         spawnAbilityParticles(target, ParticleTypes.END_ROD, 14);
       }),
       // "A sharpened solid icicle rips foes apart."
-      CompanionAbility.gated("Icicle Shot", 25, Form.INDIGO, 10, (companion, owner) -> {
+      CompanionAbility.gated("Icicle Shot", 25, Form.INDIGO, 10, "A sharpened solid icicle rips foes apart.", (companion, owner) -> {
         LivingEntity target = findNearestTarget(companion, owner, CARPET_BOMBS_FIND_RADIUS);
         if (target == null) {
           return;
@@ -205,7 +205,7 @@ public class BirdSummon extends AbstractFlyingCompanion {
         spawnAbilityParticles(target, ParticleTypes.SNOWFLAKE, 10);
       }),
       // "Frozen breath turns foes into ice." -> AoE, unlike the single-target Icicle Shot
-      CompanionAbility.gated("Blizzard Breath", 35, Form.INDIGO, 10, (companion, owner) -> {
+      CompanionAbility.gated("Blizzard Breath", 35, Form.INDIGO, 10, "Frozen breath that turns nearby foes to ice.", (companion, owner) -> {
         AABB area = companion.getBoundingBox().inflate(4.0);
         for (LivingEntity target : companion.level().getEntitiesOfClass(LivingEntity.class, area,
             e -> e != companion && e != owner && e.isAlive())) {
@@ -216,7 +216,7 @@ public class BirdSummon extends AbstractFlyingCompanion {
         spawnAbilityParticles(companion, ParticleTypes.SNOWFLAKE, 16);
       }),
       // "Launches a flaming ball towards the foe, sending up a pillar of fire where it lands."
-      CompanionAbility.gated("Ignition Blow", 25, Form.CRIMSON, 10, (companion, owner) -> {
+      CompanionAbility.gated("Ignition Blow", 25, Form.CRIMSON, 10, "Launches a flaming ball at the foe, sending up a pillar of fire where it lands.", (companion, owner) -> {
         LivingEntity target = findNearestTarget(companion, owner, CARPET_BOMBS_FIND_RADIUS);
         if (target == null) {
           return;
@@ -227,7 +227,7 @@ public class BirdSummon extends AbstractFlyingCompanion {
         spawnAbilityParticles(target, ParticleTypes.FLAME, 10);
       }),
       // "Flaming breath burns up all foes in the vicinity." -> AoE, unlike single-target Ignition Blow
-      CompanionAbility.gated("Flame Breath", 35, Form.CRIMSON, 10, (companion, owner) -> {
+      CompanionAbility.gated("Flame Breath", 35, Form.CRIMSON, 10, "Flaming breath that burns up every foe in the vicinity.", (companion, owner) -> {
         AABB area = companion.getBoundingBox().inflate(4.0);
         for (LivingEntity target : companion.level().getEntitiesOfClass(LivingEntity.class, area,
             e -> e != companion && e != owner && e.isAlive())) {

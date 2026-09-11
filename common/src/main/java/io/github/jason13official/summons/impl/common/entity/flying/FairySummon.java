@@ -40,22 +40,22 @@ public class FairySummon extends AbstractFlyingCompanion {
   private static final List<CompanionAbility> ABILITIES = List.of(
       // "Allows Hector to open chests." TODO: no chest-opening logic exists, proxied as a
       // temporary Luck boost (better loot access)
-      CompanionAbility.base("Unlock", 20, (companion, owner) -> {
+      CompanionAbility.base("Unlock", 20, "Allows Hector to open chests.", (companion, owner) -> {
         owner.addEffect(new MobEffectInstance(MobEffects.LUCK, 200, 0));
         spawnAbilityParticles(owner, ParticleTypes.HAPPY_VILLAGER, 5);
       }),
       // "Heals 20 HP."
-      CompanionAbility.base("Heal Lv.1", 10, (companion, owner) -> {
+      CompanionAbility.base("Heal Lv.1", 10, "Heals 20 HP.", (companion, owner) -> {
         owner.heal(2.0F);
         spawnAbilityParticles(owner, ParticleTypes.HEART, 5);
       }),
       // "Heals approximately 50 HP gradually over a short period of time."
-      CompanionAbility.gated("Time Heal", 6, Form.LEAFFLE, 5, (companion, owner) -> {
+      CompanionAbility.gated("Time Heal", 6, Form.LEAFFLE, 5, "Heals about 50 HP gradually over a short time.", (companion, owner) -> {
         owner.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 100, 1));
         spawnAbilityParticles(owner, ParticleTypes.HEART, 5);
       }),
       // "Fairy attacks enemies by poisoning them" -> automatic in-game, triggered here instead
-      CompanionAbility.gated("Poison Powder", 0, Form.LEAFFLE, 5, (companion, owner) -> {
+      CompanionAbility.gated("Poison Powder", 0, Form.LEAFFLE, 5, "Fairy attacks nearby enemies by poisoning them.", (companion, owner) -> {
         AABB area = companion.getBoundingBox().inflate(3.0);
         for (LivingEntity target : companion.level().getEntitiesOfClass(LivingEntity.class, area,
             e -> e != companion && e != owner && e.isAlive())) {
@@ -64,39 +64,39 @@ public class FairySummon extends AbstractFlyingCompanion {
         spawnAbilityParticles(companion, ParticleTypes.WITCH, 8);
       }),
       // "Heals 50 HP."
-      CompanionAbility.gated("Heal Lv.2", 20, Form.HERBEST, 5, (companion, owner) -> {
+      CompanionAbility.gated("Heal Lv.2", 20, Form.HERBEST, 5, "Heals 50 HP.", (companion, owner) -> {
         owner.heal(6.0F);
         spawnAbilityParticles(owner, ParticleTypes.HEART, 5);
       }),
       // "Cures poison automatically" -> Herbest's cure is poison-only; Curse Breaker (Killer
       // Bee) and Stone Breaker (Hornet) cover the other two status ailments
-      CompanionAbility.gated("Antidote", 5, Form.HERBEST, 5, (companion, owner) ->
+      CompanionAbility.gated("Antidote", 5, Form.HERBEST, 5, "Cures poison automatically.", (companion, owner) ->
           owner.removeEffect(MobEffects.POISON)),
       // "Heals 100 HP instantly."
-      CompanionAbility.gated("Heal Lv.3", 30, Form.KILLER_BEE, 5, (companion, owner) -> {
+      CompanionAbility.gated("Heal Lv.3", 30, Form.KILLER_BEE, 5, "Heals 100 HP instantly.", (companion, owner) -> {
         owner.heal(12.0F);
         spawnAbilityParticles(owner, ParticleTypes.HEART, 8);
       }),
       // "Removes curse automatically." TODO: no dedicated Curse status -> proxied as clearing
       // Wither, the closest existing curse-like debuff
-      CompanionAbility.gated("Curse Breaker", 5, Form.KILLER_BEE, 5, (companion, owner) ->
+      CompanionAbility.gated("Curse Breaker", 5, Form.KILLER_BEE, 5, "Removes curse automatically.", (companion, owner) ->
           owner.removeEffect(MobEffects.WITHER)),
       // "Creates a small circle that restores HP rapidly when Hector stands inside... 10
       // hearts for 100 HP" -> the best heal in the game per the FAQ
-      CompanionAbility.gated("Healing Field", 10, Form.HONEY_BEE, 8, (companion, owner) -> {
+      CompanionAbility.gated("Healing Field", 10, Form.HONEY_BEE, 8, "Creates a circle that rapidly restores HP to Hector while he stands inside it.", (companion, owner) -> {
         owner.heal(12.0F);
         owner.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 60, 1));
         spawnAbilityParticles(owner, ParticleTypes.HEART, 12);
       }),
       // "Cures stoning automatically." TODO: no petrification status exists in this mod
       // either, so this never actually triggers yet -> kept for completeness
-      CompanionAbility.gated("Stone Breaker", 5, Form.HORNET, 5, (companion, owner) -> {
+      CompanionAbility.gated("Stone Breaker", 5, Form.HORNET, 5, "Cures stoning automatically.", (companion, owner) -> {
         owner.removeEffect(MobEffects.DIG_SLOWDOWN);
         owner.removeEffect(MobEffects.WEAKNESS);
       }),
       // "Play a slot machine to determine how much HP is healed... sometimes it doesn't
       // even work." -> a random amount, sometimes zero
-      CompanionAbility.gated("Lucky Slot", 10, Form.HORNET, 5, (companion, owner) -> {
+      CompanionAbility.gated("Lucky Slot", 10, Form.HORNET, 5, "Plays a slot machine to determine how much HP is healed -- sometimes it doesn't work at all.", (companion, owner) -> {
         float healed = companion.getRandom().nextInt(4) * 4.0F; // 0, 4, 8 or 12
         if (healed > 0.0F) {
           owner.heal(healed);
@@ -105,7 +105,7 @@ public class FairySummon extends AbstractFlyingCompanion {
       }),
       // "Fairy will press hard to reach buttons for you... you need it to get the whole
       // Castle." -> literally presses the nearest lever/button in range
-      CompanionAbility.gated("Press It and See", 10, Form.PROBOSCIS_FAIRY, 10, (companion, owner) -> {
+      CompanionAbility.gated("Press It and See", 10, Form.PROBOSCIS_FAIRY, 10, "Fairy presses hard-to-reach buttons and levers for you.", (companion, owner) -> {
         BlockPos center = companion.blockPosition();
         for (BlockPos pos : BlockPos.betweenClosed(center.offset(-3, -2, -3), center.offset(3, 2, 3))) {
           BlockState state = companion.level().getBlockState(pos);
@@ -125,12 +125,12 @@ public class FairySummon extends AbstractFlyingCompanion {
       }),
       // "Heals 1 HP, then disappears from use for a brief time." -> the FAQ author calls this
       // the worst skill in the game, kept just as weak here
-      CompanionAbility.gated("Just a Little", 5, Form.PROBOSCIS_FAIRY, 10, (companion, owner) -> {
+      CompanionAbility.gated("Just a Little", 5, Form.PROBOSCIS_FAIRY, 10, "Heals 1 HP, then disappears from use for a brief time.", (companion, owner) -> {
         owner.heal(0.5F);
         spawnAbilityParticles(owner, ParticleTypes.HEART, 2);
       }),
       // "Drops a bomb that damages anyone in range, including Hector."
-      CompanionAbility.gated("Skull Bomb", 15, Form.PROBOSCIS_FAIRY, 10, (companion, owner) -> {
+      CompanionAbility.gated("Skull Bomb", 15, Form.PROBOSCIS_FAIRY, 10, "Drops a bomb that damages anyone in range, including Hector.", (companion, owner) -> {
         AABB area = companion.getBoundingBox().inflate(3.0);
         float damage = (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE) + 1.0F;
         for (LivingEntity target : companion.level().getEntitiesOfClass(LivingEntity.class, area,
@@ -141,7 +141,7 @@ public class FairySummon extends AbstractFlyingCompanion {
       }),
       // "Cures all status ailments automatically... an all in one protection." Broader than
       // Antidote/Curse Breaker/Stone Breaker -> clears every harmful effect at once
-      CompanionAbility.gated("Refresh", 5, Form.PROBOSCIS_FAIRY, 10, (companion, owner) -> {
+      CompanionAbility.gated("Refresh", 5, Form.PROBOSCIS_FAIRY, 10, "Cures all status ailments automatically.", (companion, owner) -> {
         for (MobEffectInstance effect : new ArrayList<>(owner.getActiveEffects())) {
           if (effect.getEffect().value().getCategory() == MobEffectCategory.HARMFUL) {
             owner.removeEffect(effect.getEffect());
@@ -151,13 +151,13 @@ public class FairySummon extends AbstractFlyingCompanion {
       }),
       // "Pay the Fairy $5,000 gold for full HP." TODO: no gold-cost economy, proxied as a
       // free full heal
-      CompanionAbility.gated("Gold Heal", 30, Form.TIRAMISU, 10, (companion, owner) -> {
+      CompanionAbility.gated("Gold Heal", 30, Form.TIRAMISU, 10, "Pay the Fairy a fortune in gold for a full heal.", (companion, owner) -> {
         owner.heal(owner.getMaxHealth());
         spawnAbilityParticles(owner, ParticleTypes.HAPPY_VILLAGER, 12);
       }),
       // "Allows Hector to read ancient script." TODO: no such structure exists, proxied as
       // revealing nearby hostiles (Glowing) plus owner Night Vision
-      CompanionAbility.gated("Decipher", 20, Form.TIRAMISU, 10, (companion, owner) -> {
+      CompanionAbility.gated("Decipher", 20, Form.TIRAMISU, 10, "Allows Hector to read ancient script.", (companion, owner) -> {
         owner.addEffect(new MobEffectInstance(MobEffects.NIGHT_VISION, 1200, 0));
         AABB area = companion.getBoundingBox().inflate(16.0);
         for (LivingEntity target : companion.level().getEntitiesOfClass(LivingEntity.class, area,
@@ -168,23 +168,23 @@ public class FairySummon extends AbstractFlyingCompanion {
       }),
       // "Renders Hector invincible for about 10 seconds." -> proxied with a heavy, timed
       // Resistance buff rather than a literal invulnerability flag
-      CompanionAbility.gated("Invincible Vase", 40, Form.TIRAMISU, 10, (companion, owner) -> {
+      CompanionAbility.gated("Invincible Vase", 40, Form.TIRAMISU, 10, "Renders Hector invincible for about 10 seconds.", (companion, owner) -> {
         owner.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 200, 4));
         spawnAbilityParticles(owner, ParticleTypes.TOTEM_OF_UNDYING, 14);
       }),
       // "Causes enemies to drop healing spheres when hit for a brief period... I see no use
       // for this at all." -> kept intentionally weak per the FAQ's own assessment
-      CompanionAbility.gated("Healing Drop", 8, Form.TIARA, 10, (companion, owner) -> {
+      CompanionAbility.gated("Healing Drop", 8, Form.TIARA, 10, "Causes enemies to drop healing spheres when hit, for a brief period.", (companion, owner) -> {
         owner.heal(3.0F);
         spawnAbilityParticles(owner, ParticleTypes.HAPPY_VILLAGER, 4);
       }),
       // "Renders Hector invisible for a brief period of time."
-      CompanionAbility.gated("Crystal Skull", 25, Form.TIARA, 10, (companion, owner) -> {
+      CompanionAbility.gated("Crystal Skull", 25, Form.TIARA, 10, "Renders Hector invisible for a brief period of time.", (companion, owner) -> {
         owner.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, 100, 0));
         spawnAbilityParticles(owner, ParticleTypes.SMOKE, 10);
       }),
       // "Comet Star draws stars in the air and shoots them at enemies... ultra-slow."
-      CompanionAbility.gated("Twinkle Star", 20, Form.COMET_STAR, 10, (companion, owner) -> {
+      CompanionAbility.gated("Twinkle Star", 20, Form.COMET_STAR, 10, "Draws stars in the air and shoots them at enemies -- ultra slow.", (companion, owner) -> {
         LivingEntity target = findNearestTarget(companion, owner, 8.0);
         if (target == null) {
           return;
@@ -195,7 +195,7 @@ public class FairySummon extends AbstractFlyingCompanion {
       }),
       // "Comet Star puts nearby enemies to sleep... gives you a huge advantage" -> the FAQ's
       // one genuinely useful Comet Star skill
-      CompanionAbility.gated("Lullaby", 15, Form.COMET_STAR, 10, (companion, owner) -> {
+      CompanionAbility.gated("Lullaby", 15, Form.COMET_STAR, 10, "Puts nearby enemies to sleep.", (companion, owner) -> {
         AABB area = companion.getBoundingBox().inflate(6.0);
         for (LivingEntity target : companion.level().getEntitiesOfClass(LivingEntity.class, area,
             e -> e != companion && e != owner && e.isAlive())) {
@@ -206,7 +206,7 @@ public class FairySummon extends AbstractFlyingCompanion {
         spawnAbilityParticles(companion, ParticleTypes.SNEEZE, 10);
       }),
       // "Heals 200 HP."
-      CompanionAbility.gated("Heal Lv.4", 50, Form.COMET_STAR, 10, (companion, owner) -> {
+      CompanionAbility.gated("Heal Lv.4", 50, Form.COMET_STAR, 10, "Heals 200 HP.", (companion, owner) -> {
         owner.heal(24.0F);
         spawnAbilityParticles(owner, ParticleTypes.HEART, 14);
       })

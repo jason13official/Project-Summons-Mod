@@ -28,7 +28,7 @@ public class PumpkinSummon extends AbstractGroundCompanion {
   /// "They only have one ability, Pose, which inflicts minimum damage to nearby enemies,
   /// although Pumpkin will be completely vulnerable while performing it."
   private static final List<CompanionAbility> ABILITIES = List.of(
-      CompanionAbility.base("Pose", 40, (companion, owner) -> {
+      CompanionAbility.base("Pose", 40, "Inflicts minimum damage to nearby enemies -- Pumpkin is completely vulnerable while posing.", (companion, owner) -> {
         AABB area = companion.getBoundingBox().inflate(POSE_RADIUS);
         float damage = (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE);
 

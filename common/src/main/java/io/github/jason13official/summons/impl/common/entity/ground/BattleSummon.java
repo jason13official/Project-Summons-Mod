@@ -34,7 +34,7 @@ public class BattleSummon extends AbstractGroundCompanion {
   /// Battle-Type https://gamefaqs.gamespot.com/ps2/925894-castlevania-curse-of-darkness/faqs
   private static final List<CompanionAbility> ABILITIES = List.of(
       // "Sends out a wave of energy that damages surrounding opponents."
-      CompanionAbility.base("Aura Blast", 20, (companion, owner) -> {
+      CompanionAbility.base("Aura Blast", 20, "Sends out a wave of energy that damages every enemy around it.", (companion, owner) -> {
         AABB area = companion.getBoundingBox().inflate(AURA_BLAST_RADIUS);
         float damage = (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE);
 
@@ -48,7 +48,7 @@ public class BattleSummon extends AbstractGroundCompanion {
       // "Used to lift up heavy objects... all battle type IDs will get this skill after a
       // certain point in the game" -> unlike every other ability here, this isn't tied to any
       // one evolution branch, so it's ungated by form (empty requiredForms), just by level
-      new CompanionAbility("Brute Force", 40, Set.of(), 5, (companion, owner) -> {
+      new CompanionAbility("Brute Force", 40, Set.of(), 5, "Used to lift and break through heavy obstacles like iron doors.", (companion, owner) -> {
         BlockPos center = companion.blockPosition();
         for (BlockPos pos : BlockPos.betweenClosed(center.offset(-1, -1, -1), center.offset(1, 2, 1))) {
           Block block = companion.level().getBlockState(pos).getBlock();
@@ -60,7 +60,7 @@ public class BattleSummon extends AbstractGroundCompanion {
         }
       }),
       // "Rains swords down on your enemies... lasts a long time and does decent dmg."
-      CompanionAbility.gated("Heavenly Sword", 25, Form.SPEED_MAIL, 5, (companion, owner) -> {
+      CompanionAbility.gated("Heavenly Sword", 25, Form.SPEED_MAIL, 5, "Rains swords down on enemies; lasts a long time and does decent damage.", (companion, owner) -> {
         LivingEntity target = findNearestTarget(companion, owner, AURA_BLAST_RADIUS * 2.0);
         if (target == null) {
           return;
@@ -71,7 +71,7 @@ public class BattleSummon extends AbstractGroundCompanion {
         spawnAbilityParticles(target, ParticleTypes.CRIT, 12);
       }),
       // "Shakes the ground and causes some damage."
-      CompanionAbility.gated("Hip Press", 30, Form.GOLEM, 5, (companion, owner) -> {
+      CompanionAbility.gated("Hip Press", 30, Form.GOLEM, 5, "Shakes the ground, dealing damage to everything nearby.", (companion, owner) -> {
         LivingEntity target = findNearestTarget(companion, owner, AURA_BLAST_RADIUS);
         if (target == null) {
           return;
@@ -84,7 +84,7 @@ public class BattleSummon extends AbstractGroundCompanion {
       }),
       // upgraded Hip Press ("Succesfully complete 100 chain combos as Golem" -> no Chain
       // Attack system exists yet, proxied as a level gate instead)
-      CompanionAbility.gated("Hip Press Lv.2", 30, Form.GOLEM, 10, (companion, owner) -> {
+      CompanionAbility.gated("Hip Press Lv.2", 30, Form.GOLEM, 10, "An upgraded Hip Press, hitting harder and knocking foes back further.", (companion, owner) -> {
         LivingEntity target = findNearestTarget(companion, owner, AURA_BLAST_RADIUS);
         if (target == null) {
           return;
@@ -98,13 +98,13 @@ public class BattleSummon extends AbstractGroundCompanion {
       // "Hector gets on Iyeti's shoulders and rides around... You can also attack with
       // Iyeti." -> owner literally mounts the companion for the ability's busy duration,
       // auto-dismounting once it ends (see #tick)
-      CompanionAbility.gated("Shoulder Ride", 100, Form.IYTEI, 8, (companion, owner) -> {
+      CompanionAbility.gated("Shoulder Ride", 100, Form.IYTEI, 8, "Hector rides on its shoulders and can still attack while mounted.", (companion, owner) -> {
         owner.startRiding(companion, true);
         spawnAbilityParticles(owner, ParticleTypes.CLOUD, 6);
       }),
       // "Iyeti screams and stuns surrounding enemies." TODO: no true stun exists, proxied as
       // a near-total AoE Slowness
-      CompanionAbility.gated("Ultra Scream", 20, Form.IYTEI, 8, (companion, owner) -> {
+      CompanionAbility.gated("Ultra Scream", 20, Form.IYTEI, 8, "A scream that stuns everything nearby.", (companion, owner) -> {
         AABB area = companion.getBoundingBox().inflate(AURA_BLAST_RADIUS);
         for (LivingEntity target : companion.level().getEntitiesOfClass(LivingEntity.class, area,
             e -> e != companion && e != owner && e.isAlive())) {
@@ -113,7 +113,7 @@ public class BattleSummon extends AbstractGroundCompanion {
         spawnAbilityParticles(companion, ParticleTypes.SNEEZE, 10);
       }),
       // "Five floating eye bombs pop out above your ID and home in on an enemy."
-      CompanionAbility.gated("Homing Eye", 30, Form.JUGGERNAUT, 8, (companion, owner) -> {
+      CompanionAbility.gated("Homing Eye", 30, Form.JUGGERNAUT, 8, "Five floating eye bombs pop out and home in on an enemy.", (companion, owner) -> {
         LivingEntity target = findNearestTarget(companion, owner, AURA_BLAST_RADIUS * 2.0);
         if (target == null) {
           return;
@@ -127,7 +127,7 @@ public class BattleSummon extends AbstractGroundCompanion {
       }),
       // "Only Juggernaut can learn this skill" -> upgraded Brute Force, breaks a wider range
       // of blocks over a bigger area
-      CompanionAbility.gated("Brute Force Lv.2", 40, Form.JUGGERNAUT, 10, (companion, owner) -> {
+      CompanionAbility.gated("Brute Force Lv.2", 40, Form.JUGGERNAUT, 10, "An upgraded Brute Force, able to smash through tougher obstacles over a wider area.", (companion, owner) -> {
         BlockPos center = companion.blockPosition();
         for (BlockPos pos : BlockPos.betweenClosed(center.offset(-2, -1, -2), center.offset(2, 3, 2))) {
           Block block = companion.level().getBlockState(pos).getBlock();
@@ -140,11 +140,11 @@ public class BattleSummon extends AbstractGroundCompanion {
       }),
       // "Sends a wave of energy out in front of the ID, causing decent damage" -> shared by
       // Rasetz and Corpsey per the FAQ
-      CompanionAbility.gated("Grand Wave", 15, Form.RASETZ, 10, BattleSummon::grandWave),
-      CompanionAbility.gated("Grand Wave", 15, Form.CORPSEY, 10, BattleSummon::grandWave),
+      CompanionAbility.gated("Grand Wave", 15, Form.RASETZ, 10, "Sends a wave of energy out in front of it, dealing decent damage.", BattleSummon::grandWave),
+      CompanionAbility.gated("Grand Wave", 15, Form.CORPSEY, 10, "Sends a wave of energy out in front of it, dealing decent damage.", BattleSummon::grandWave),
       // "Shoots small pieces of blue fire that home in on enemies and cause pretty good
       // damage."
-      CompanionAbility.gated("Glow Soul", 35, Form.RASETZ, 10, (companion, owner) -> {
+      CompanionAbility.gated("Glow Soul", 35, Form.RASETZ, 10, "Shoots small pieces of blue fire that home in on enemies, dealing solid damage.", (companion, owner) -> {
         LivingEntity target = findNearestTarget(companion, owner, AURA_BLAST_RADIUS * 2.0);
         if (target == null) {
           return;
@@ -158,7 +158,7 @@ public class BattleSummon extends AbstractGroundCompanion {
       }),
       // "Corpsey unleashes a torrent of bone shards that rip through enemies... takes no
       // damage while using it." -> the companion gets a brief Resistance buff to match
-      CompanionAbility.gated("Bone Storm", 20, Form.CORPSEY, 10, (companion, owner) -> {
+      CompanionAbility.gated("Bone Storm", 20, Form.CORPSEY, 10, "Unleashes a torrent of bone shards, taking no damage while doing so.", (companion, owner) -> {
         companion.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 20, 4));
         AABB area = companion.getBoundingBox().inflate(AURA_BLAST_RADIUS * 1.5);
         float damage = (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * 1.3F;
@@ -169,7 +169,7 @@ public class BattleSummon extends AbstractGroundCompanion {
         spawnAbilityParticles(companion, ParticleTypes.CRIT, 16);
       }),
       // "Ironside's hands shoot out at the enemy... limited area, but does a lot of damage."
-      CompanionAbility.gated("Chain Punch", 25, Form.IRONSIDE, 10, (companion, owner) -> {
+      CompanionAbility.gated("Chain Punch", 25, Form.IRONSIDE, 10, "Its hands shoot out at the enemy; limited range, but heavy damage.", (companion, owner) -> {
         LivingEntity target = findNearestTarget(companion, owner, AURA_BLAST_RADIUS);
         if (target == null) {
           return;
@@ -181,7 +181,7 @@ public class BattleSummon extends AbstractGroundCompanion {
       }),
       // "Ironside sprays the room with machine gun fire... can be damaged while shooting" -
       // unlike Bone Storm, no self-immunity here
-      CompanionAbility.gated("Machine Gun Shot", 25, Form.IRONSIDE, 10, (companion, owner) -> {
+      CompanionAbility.gated("Machine Gun Shot", 25, Form.IRONSIDE, 10, "Sprays the room with rapid-fire shots; can be damaged while shooting.", (companion, owner) -> {
         AABB area = companion.getBoundingBox().inflate(AURA_BLAST_RADIUS * 1.5);
         float damage = (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * 0.8F;
         for (LivingEntity target : companion.level().getEntitiesOfClass(LivingEntity.class, area,
@@ -192,7 +192,7 @@ public class BattleSummon extends AbstractGroundCompanion {
       }),
       // "Liquid Golem turns into a giant blob of mercury and flies around the room, hitting
       // enemies randomly... little to no damage" -> kept intentionally weak per the FAQ
-      CompanionAbility.gated("Mercury Sphere", 25, Form.LIQUID_GOLEM, 10, (companion, owner) -> {
+      CompanionAbility.gated("Mercury Sphere", 25, Form.LIQUID_GOLEM, 10, "Turns into a blob of mercury and flies around the room, hitting enemies at random.", (companion, owner) -> {
         LivingEntity target = findNearestTarget(companion, owner, AURA_BLAST_RADIUS * 2.0);
         if (target != null) {
           target.hurt(companion.damageSources().mobAttack(companion), (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * 0.5F);
@@ -201,7 +201,7 @@ public class BattleSummon extends AbstractGroundCompanion {
       }),
       // "Liquid Golem turns burning hot and runs around the room... does less damage than
       // Aura Blast" -> a brief self-buff plus a single, deliberately weak hit
-      CompanionAbility.gated("Magma Form", 40, Form.LIQUID_GOLEM, 10, (companion, owner) -> {
+      CompanionAbility.gated("Magma Form", 40, Form.LIQUID_GOLEM, 10, "Turns burning hot and runs around the room, scorching anything it touches.", (companion, owner) -> {
         companion.addEffect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 100, 0));
         LivingEntity target = findNearestTarget(companion, owner, AURA_BLAST_RADIUS);
         if (target != null) {
