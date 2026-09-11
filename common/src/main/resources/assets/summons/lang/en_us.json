@@ -21,6 +21,14 @@
   "item.summons.dung": "Dung",
   "item.summons.chauve_souris": "Chauve-souris",
 
+  "block.summons.summon_gate": "Summon Gate",
+  "block.summons.petrified_fairy": "Petrified Fairy-Type",
+  "block.summons.petrified_battle": "Petrified Battle-Type",
+  "block.summons.petrified_bird": "Petrified Bird-Type",
+  "block.summons.petrified_mage": "Petrified Mage-Type",
+  "block.summons.petrified_devil": "Petrified Devil-Type",
+  "block.summons.petrified_pumpkin": "Petrified Pumpkin-Type",
+
   "key.categories.summons": "Summons",
   "key.summons.toggle_summon": "Summon/Dismiss Companion",
   "key.summons.cycle_party": "Cycle Party",

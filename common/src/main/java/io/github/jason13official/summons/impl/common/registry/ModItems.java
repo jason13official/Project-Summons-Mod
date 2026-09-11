@@ -8,6 +8,7 @@ import io.github.jason13official.summons.impl.common.item.SpearItem;
 import io.github.jason13official.summons.platform.Services;
 import java.util.function.BiConsumer;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Item.Properties;
 
@@ -27,6 +28,8 @@ public class ModItems {
   public static Item EVO_CRYSTAL_WHITE;
 
   public static Item HEART;
+
+  public static Item SUMMON_GATE;
 
   // Spear-class weapons (wiki: pole weapons); DECK_BRUSH is the starter, CHAUVE_SOURIS is
   // Devil-Type's final-evolution requirement
@@ -52,6 +55,8 @@ public class ModItems {
 
     HEART = new HeartItem(new Properties());
 
+    SUMMON_GATE = new BlockItem(ModBlocks.SUMMON_GATE, new Properties());
+
     DECK_BRUSH = new SpearItem(4.0F, -2.6F, new Properties().stacksTo(1));
     BAMBOO_LANCE = new SpearItem(5.0F, -2.6F, new Properties().stacksTo(1));
     DUNG = new SpearItem(6.0F, -2.6F, new Properties().stacksTo(1));
@@ -71,6 +76,8 @@ public class ModItems {
     consumer.accept(EVO_CRYSTAL_WHITE, Summons.identifier("evo_crystal_white"));
 
     consumer.accept(HEART, Summons.identifier("heart"));
+
+    consumer.accept(SUMMON_GATE, Summons.identifier("summon_gate"));
 
     consumer.accept(DECK_BRUSH, Summons.identifier("deck_brush"));
     consumer.accept(BAMBOO_LANCE, Summons.identifier("bamboo_lance"));
