@@ -21,13 +21,17 @@ public class ModBlocks {
 
   public static void register(BiConsumer<Block, ResourceLocation> consumer) {
 
-    // overworld landmark, not the pocket room itself - normal strength, movable/breakable like
-    // any other block (the pocket-side petrified statues below are the ones kept unbreakable)
+    // the archway's walk-through opening, not the pocket room itself; normal strength,
+    // movable/breakable like any other block (the pocket-side petrified statues below are the
+    // ones kept unbreakable). noCollission so the player physically passes through it (entityInside
+    // trigger) instead of being stopped by it like a wall; the outline/hitbox used for
+    // right-click targeting is unaffected, so it stays clickable too
     SUMMON_GATE = new SummonGateBlock(Properties.of()
         .mapColor(MapColor.COLOR_BLACK)
         .sound(SoundType.STONE)
         .strength(3.5F)
-        .requiresCorrectToolForDrops());
+        .requiresCorrectToolForDrops()
+        .noCollission());
     consumer.accept(SUMMON_GATE, Summons.identifier("summon_gate"));
 
     for (CompanionType type : CompanionType.values()) {
@@ -35,7 +39,7 @@ public class ModBlocks {
           .mapColor(MapColor.STONE)
           .sound(SoundType.STONE)
           .strength(-1.0F, 3600000.0F)
-          .noLootTable()); // never mined - shattered by SummonGateManager.unlockAtStatue instead
+          .noLootTable()); // never mined; shattered by SummonGateManager.unlockAtStatue instead
 
       PETRIFIED.put(type, petrified);
       consumer.accept(petrified, Summons.identifier("petrified_" + type.name().toLowerCase()));

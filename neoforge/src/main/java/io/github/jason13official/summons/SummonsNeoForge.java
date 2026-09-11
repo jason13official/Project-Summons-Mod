@@ -5,9 +5,11 @@ import io.github.jason13official.summons.impl.common.network.CompanionProgressSy
 import io.github.jason13official.summons.impl.common.network.CompanionStateSyncPayload;
 import io.github.jason13official.summons.impl.common.network.SummonsNetworking;
 import io.github.jason13official.summons.impl.common.network.SummonsNetworking.CompanionInputPayload;
+import io.github.jason13official.summons.impl.common.gate.SummonGateManager;
 import io.github.jason13official.summons.impl.common.registry.ModBlocks;
 import io.github.jason13official.summons.impl.common.registry.ModCommands;
 import io.github.jason13official.summons.impl.common.registry.ModEntities;
+import io.github.jason13official.summons.impl.common.registry.ModFeatures;
 import io.github.jason13official.summons.impl.common.registry.ModItems;
 import io.github.jason13official.summons.impl.common.registry.ModMenus;
 import io.github.jason13official.summons.impl.common.registry.ModParticles;
@@ -35,6 +37,7 @@ import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.AddReloadListenerEvent;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
+import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 import net.neoforged.neoforge.registries.RegisterEvent;
@@ -55,6 +58,7 @@ public class SummonsNeoForge {
     bind(Registries.BLOCK_ENTITY_TYPE, ModTiles::register);
     bind(Registries.MENU, ModMenus::register);
     bind(Registries.CREATIVE_MODE_TAB, ModTabs::register);
+    bind(Registries.FEATURE, ModFeatures::register);
 
     EVENT_BUS.addListener((Consumer<FMLCommonSetupEvent>) event -> Summons.init());
 
@@ -66,6 +70,8 @@ public class SummonsNeoForge {
 
     NeoForge.EVENT_BUS.addListener((Consumer<RegisterCommandsEvent>) event ->
         ModCommands.register(event.getDispatcher(), event.getBuildContext(), event.getCommandSelection()));
+
+    NeoForge.EVENT_BUS.addListener((Consumer<ServerTickEvent.Post>) event -> SummonGateManager.tick(event.getServer()));
 
     EVENT_BUS.addListener((RegisterPayloadHandlersEvent event) -> {
       PayloadRegistrar registrar = event.registrar("1");

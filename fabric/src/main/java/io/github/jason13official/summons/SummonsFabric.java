@@ -5,9 +5,11 @@ import io.github.jason13official.summons.impl.common.network.CompanionProgressSy
 import io.github.jason13official.summons.impl.common.network.CompanionStateSyncPayload;
 import io.github.jason13official.summons.impl.common.network.SummonsNetworking;
 import io.github.jason13official.summons.impl.common.network.SummonsNetworking.CompanionInputPayload;
+import io.github.jason13official.summons.impl.common.gate.SummonGateManager;
 import io.github.jason13official.summons.impl.common.registry.ModBlocks;
 import io.github.jason13official.summons.impl.common.registry.ModCommands;
 import io.github.jason13official.summons.impl.common.registry.ModEntities;
+import io.github.jason13official.summons.impl.common.registry.ModFeatures;
 import io.github.jason13official.summons.impl.common.registry.ModItems;
 import io.github.jason13official.summons.impl.common.registry.ModMenus;
 import io.github.jason13official.summons.impl.common.registry.ModParticles;
@@ -17,6 +19,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry;
@@ -43,6 +46,7 @@ public class SummonsFabric implements ModInitializer {
     bind(BuiltInRegistries.BLOCK_ENTITY_TYPE, ModTiles::register);
     bind(BuiltInRegistries.MENU, ModMenus::register);
     bind(BuiltInRegistries.CREATIVE_MODE_TAB, ModTabs::register);
+    bind(BuiltInRegistries.FEATURE, ModFeatures::register);
 
     Summons.init();
 
@@ -60,6 +64,8 @@ public class SummonsFabric implements ModInitializer {
     PayloadTypeRegistry.playS2C().register(CompanionIdentitySyncPayload.TYPE, CompanionIdentitySyncPayload.STREAM_CODEC);
 
     CommandRegistrationCallback.EVENT.register(ModCommands::register);
+
+    ServerTickEvents.END_SERVER_TICK.register(SummonGateManager::tick);
   }
 
   public void createDefaultAttributes(Consumer<BiConsumer<EntityType, AttributeSupplier>> source) {
