@@ -1,8 +1,10 @@
 package io.github.jason13official.summons.impl.client;
 
+import io.github.jason13official.summons.impl.client.gui.screen.SummonsMenuScreen;
 import io.github.jason13official.summons.impl.common.network.SummonsNetworking.Action;
 import io.github.jason13official.summons.platform.Services;
 import net.minecraft.client.KeyMapping;
+import net.minecraft.client.Minecraft;
 import org.lwjgl.glfw.GLFW;
 
 /// Mirrors Curse of Darkness Innocent Devil controls: UP/DOWN cycles Auto/Command/Defend,
@@ -20,6 +22,7 @@ public class SummonsKeyBindings {
   public static final KeyMapping ABILITY_RIGHT = new KeyMapping("key.summons.ability_right", GLFW.GLFW_KEY_RIGHT, CATEGORY);
   public static final KeyMapping COMMAND = new KeyMapping("key.summons.command", GLFW.GLFW_KEY_J, CATEGORY);
   public static final KeyMapping ABILITY_SCROLL_MODIFIER = new KeyMapping("key.summons.ability_scroll_modifier", GLFW.GLFW_KEY_LEFT_ALT, CATEGORY);
+  public static final KeyMapping OPEN_MENU = new KeyMapping("key.summons.open_menu", GLFW.GLFW_KEY_N, CATEGORY);
 
   public static KeyMapping[] all() {
 
@@ -31,7 +34,8 @@ public class SummonsKeyBindings {
         ABILITY_LEFT,
         ABILITY_RIGHT,
         COMMAND,
-        ABILITY_SCROLL_MODIFIER
+        ABILITY_SCROLL_MODIFIER,
+        OPEN_MENU
     };
   }
 
@@ -61,6 +65,11 @@ public class SummonsKeyBindings {
     }
     while (COMMAND.consumeClick()) {
       Services.network().sendCompanionInput(Action.COMMAND);
+    }
+    while (OPEN_MENU.consumeClick()) {
+      if (Minecraft.getInstance().screen == null) {
+        Minecraft.getInstance().setScreen(new SummonsMenuScreen());
+      }
     }
   }
 }

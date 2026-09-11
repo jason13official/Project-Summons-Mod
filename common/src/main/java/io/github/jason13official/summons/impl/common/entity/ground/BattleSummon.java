@@ -270,6 +270,11 @@ public class BattleSummon extends AbstractGroundCompanion {
   }
 
   @Override
+  public EvolutionForm[] allForms() {
+    return Form.values();
+  }
+
+  @Override
   protected List<EvolutionThreshold> evolutionThresholds() {
     return switch ((Form) this.getEvolutionForm()) {
       case MAGMARD -> List.of(

@@ -24,5 +24,6 @@
   "key.summons.ability_left": "Companion Ability (Left)",
   "key.summons.ability_right": "Companion Ability (Right)",
   "key.summons.command": "Companion Command",
-  "key.summons.ability_scroll_modifier": "Scroll Ability (Hold)"
+  "key.summons.ability_scroll_modifier": "Scroll Ability (Hold)",
+  "key.summons.open_menu": "Open Summons Menu"
 }

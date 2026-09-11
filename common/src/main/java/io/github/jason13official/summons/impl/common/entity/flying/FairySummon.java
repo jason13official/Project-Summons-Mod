@@ -269,6 +269,11 @@ public class FairySummon extends AbstractFlyingCompanion {
   }
 
   @Override
+  public EvolutionForm[] allForms() {
+    return Form.values();
+  }
+
+  @Override
   protected List<EvolutionThreshold> evolutionThresholds() {
     return switch ((Form) this.getEvolutionForm()) {
       case INFANT_FAIRY -> List.of(

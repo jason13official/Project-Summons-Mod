@@ -273,6 +273,11 @@ public class MageSummon extends AbstractFlyingCompanion {
   }
 
   @Override
+  public EvolutionForm[] allForms() {
+    return Form.values();
+  }
+
+  @Override
   protected List<EvolutionThreshold> evolutionThresholds() {
     return switch ((Form) this.getEvolutionForm()) {
       case WOOD_ROD -> List.of(

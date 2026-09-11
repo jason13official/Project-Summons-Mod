@@ -131,6 +131,11 @@ public class DevilSummon extends AbstractFlyingCompanion {
   }
 
   @Override
+  public EvolutionForm[] allForms() {
+    return Form.values();
+  }
+
+  @Override
   protected List<EvolutionThreshold> evolutionThresholds() {
     return switch ((Form) this.getEvolutionForm()) {
       // Gale -> Brow: 200 of any color combined (not alternates; the wiki's one example of a

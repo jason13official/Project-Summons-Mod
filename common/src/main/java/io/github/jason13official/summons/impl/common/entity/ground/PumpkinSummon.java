@@ -82,6 +82,11 @@ public class PumpkinSummon extends AbstractGroundCompanion {
   }
 
   @Override
+  public EvolutionForm[] allForms() {
+    return Form.values();
+  }
+
+  @Override
   protected List<EvolutionThreshold> evolutionThresholds() {
     return switch ((Form) this.getEvolutionForm()) {
       case PUMPKIN -> List.of(

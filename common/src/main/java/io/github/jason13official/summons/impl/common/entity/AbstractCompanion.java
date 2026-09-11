@@ -404,6 +404,12 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     return List.of();
   }
 
+  /// every form in this type's chart, in `Form.values()` order; override per type for the
+  /// Innocent Devil Chart screen. Not the same as [#abilities]'s per-form gating.
+  public EvolutionForm[] allForms() {
+    return new EvolutionForm[0];
+  }
+
   // endregion evolution
 
   // region leveling
