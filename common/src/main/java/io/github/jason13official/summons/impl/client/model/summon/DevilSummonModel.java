@@ -82,7 +82,7 @@ public class DevilSummonModel extends HierarchicalModel<AbstractCompanion> {
     this.root().getAllParts().forEach(ModelPart::resetPose);
 
     if (entity.getMode() == CompanionMode.DEFEND) {
-      this.applyStatic(DevilSummonAnimations.SCARY_FACE);
+      this.applyStatic(DevilSummonAnimations.GUARD);
       return;
     }
 

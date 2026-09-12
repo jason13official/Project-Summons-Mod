@@ -1,6 +1,7 @@
 package io.github.jason13official.summons.impl.common.gate;
 
 import io.github.jason13official.summons.api.common.util.SummonsDataHolder;
+import io.github.jason13official.summons.impl.common.block.PetrifiedSummonBlockEntity;
 import io.github.jason13official.summons.impl.common.block.SummonGateBlock;
 import io.github.jason13official.summons.impl.common.party.CompanionParty;
 import io.github.jason13official.summons.impl.common.party.CompanionPartyManager;
@@ -109,6 +110,14 @@ public class SummonGateManager {
         "The statue trembles... your " + displayName(type) + "-type Innocent Devil stirs..."));
 
     PENDING.put(player.getUUID(), new PendingWarp(level, pos, type, WARP_DELAY_TICKS));
+    syncAwakenProgress(level, pos, WARP_DELAY_TICKS, WARP_DELAY_TICKS);
+  }
+
+  /// pushes the countdown into the statue's [PetrifiedSummonBlockEntity] so its renderer can grow/flash/swirl it; a no-op if the block entity is already gone (e.g. the room got rebuilt mid-cutscene)
+  private static void syncAwakenProgress(ServerLevel level, BlockPos pos, int ticksLeft, int totalTicks) {
+    if (level.getBlockEntity(pos) instanceof PetrifiedSummonBlockEntity statue) {
+      statue.setAwakenProgress(ticksLeft, totalTicks);
+    }
   }
 
   private static boolean isOnCooldown(ServerPlayer player) {
@@ -158,6 +167,7 @@ public class SummonGateManager {
       }
 
       warp.ticksLeft--;
+      syncAwakenProgress(warp.level, warp.pos, warp.ticksLeft, WARP_DELAY_TICKS);
       float progress = 1.0F - warp.ticksLeft / (float) WARP_DELAY_TICKS;
       int particles = 2 + Mth.floor(progress * 18.0F);
       warp.level.sendParticles(ParticleTypes.END_ROD, warp.pos.getX() + 0.5, warp.pos.getY() + 0.5, warp.pos.getZ() + 0.5,

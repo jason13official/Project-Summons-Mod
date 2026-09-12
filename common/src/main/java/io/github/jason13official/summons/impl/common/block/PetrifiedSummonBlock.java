@@ -9,12 +9,17 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.EntityBlock;
+import net.minecraft.world.level.block.RenderShape;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
+import org.jetbrains.annotations.Nullable;
 
 /// a petrified Innocent Devil waiting in its Summon Gate pocket room; right-clicking shatters the statue and unlocks `type` into the player's
-/// [io.github.jason13official.summons.impl.common.party.CompanionParty]
-public class PetrifiedSummonBlock extends Block {
+/// [io.github.jason13official.summons.impl.common.party.CompanionParty]. Rendering is entirely handled by [PetrifiedSummonBlockEntity]'s renderer
+/// (grow/flash/swirl while awakening) -> the baked block model contributes nothing on its own.
+public class PetrifiedSummonBlock extends Block implements EntityBlock {
 
   private final CompanionType type;
 
@@ -34,5 +39,16 @@ public class PetrifiedSummonBlock extends Block {
     }
 
     return InteractionResult.sidedSuccess(level.isClientSide);
+  }
+
+  @Override
+  protected RenderShape getRenderShape(BlockState state) {
+    return RenderShape.INVISIBLE;
+  }
+
+  @Nullable
+  @Override
+  public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
+    return new PetrifiedSummonBlockEntity(pos, state);
   }
 }

@@ -14,6 +14,7 @@ import net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.api.client.rendering.v1.BlockEntityRendererRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityModelLayerRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
@@ -21,8 +22,10 @@ import net.minecraft.client.KeyMapping;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.builders.LayerDefinition;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 
 public class SummonsClientFabric implements ClientModInitializer {
 
@@ -33,6 +36,7 @@ public class SummonsClientFabric implements ClientModInitializer {
 
     this.registerEntityModels(SummonsClient::registerEntityModels);
     this.registerEntityRenderers(SummonsClient::registerEntityRenderers);
+    this.registerBlockEntityRenderers(SummonsClient::registerBlockEntityRenderers);
 
     SummonsClient.registerKeyBindings(this::registerKeyBinding);
     ClientTickEvents.END_CLIENT_TICK.register(client -> SummonsKeyBindings.tickKeyBindings());
@@ -56,6 +60,11 @@ public class SummonsClientFabric implements ClientModInitializer {
   private void registerEntityRenderers(Consumer<BiConsumer<EntityType, EntityRendererProvider>> source) {
 
     source.accept(EntityRendererRegistry::register);
+  }
+
+  private void registerBlockEntityRenderers(Consumer<BiConsumer<BlockEntityType, BlockEntityRendererProvider>> source) {
+
+    source.accept(BlockEntityRendererRegistry::register);
   }
 
   /// fabric prefers `TexturedModelDataProvider` so we have to translate

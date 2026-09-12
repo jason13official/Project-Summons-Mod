@@ -4,6 +4,8 @@ import io.github.jason13official.summons.impl.client.SummonsKeyBindings;
 import io.github.jason13official.summons.impl.client.gui.SummonsHUD;
 import io.github.jason13official.summons.impl.client.model.CompanionCubeModel;
 import io.github.jason13official.summons.impl.client.model.CompanionPrismModel;
+import io.github.jason13official.summons.impl.client.model.block.PetrifiedSummonBodyModel;
+import io.github.jason13official.summons.impl.client.model.block.PetrifiedSummonSwirlModel;
 import io.github.jason13official.summons.impl.client.model.summon.BattleSummonModel;
 import io.github.jason13official.summons.impl.client.model.summon.BirdSummonModel;
 import io.github.jason13official.summons.impl.client.model.summon.DevilSummonModel;
@@ -12,6 +14,7 @@ import io.github.jason13official.summons.impl.client.model.summon.MageSummonMode
 import io.github.jason13official.summons.impl.client.model.summon.PumpkinSummonModel;
 import io.github.jason13official.summons.impl.client.renderer.CompanionCubeRenderer;
 import io.github.jason13official.summons.impl.client.renderer.CompanionPrismRenderer;
+import io.github.jason13official.summons.impl.client.renderer.block.PetrifiedSummonBlockEntityRenderer;
 import io.github.jason13official.summons.impl.client.renderer.summon.BattleSummonRenderer;
 import io.github.jason13official.summons.impl.client.renderer.summon.BirdSummonRenderer;
 import io.github.jason13official.summons.impl.client.renderer.summon.DevilSummonRenderer;
@@ -19,6 +22,7 @@ import io.github.jason13official.summons.impl.client.renderer.summon.FairySummon
 import io.github.jason13official.summons.impl.client.renderer.summon.MageSummonRenderer;
 import io.github.jason13official.summons.impl.client.renderer.summon.PumpkinSummonRenderer;
 import io.github.jason13official.summons.impl.common.registry.ModEntities;
+import io.github.jason13official.summons.impl.common.registry.ModTiles;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -27,9 +31,11 @@ import net.minecraft.client.KeyMapping;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.builders.LayerDefinition;
+import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 
 public class SummonsClient {
 
@@ -74,5 +80,13 @@ public class SummonsClient {
     consumer.accept(MageSummonModel.LAYER_LOCATION, MageSummonModel::createBodyLayer);
     consumer.accept(DevilSummonModel.LAYER_LOCATION, DevilSummonModel::createBodyLayer);
     consumer.accept(PumpkinSummonModel.LAYER_LOCATION, PumpkinSummonModel::createBodyLayer);
+
+    consumer.accept(PetrifiedSummonBodyModel.LAYER_LOCATION, PetrifiedSummonBodyModel::createBodyLayer);
+    consumer.accept(PetrifiedSummonSwirlModel.LAYER_LOCATION, PetrifiedSummonSwirlModel::createBodyLayer);
+  }
+
+  public static void registerBlockEntityRenderers(BiConsumer<BlockEntityType, BlockEntityRendererProvider> consumer) {
+
+    consumer.accept(ModTiles.PETRIFIED_SUMMON, PetrifiedSummonBlockEntityRenderer::new);
   }
 }

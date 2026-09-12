@@ -31,12 +31,19 @@ public class DevilSummonAnimations {
       ))
       .build();
 
-  public static final AnimationDefinition SCARY_FACE = AnimationDefinition.Builder.withLength(0.0F).looping()
-      .addAnimation("hat", new AnimationChannel(AnimationChannel.Targets.POSITION,
-          new Keyframe(0.0F, KeyframeAnimations.posVec(0.0F, -5.0F, 0.0F), AnimationChannel.Interpolations.LINEAR)
+  /// DEFEND pose: arms crossed in front of the chest, legs drawn together
+  public static final AnimationDefinition GUARD = AnimationDefinition.Builder.withLength(0.0F).looping()
+      .addAnimation("leftArm", new AnimationChannel(AnimationChannel.Targets.ROTATION,
+          new Keyframe(0.0F, KeyframeAnimations.degreeVec(-80.0F, 0.0F, 20.0F), AnimationChannel.Interpolations.LINEAR)
       ))
-      .addAnimation("head", new AnimationChannel(AnimationChannel.Targets.POSITION,
-          new Keyframe(0.0F, KeyframeAnimations.posVec(0.0F, 5.0F, 0.0F), AnimationChannel.Interpolations.LINEAR)
+      .addAnimation("rightArm", new AnimationChannel(AnimationChannel.Targets.ROTATION,
+          new Keyframe(0.0F, KeyframeAnimations.degreeVec(-80.0F, 0.0F, -20.0F), AnimationChannel.Interpolations.LINEAR)
+      ))
+      .addAnimation("leftLeg", new AnimationChannel(AnimationChannel.Targets.ROTATION,
+          new Keyframe(0.0F, KeyframeAnimations.degreeVec(0.0F, 0.0F, -8.0F), AnimationChannel.Interpolations.LINEAR)
+      ))
+      .addAnimation("rightLeg", new AnimationChannel(AnimationChannel.Targets.ROTATION,
+          new Keyframe(0.0F, KeyframeAnimations.degreeVec(0.0F, 0.0F, 8.0F), AnimationChannel.Interpolations.LINEAR)
       ))
       .build();
 

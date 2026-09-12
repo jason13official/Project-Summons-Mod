@@ -16,9 +16,22 @@ public class BattleSummonAnimations {
       ))
       .build();
 
-  public static final AnimationDefinition FLOWER = AnimationDefinition.Builder.withLength(0.0F).looping()
+  /// DEFEND pose: braced/blocking stance -> arms raised and crossed in front, knees bent, slight forward lean
+  public static final AnimationDefinition GUARD = AnimationDefinition.Builder.withLength(0.0F).looping()
+      .addAnimation("body", new AnimationChannel(AnimationChannel.Targets.ROTATION,
+          new Keyframe(0.0F, KeyframeAnimations.degreeVec(8.0F, 0.0F, 0.0F), AnimationChannel.Interpolations.LINEAR)
+      ))
       .addAnimation("arm0", new AnimationChannel(AnimationChannel.Targets.ROTATION,
-          new Keyframe(0.0F, KeyframeAnimations.degreeVec(-46.05F, 0.0F, 0.0F), AnimationChannel.Interpolations.LINEAR)
+          new Keyframe(0.0F, KeyframeAnimations.degreeVec(-70.0F, 0.0F, 25.0F), AnimationChannel.Interpolations.LINEAR)
+      ))
+      .addAnimation("arm1", new AnimationChannel(AnimationChannel.Targets.ROTATION,
+          new Keyframe(0.0F, KeyframeAnimations.degreeVec(-70.0F, 0.0F, -25.0F), AnimationChannel.Interpolations.LINEAR)
+      ))
+      .addAnimation("leg0", new AnimationChannel(AnimationChannel.Targets.ROTATION,
+          new Keyframe(0.0F, KeyframeAnimations.degreeVec(15.0F, 0.0F, 0.0F), AnimationChannel.Interpolations.LINEAR)
+      ))
+      .addAnimation("leg1", new AnimationChannel(AnimationChannel.Targets.ROTATION,
+          new Keyframe(0.0F, KeyframeAnimations.degreeVec(15.0F, 0.0F, 0.0F), AnimationChannel.Interpolations.LINEAR)
       ))
       .build();
 

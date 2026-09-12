@@ -73,7 +73,7 @@ public class BattleSummonModel extends HierarchicalModel<AbstractCompanion> {
     this.root().getAllParts().forEach(ModelPart::resetPose);
 
     if (entity.getMode() == CompanionMode.DEFEND) {
-      this.applyStatic(BattleSummonAnimations.FLOWER);
+      this.applyStatic(BattleSummonAnimations.GUARD);
       return;
     }
 
