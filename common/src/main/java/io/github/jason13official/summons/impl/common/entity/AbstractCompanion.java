@@ -12,6 +12,7 @@ import io.github.jason13official.summons.impl.common.network.CompanionProgressSy
 import io.github.jason13official.summons.impl.common.network.CompanionStateSyncPayload;
 import io.github.jason13official.summons.impl.common.party.CompanionMode;
 import io.github.jason13official.summons.impl.common.party.CompanionType;
+import io.github.jason13official.summons.impl.common.registry.ModDimensions;
 import io.github.jason13official.summons.platform.Services;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -150,6 +151,11 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
       return; // relocated into the owner's dimension; this instance was replaced
     }
 
+    // frozen while inside the Summon Gate pocket dimension; recomputed every tick so it can't
+    // drift out of sync with #setMode/wisp's own noAi bookkeeping once back in a normal dimension
+    this.setNoAi(this.level().dimension().equals(ModDimensions.SUMMON_POCKET)
+        || this.isWisp() || this.mode == CompanionMode.DEFEND);
+
     if (this.isWisp()) {
       CompanionWisp.floatTowardOwner(this); // noAi skips normal goal-based movement entirely
     }
@@ -235,6 +241,13 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     }
 
     LivingEntity owner = this.getOwner();
+    if (owner == null) {
+      // getOwner()'s default impl is level-scoped; a player owner in a different dimension
+      // vanishes from it entirely, so fall back to a server-wide lookup by UUID instead
+      UUID ownerUUID = this.getOwnerUUID();
+      owner = ownerUUID != null ? level.getServer().getPlayerList().getPlayer(ownerUUID) : null;
+    }
+
     if (owner == null || !(owner.level() instanceof ServerLevel ownerLevel)) {
       return;
     }

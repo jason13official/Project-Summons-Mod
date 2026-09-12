@@ -30,7 +30,7 @@ public class PetrifiedSummonBlock extends Block {
 
   @Override
   protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hitResult) {
-    if (!level.isClientSide && player instanceof ServerPlayer serverPlayer && level instanceof ServerLevel serverLevel) {
+    if (!level.isClientSide() && player instanceof ServerPlayer serverPlayer && level instanceof ServerLevel serverLevel) {
       SummonGateManager.unlockAtStatue(serverPlayer, serverLevel, pos, this.type);
     }
 

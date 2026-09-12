@@ -1,7 +1,10 @@
 {
   "variants": {
-    "": {
-      "model": "summons:block/summon_gate"
+    "axis=x": {
+      "model": "summons:block/summon_gate_ns"
+    },
+    "axis=z": {
+      "model": "summons:block/summon_gate_ew"
     }
   }
 }

@@ -6,6 +6,7 @@ import io.github.jason13official.summons.impl.common.network.CompanionStateSyncP
 import io.github.jason13official.summons.impl.common.network.SummonsNetworking;
 import io.github.jason13official.summons.impl.common.network.SummonsNetworking.CompanionInputPayload;
 import io.github.jason13official.summons.impl.common.gate.SummonGateManager;
+import io.github.jason13official.summons.impl.common.party.CompanionPartyManager;
 import io.github.jason13official.summons.impl.common.registry.ModBlocks;
 import io.github.jason13official.summons.impl.common.registry.ModCommands;
 import io.github.jason13official.summons.impl.common.registry.ModEntities;
@@ -21,6 +22,7 @@ import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
@@ -66,6 +68,10 @@ public class SummonsFabric implements ModInitializer {
     CommandRegistrationCallback.EVENT.register(ModCommands::register);
 
     ServerTickEvents.END_SERVER_TICK.register(SummonGateManager::tick);
+
+    // a companion is never left alive/unowned-of-attention in the world while its owner is
+    // offline -> dismiss (snapshot + discard) it on logout, same as the dismiss keybind
+    ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> CompanionPartyManager.dismissActive(handler.player));
   }
 
   public void createDefaultAttributes(Consumer<BiConsumer<EntityType, AttributeSupplier>> source) {

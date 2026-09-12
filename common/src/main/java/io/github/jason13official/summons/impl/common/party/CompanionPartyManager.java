@@ -32,6 +32,20 @@ public class CompanionPartyManager {
     return found.isEmpty() ? null : found.get(0);
   }
 
+  /// server-side only: searches every loaded dimension, since the companion can briefly be
+  /// mid-follow in a different one than the owner when this is called
+  @Nullable
+  private static AbstractCompanion findActiveAnywhere(ServerPlayer owner) {
+    for (ServerLevel level : owner.server.getAllLevels()) {
+      AbstractCompanion found = findActive(level, owner);
+      if (found != null) {
+        return found;
+      }
+    }
+
+    return null;
+  }
+
   /// record a newly acquired Innocent Devil/Summon into its party slot; no-op if that slot is
   /// already unlocked.
   public static void unlock(ServerPlayer player, CompanionType type) {
@@ -101,7 +115,7 @@ public class CompanionPartyManager {
       return;
     }
 
-    AbstractCompanion active = findActive(player.serverLevel(), player);
+    AbstractCompanion active = findActiveAnywhere(player);
     if (active != null) {
       party.putSnapshot(activeType.get(), active.saveWithoutId(new CompoundTag()));
       active.discard();

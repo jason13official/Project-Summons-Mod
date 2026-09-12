@@ -5,10 +5,12 @@ import io.github.jason13official.summons.impl.common.network.CompanionIdentitySy
 import io.github.jason13official.summons.impl.common.network.CompanionProgressSyncPayload;
 import io.github.jason13official.summons.impl.common.network.CompanionStateSyncPayload;
 import io.github.jason13official.summons.impl.common.network.SummonsNetworking;
+import io.github.jason13official.summons.impl.common.registry.ModBlocks;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
@@ -18,6 +20,7 @@ import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.builders.LayerDefinition;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.world.entity.EntityType;
 
@@ -42,6 +45,8 @@ public class SummonsClientFabric implements ClientModInitializer {
         context.client().execute(() -> SummonsNetworking.handleStateSync(payload)));
     ClientPlayNetworking.registerGlobalReceiver(CompanionIdentitySyncPayload.TYPE, (payload, context) ->
         context.client().execute(() -> SummonsNetworking.handleIdentitySync(payload)));
+
+    BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.SUMMON_GATE, RenderType.translucent());
   }
 
   private void registerKeyBinding(KeyMapping mapping) {

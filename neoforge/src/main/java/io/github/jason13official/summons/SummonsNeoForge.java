@@ -6,6 +6,7 @@ import io.github.jason13official.summons.impl.common.network.CompanionStateSyncP
 import io.github.jason13official.summons.impl.common.network.SummonsNetworking;
 import io.github.jason13official.summons.impl.common.network.SummonsNetworking.CompanionInputPayload;
 import io.github.jason13official.summons.impl.common.gate.SummonGateManager;
+import io.github.jason13official.summons.impl.common.party.CompanionPartyManager;
 import io.github.jason13official.summons.impl.common.registry.ModBlocks;
 import io.github.jason13official.summons.impl.common.registry.ModCommands;
 import io.github.jason13official.summons.impl.common.registry.ModEntities;
@@ -37,6 +38,7 @@ import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.AddReloadListenerEvent;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
@@ -72,6 +74,14 @@ public class SummonsNeoForge {
         ModCommands.register(event.getDispatcher(), event.getBuildContext(), event.getCommandSelection()));
 
     NeoForge.EVENT_BUS.addListener((Consumer<ServerTickEvent.Post>) event -> SummonGateManager.tick(event.getServer()));
+
+    // a companion is never left alive/unowned-of-attention in the world while its owner is
+    // offline -> dismiss (snapshot + discard) it on logout, same as the dismiss keybind
+    NeoForge.EVENT_BUS.addListener((Consumer<PlayerEvent.PlayerLoggedOutEvent>) event -> {
+      if (event.getEntity() instanceof ServerPlayer player) {
+        CompanionPartyManager.dismissActive(player);
+      }
+    });
 
     EVENT_BUS.addListener((RegisterPayloadHandlersEvent event) -> {
       PayloadRegistrar registrar = event.registrar("1");

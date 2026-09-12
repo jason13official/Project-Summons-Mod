@@ -21,11 +21,8 @@ public class ModBlocks {
 
   public static void register(BiConsumer<Block, ResourceLocation> consumer) {
 
-    // the archway's walk-through opening, not the pocket room itself; normal strength,
-    // movable/breakable like any other block (the pocket-side petrified statues below are the
-    // ones kept unbreakable). noCollission so the player physically passes through it (entityInside
-    // trigger) instead of being stopped by it like a wall; the outline/hitbox used for
-    // right-click targeting is unaffected, so it stays clickable too
+    // normal strength, movable/breakable unlike the unbreakable petrified statues below;
+    // noCollission lets the player walk through it (entityInside), keeping its right-click shape
     SUMMON_GATE = new SummonGateBlock(Properties.of()
         .mapColor(MapColor.COLOR_BLACK)
         .sound(SoundType.STONE)

@@ -31,12 +31,9 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 
-/// the per-player "petrified Innocent Devil" pocket room, ported from Castlevania: Curse of
-/// Darkness's green-door pocket dimensions -> each visit unlocks the next [CompanionType] in
-/// [CompanionType] enum order (Fairy, Battle, Bird, Mage, Devil, Pumpkin), one per visit.
-/// Rooms live in [ModDimensions#SUMMON_POCKET], one deterministic 512-block-spaced cell per
-/// player ([SummonGateSavedData]); the player is forced to Adventure mode for the visit (cached
-/// + restored on the way out) so nothing in the room can be broken or moved.
+/// the per-player "petrified Innocent Devil" pocket room; each visit unlocks the next
+/// [CompanionType] in enum order. Rooms live in [ModDimensions#SUMMON_POCKET], one deterministic
+/// 512-block-spaced cell per player ([SummonGateSavedData]).
 public class SummonGateManager {
 
   private static final String ROOT_TAG = "summons_gate";
@@ -55,6 +52,12 @@ public class SummonGateManager {
 
   private static final int WARP_DELAY_TICKS = 100; // ~5s statue-glow buildup before the warp home
   private static final Map<UUID, PendingWarp> PENDING = new HashMap<>();
+
+  // mirrors vanilla Entity#portalCooldown; a player landed by enterGate/leaveGate ignores
+  // further gate triggers for this many ticks, so standing on/being pushed back onto the
+  // walk-through opening right after a teleport can't immediately bounce them back
+  private static final int GATE_COOLDOWN_TICKS = 20;
+  private static final Map<UUID, Integer> COOLDOWN = new HashMap<>();
 
   /// a running "statue awakening" cutscene: the pedestal glows brighter each tick until
   /// `ticksLeft` hits 0, then [SummonGateManager#finishWarp] fires
@@ -82,8 +85,8 @@ public class SummonGateManager {
       return;
     }
 
-    if (player.serverLevel() == pocket) {
-      return; // already inside
+    if (player.serverLevel() == pocket || isOnCooldown(player)) {
+      return; // already inside, or just landed from a gate teleport
     }
 
     CompanionParty party = CompanionParty.of(player);
@@ -103,6 +106,7 @@ public class SummonGateManager {
 
     BlockPos entrance = origin.offset(ROOM_SIZE / 2, 1, 1);
     player.teleportTo(pocket, entrance.getX() + 0.5, entrance.getY(), entrance.getZ() + 0.5, 0.0F, 0.0F); // yaw 0 faces +Z, toward the pedestal
+    refreshCooldown(player);
     player.sendSystemMessage(Component.literal(
         "A petrified " + displayName(next.get()) + "-type Innocent Devil awaits..."));
   }
@@ -126,8 +130,37 @@ public class SummonGateManager {
     PENDING.put(player.getUUID(), new PendingWarp(level, pos, type, WARP_DELAY_TICKS));
   }
 
-  /// drives every in-progress [PendingWarp]; call once per server tick
+  private static boolean isOnCooldown(ServerPlayer player) {
+    return COOLDOWN.getOrDefault(player.getUUID(), 0) > 0;
+  }
+
+  private static void refreshCooldown(ServerPlayer player) {
+    COOLDOWN.put(player.getUUID(), GATE_COOLDOWN_TICKS);
+  }
+
+  private static void tickCooldowns() {
+
+    if (COOLDOWN.isEmpty()) {
+      return;
+    }
+
+    Iterator<Map.Entry<UUID, Integer>> iterator = COOLDOWN.entrySet().iterator();
+    while (iterator.hasNext()) {
+      Map.Entry<UUID, Integer> entry = iterator.next();
+      int remaining = entry.getValue() - 1;
+      if (remaining <= 0) {
+        iterator.remove();
+      } else {
+        entry.setValue(remaining);
+      }
+    }
+  }
+
+  /// drives every in-progress [PendingWarp] plus every gate-teleport cooldown; call once per
+  /// server tick
   public static void tick(MinecraftServer server) {
+
+    tickCooldowns();
 
     if (PENDING.isEmpty()) {
       return;
@@ -193,6 +226,7 @@ public class SummonGateManager {
 
     player.teleportTo(returnLevel, tag.getDouble(X_TAG), tag.getDouble(Y_TAG), tag.getDouble(Z_TAG),
         tag.getFloat(YAW_TAG), tag.getFloat(PITCH_TAG));
+    refreshCooldown(player);
 
     if (tag.contains(GAMEMODE_TAG)) {
       player.setGameMode(GameType.byName(tag.getString(GAMEMODE_TAG), GameType.SURVIVAL));
@@ -201,12 +235,9 @@ public class SummonGateManager {
     root.remove(ROOT_TAG);
   }
 
-  /// stashes where to send the player back to; walking (not right-clicking) into the gate
-  /// leaves them standing *inside* the [io.github.jason13official.summons.impl.common.block.SummonGateBlock]
-  /// itself, so caching the raw position would warp them right back into the pocket dimension
-  /// the moment [SummonGateManager#leaveGate] lands them there (`entityInside` re-triggers
-  /// `enterGate`) -> step backwards along the way they came until standing somewhere that isn't
-  /// the gate and won't suffocate them instead
+  /// stashes where to send the player back to; walking into the gate leaves them standing
+  /// inside the block itself, so [SummonGateManager#findSafeReturnPos] steps back to a spot
+  /// that won't immediately re-trigger [io.github.jason13official.summons.impl.common.block.SummonGateBlock]
   private static void storeReturnPoint(ServerPlayer player) {
 
     CompoundTag root = ((SummonsDataHolder) player).summons$getPersistentData();
@@ -225,11 +256,8 @@ public class SummonGateManager {
     root.put(ROOT_TAG, tag);
   }
 
-  /// walks backwards (away from the player's facing direction, i.e. back the way they came)
-  /// from their current position, up to a few blocks, looking for a spot that isn't a
-  /// [io.github.jason13official.summons.impl.common.block.SummonGateBlock] and has two clear
-  /// blocks (feet + head) over solid ground; falls back to the player's raw position if nothing
-  /// better turns up within range (e.g. they right-clicked from well outside the gate already)
+  /// steps backwards from the player's position, looking for a spot that isn't a gate block
+  /// and has two clear blocks over solid ground; falls back to the raw position otherwise
   private static BlockPos findSafeReturnPos(ServerPlayer player) {
 
     ServerLevel level = player.serverLevel();
