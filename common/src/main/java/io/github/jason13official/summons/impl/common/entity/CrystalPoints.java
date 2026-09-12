@@ -5,10 +5,10 @@ import io.netty.buffer.ByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 
-/// Evo Crystal point totals, one per color, as a single value instead of five independent
-/// int fields. Own `StreamCodec`, same shape as vanilla's per-type serializers (SnifferState,
-/// ArmadilloState); not a generic `EntityDataSerializer`, since mods can't register those.
+/// Evo Crystal point totals, one per color, as a single value instead of five independent int fields. Own `StreamCodec`, same shape as vanilla's per-type serializers (SnifferState, ArmadilloState);
+/// not a generic `EntityDataSerializer`, since mods can't register those.
 public record CrystalPoints(int red, int blue, int green, int yellow, int white) {
+
   public static final CrystalPoints ZERO = new CrystalPoints(0, 0, 0, 0, 0);
 
   public static final StreamCodec<ByteBuf, CrystalPoints> STREAM_CODEC = StreamCodec.composite(

@@ -28,10 +28,10 @@ import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.util.Mth;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.OwnableEntity;
@@ -45,57 +45,63 @@ import org.jetbrains.annotations.Nullable;
 
 public abstract class AbstractCompanion extends PathfinderMob implements TraceableEntity, OwnableEntity {
 
+  public static final float GUARD_FIELD_MAX_RADIUS = 3.0F;
+  public static final float GUARD_FIELD_MIN_RADIUS = 0.75F;
+  public static final int MAX_LEVEL = 99;
   // TamableAnimal.class; UUID owner, round-trips via restoreFrom
   private static final EntityDataAccessor<Optional<UUID>> DATA_OWNER_UUID_ID =
       SynchedEntityData.defineId(AbstractCompanion.class, EntityDataSerializers.OPTIONAL_UUID);
+  private static final int PROGRESS_SYNC_INTERVAL_TICKS = 20;
+  private static final int STATE_SYNC_INTERVAL_TICKS = 20;
+  private static final int IDENTITY_SYNC_INTERVAL_TICKS = 100; // fine to lag further behind
+  private static final double TELEPORT_TO_OWNER_DISTANCE = 24.0;
+  private static final int ABILITY_USE_XP = 5;
+  private static final int DIRECT_ATTACK_XP = 2;
+  private static final EvolutionForm NONE_FORM = new EvolutionForm() {
+    @Override
+    public String id() {
+      return "NONE";
+    }
 
+    @Override
+    public String displayName() {
+      return "None";
+    }
+
+    @Override
+    public int stage() {
+      return 0;
+    }
+  };
+  // region direct attack
+  private static final float DIRECT_ATTACK_GROWTH_PER_LEVEL = 0.01F; // +1%/level; level 99 ~ 2x
+  private final OrbitingBitManager orbitingBits = new OrbitingBitManager();
   // Everything below is OUR OWN sync, not vanilla's SynchedEntityData (mods can't safely
   // register new EntityDataSerializers). Plain fields, mirrored to tracking clients via
   // three payloads split by change frequency (see #tick, #build*/#apply*SyncPayload).
   private boolean progressSyncDirty = true; // crystals/level/experience -> changes often
   private boolean stateSyncDirty = true; // mode/ability/chain/guard field -> changes sometimes
   private boolean identitySyncDirty = true; // type/evolution/wisp -> changes rarely
-  private static final int PROGRESS_SYNC_INTERVAL_TICKS = 20;
-  private static final int STATE_SYNC_INTERVAL_TICKS = 20;
-  private static final int IDENTITY_SYNC_INTERVAL_TICKS = 100; // fine to lag further behind
-
   // which Innocent Devil "slot" this instance represents; assigned by CompanionPartyManager
   private CompanionType companionType = CompanionType.FAIRY;
   private CompanionMode mode = CompanionMode.AUTO;
   private int abilityIndex;
   private boolean abilityBusy;
   private int abilityBusyTicks;
-
-  /// Chain Attack "window" (Battle/Devil only, see CompanionType#isChainAttackCapable):
-  /// true while the owner's next landed hit should trigger a bonus companion attack instead
-  /// of just damage, see ChainAttackTracker. Synced so SummonsHUD can show the popup.
+  /// Chain Attack "window" (Battle/Devil only, see CompanionType#isChainAttackCapable): true while the owner's next landed hit should trigger a bonus companion attack instead of just damage, see
+  /// ChainAttackTracker. Synced so SummonsHUD can show the popup.
   private boolean chainArmed;
   private int chainArmedTicks;
-
-  public static final float GUARD_FIELD_MAX_RADIUS = 3.0F;
-  public static final float GUARD_FIELD_MIN_RADIUS = 0.75F;
-
   /// Guard field radius for DEFEND mode; shrinks per hit, regenerates over time.
   private float guardFieldRadius = GUARD_FIELD_MAX_RADIUS;
-
-  private static final double TELEPORT_TO_OWNER_DISTANCE = 24.0;
-
   private CrystalPoints crystals = CrystalPoints.ZERO;
-
   // comma-joined form ids ever reached; abilities stay learned once unlocked, even past
   // whatever form originally granted them (matches the wiki: evolving never revokes one)
   private String evolutionForm;
   private String reachedForms;
-
   private int level = 1;
   private int experience;
-
-  public static final int MAX_LEVEL = 99;
-  private static final int ABILITY_USE_XP = 5;
-  private static final int DIRECT_ATTACK_XP = 2;
-
-  /// at 0 Hearts the I.D. goes inert instead of dying; no wisp entity/model, renderers
-  /// skip drawing and tick() emits particles instead until a Heart revives it
+  /// at 0 Hearts the I.D. goes inert instead of dying; no wisp entity/model, renderers skip drawing and tick() emits particles instead until a Heart revives it
   private boolean wisp;
 
   public AbstractCompanion(EntityType<? extends AbstractCompanion> entityType, Level level) {
@@ -110,9 +116,45 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     return Mob.createMobAttributes().add(Attributes.MAX_HEALTH, 10.0D).add(Attributes.MOVEMENT_SPEED, 0.2D);
   }
 
-  /// Monster.class calls this from its own aiStep() override to drive attackAnim/
-  /// getAttackAnim(); plain Mob/PathfinderMob never do, so without this override
-  /// getAttackAnim() would stay stuck at 0 forever despite swing() being called correctly.
+  /// protects an owner standing inside a DEFEND-mode companion's field; also shrinks it, same as a direct hit would
+  public static boolean isProtectedByGuardField(LivingEntity owner) {
+    return CompanionGuardField.isProtecting(owner);
+  }
+
+  /// XP needed to advance from `level` to `level + 1`
+  public static int experienceToNextLevel(int level) {
+    return 10 * level;
+  }
+
+  /// small particle burst at `target`'s head and feet, for ability effects to call
+  protected static void spawnAbilityParticles(LivingEntity target, ParticleOptions particle, int count) {
+    if (target.level() instanceof ServerLevel level) {
+
+      // at feet
+      level.sendParticles(particle, target.getX(), target.getY(), target.getZ(), count,
+          randOffsetThird(level), randOffsetThird(level), randOffsetThird(level), 0.0);
+
+      // at head
+      level.sendParticles(particle, target.getX(), target.getY() + target.getBbHeight(), target.getZ(), count,
+          randOffsetThird(level), randOffsetThird(level), randOffsetThird(level), 0.0);
+    }
+  }
+
+  /// nearest living target to `companion` within `radius`, excluding itself and `owner`
+  protected static LivingEntity findNearestTarget(AbstractCompanion companion, LivingEntity owner, double radius) {
+    AABB area = companion.getBoundingBox().inflate(radius);
+    return companion.level().getEntitiesOfClass(LivingEntity.class, area,
+            e -> e != companion && e != owner && e.isAlive())
+        .stream().min(Comparator.comparingDouble(companion::distanceToSqr)).orElse(null);
+  }
+
+  private static double randOffsetThird(Level level) {
+
+    return ((level.getRandom().nextDouble() * 2.0D) - 1.0D) / 3.0D; // random*2-1 [-1, 1), / 3 [-0.3, 0.3)
+  }
+
+  /// Monster.class calls this from its own aiStep() override to drive attackAnim/ getAttackAnim(); plain Mob/PathfinderMob never do, so without this override getAttackAnim() would stay stuck at 0
+  /// forever despite swing() being called correctly.
   @Override
   public void aiStep() {
     this.updateSwingTime();
@@ -209,10 +251,10 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     return new CompanionIdentitySyncPayload(this.getId(), (byte) this.companionType.ordinal(),
         this.evolutionForm, this.reachedForms, this.wisp);
   }
+  // endregion guard field
 
-  /// client-side: overwrites the mirrored fields from a received snapshot directly,
-  /// bypassing the public setters (and whatever side effects they carry, like #setMode's
-  /// noAi toggle); applying synced state shouldn't re-trigger that kind of business logic
+  /// client-side: overwrites the mirrored fields from a received snapshot directly, bypassing the public setters (and whatever side effects they carry, like #setMode's noAi toggle); applying synced
+  /// state shouldn't re-trigger that kind of business logic
   public void applyProgressSyncPayload(CompanionProgressSyncPayload payload) {
     this.crystals = payload.crystals();
     this.level = payload.level();
@@ -274,9 +316,9 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
       this.stateSyncDirty = true;
     }
   }
+  // endregion wisp
 
-  /// a sparking wisp is already "spent"; DEFEND mode blocks damage and shrinks the field.
-  /// Bypass-invulnerability sources (void, /kill, creative) still go through either way.
+  /// a sparking wisp is already "spent"; DEFEND mode blocks damage and shrinks the field. Bypass-invulnerability sources (void, /kill, creative) still go through either way.
   @Override
   public boolean hurt(DamageSource source, float amount) {
     if (!this.level().isClientSide && !source.is(DamageTypeTags.BYPASSES_INVULNERABILITY)) {
@@ -293,13 +335,6 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     return super.hurt(source, amount);
   }
 
-  /// protects an owner standing inside a DEFEND-mode companion's field; also shrinks it,
-  /// same as a direct hit would
-  public static boolean isProtectedByGuardField(LivingEntity owner) {
-    return CompanionGuardField.isProtecting(owner);
-  }
-  // endregion guard field
-
   // region wisp
   public boolean isWisp() {
     return this.wisp;
@@ -312,8 +347,7 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     }
   }
 
-  /// bridges CompanionWisp back to the real vanilla death (`x.super.method()` isn't legal
-  /// from outside this class, hence the one-line forward)
+  /// bridges CompanionWisp back to the real vanilla death (`x.super.method()` isn't legal from outside this class, hence the one-line forward)
   void callSuperDie(DamageSource source) {
     super.die(source);
   }
@@ -331,11 +365,10 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
   /// what touching a Heart does: revives from wisp first if needed, then heals
   public void consumeHeart(int itemStackCount) {
 
-    for (int i=0; i<itemStackCount; i++) {
+    for (int i = 0; i < itemStackCount; i++) {
       CompanionWisp.consumeHeart(this);
     }
   }
-  // endregion wisp
 
   // region evolution
   public int getCrystalPoints(EvoCrystalColor color) {
@@ -360,34 +393,17 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     CompanionEvolution.checkEvolution(this);
   }
 
-  private static final EvolutionForm NONE_FORM = new EvolutionForm() {
-    @Override
-    public String id() {
-      return "NONE";
-    }
-
-    @Override
-    public String displayName() {
-      return "None";
-    }
-
-    @Override
-    public int stage() {
-      return 0;
-    }
-  };
-
-  /// this type's unevolved starting form; override per lore type. Called during
-  /// construction (via [#defineSynchedData]), so it must not depend on instance state.
+  /// this type's unevolved starting form; override per lore type. Called during construction (via [#defineSynchedData]), so it must not depend on instance state.
   protected EvolutionForm baseForm() {
     return NONE_FORM;
   }
 
-  /// resolves a stored form id back to this type's concrete [EvolutionForm] constant;
-  /// override per lore type alongside [#baseForm]
+  /// resolves a stored form id back to this type's concrete [EvolutionForm] constant; override per lore type alongside [#baseForm]
   protected EvolutionForm resolveForm(String id) {
     return NONE_FORM;
   }
+
+  // endregion evolution
 
   public EvolutionForm getEvolutionForm() {
     return this.resolveForm(this.evolutionForm);
@@ -400,8 +416,7 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     }
   }
 
-  /// has this companion ever reached `form` (including its current one)? Abilities check
-  /// this rather than the current form alone, so evolving further never revokes one.
+  /// has this companion ever reached `form` (including its current one)? Abilities check this rather than the current form alone, so evolving further never revokes one.
   public boolean hasReachedForm(EvolutionForm form) {
     return ("," + this.reachedForms + ",").contains("," + form.id() + ",");
   }
@@ -413,20 +428,17 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     this.reachedForms = this.reachedForms + "," + form.id();
     this.identitySyncDirty = true;
   }
+  // endregion leveling
 
-  /// evolution routes out of this companion's *current* form; override per type, switching
-  /// on [#getEvolutionForm]. See [EvolutionThreshold] for the alternate-vs-"Any" distinction.
+  /// evolution routes out of this companion's *current* form; override per type, switching on [#getEvolutionForm]. See [EvolutionThreshold] for the alternate-vs-"Any" distinction.
   protected List<EvolutionThreshold> evolutionThresholds() {
     return List.of();
   }
 
-  /// every form in this type's chart, in `Form.values()` order; override per type for the
-  /// Innocent Devil Chart screen. Not the same as [#abilities]'s per-form gating.
+  /// every form in this type's chart, in `Form.values()` order; override per type for the Innocent Devil Chart screen. Not the same as [#abilities]'s per-form gating.
   public EvolutionForm[] allForms() {
     return new EvolutionForm[0];
   }
-
-  // endregion evolution
 
   // region leveling
   public int getLevel() {
@@ -436,11 +448,7 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
   public int getExperience() {
     return this.experience;
   }
-
-  /// XP needed to advance from `level` to `level + 1`
-  public static int experienceToNextLevel(int level) {
-    return 10 * level;
-  }
+  // endregion direct attack
 
   /// grants XP, leveling up (possibly several times) while there's enough; caps at [#MAX_LEVEL]
   public void addExperience(int amount) {
@@ -456,20 +464,14 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     this.experience = level >= MAX_LEVEL ? 0 : xp;
     this.progressSyncDirty = true;
   }
-  // endregion leveling
 
-  // region direct attack
-  private static final float DIRECT_ATTACK_GROWTH_PER_LEVEL = 0.01F; // +1%/level; level 99 ~ 2x
-
-  /// only the direct attack scales with level; ability damage stays flat (no wiki numbers
-  /// for this -> it's this mod's own leveling design, not a Curse of Darkness mechanic).
+  /// only the direct attack scales with level; ability damage stays flat (no wiki numbers for this -> it's this mod's own leveling design, not a Curse of Darkness mechanic).
   public final float directAttackDamageMultiplier() {
     return 1.0F + DIRECT_ATTACK_GROWTH_PER_LEVEL * (this.getLevel() - 1);
   }
 
-  /// Melee hit + XP, with `directAttackDamageMultiplier()` applied; types with a different
-  /// basic attack override this instead. Doesn't call `super.doHurtTarget` (no hook there
-  /// for a level scalar); replicates its damage+knockback, skipping companion-irrelevant hooks.
+  /// Melee hit + XP, with `directAttackDamageMultiplier()` applied; types with a different basic attack override this instead. Doesn't call `super.doHurtTarget` (no hook there for a level scalar);
+  /// replicates its damage+knockback, skipping companion-irrelevant hooks.
   @Override
   public boolean doHurtTarget(Entity entity) {
     this.swing(InteractionHand.MAIN_HAND); // drives client-side getAttackAnim() for the swing pose
@@ -491,7 +493,6 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
   public final void grantDirectAttackExperience() {
     this.addExperience(DIRECT_ATTACK_XP);
   }
-  // endregion direct attack
 
   @Override
   public void addAdditionalSaveData(CompoundTag compound) {
@@ -568,6 +569,7 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     this.stateSyncDirty = true;
     this.identitySyncDirty = true;
   }
+  // endregion owner
 
   // TraceableEntity and OwnableEntity getOwner() collide once both are implemented;
   // we override it ourselves to resolve the mutiple implementations
@@ -578,6 +580,11 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     return OwnableEntity.super.getOwner();
   }
 
+  public void setOwner(LivingEntity owner) {
+    this.setOwnerUUID(owner.getUUID());
+  }
+  // endregion party
+
   @Nullable
   @Override
   public UUID getOwnerUUID() {
@@ -587,11 +594,6 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
   public void setOwnerUUID(@Nullable UUID uuid) {
     this.entityData.set(DATA_OWNER_UUID_ID, Optional.ofNullable(uuid));
   }
-
-  public void setOwner(LivingEntity owner) {
-    this.setOwnerUUID(owner.getUUID());
-  }
-  // endregion owner
 
   // region party
   public CompanionType getCompanionType() {
@@ -604,7 +606,6 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
       this.identitySyncDirty = true;
     }
   }
-  // endregion party
 
   // region mode
   public CompanionMode getMode() {
@@ -656,14 +657,12 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     }
   }
 
-  /// this companion type's full Command-mode kit, gated or not; override per type, e.g.
-  /// `FairySummon#allAbilities`. [#abilities] filters this down to what's actually unlocked.
+  /// this companion type's full Command-mode kit, gated or not; override per type, e.g. `FairySummon#allAbilities`. [#abilities] filters this down to what's actually unlocked.
   protected List<CompanionAbility> allAbilities() {
     return List.of();
   }
 
-  /// this companion's currently-unlocked Command-mode abilities: [CompanionAbility#requiredForms]
-  /// empty, or [#hasReachedForm] true for at least one of them, AND [#getLevel] at least
+  /// this companion's currently-unlocked Command-mode abilities: [CompanionAbility#requiredForms] empty, or [#hasReachedForm] true for at least one of them, AND [#getLevel] at least
   /// [CompanionAbility#minLevel] (soft-gated by level on top of evolution form)
   public final List<CompanionAbility> abilities() {
     List<CompanionAbility> unlocked = new ArrayList<>();
@@ -703,8 +702,7 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     }
   }
 
-  /// see ChainAttackTracker; whether the owner's next landed hit should trigger this
-  /// companion's bonus Chain Attack, for SummonsHUD's popup
+  /// see ChainAttackTracker; whether the owner's next landed hit should trigger this companion's bonus Chain Attack, for SummonsHUD's popup
   public boolean isChainArmed() {
     return this.chainArmed;
   }
@@ -751,27 +749,10 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     this.addExperience(ABILITY_USE_XP);
   }
 
-  /// small particle burst at `target`'s head and feet, for ability effects to call
-  protected static void spawnAbilityParticles(LivingEntity target, ParticleOptions particle, int count) {
-    if (target.level() instanceof ServerLevel level) {
-
-      // at feet
-      level.sendParticles(particle, target.getX(), target.getY(), target.getZ(), count,
-          randOffsetThird(level), randOffsetThird(level), randOffsetThird(level), 0.0);
-
-      // at head
-      level.sendParticles(particle, target.getX(), target.getY() + target.getBbHeight(), target.getZ(), count,
-          randOffsetThird(level), randOffsetThird(level), randOffsetThird(level), 0.0);
-    }
-  }
-
-  private final OrbitingBitManager orbitingBits = new OrbitingBitManager();
-
-  /// `count` bits orbiting the owner at `radius`/`angularSpeed`, dealing `damage` on contact
-  /// (10-tick per-bit cooldown); despawns after `lifespanTicks`, or on first hit if
-  /// `explodeOnHit`. Backs Mage's "B" spells (Floating B, Satellite B, etc).
+  /// `count` bits orbiting the owner at `radius`/`angularSpeed`, dealing `damage` on contact (10-tick per-bit cooldown); despawns after `lifespanTicks`, or on first hit if `explodeOnHit`. Backs
+  /// Mage's "B" spells (Floating B, Satellite B, etc).
   public final void spawnOrbitingBits(int count, double radius, double angularSpeed, double heightOffset,
-                                       float damage, ParticleOptions particle, boolean explodeOnHit, int lifespanTicks) {
+      float damage, ParticleOptions particle, boolean explodeOnHit, int lifespanTicks) {
     this.orbitingBits.spawn(count, radius, angularSpeed, heightOffset, damage, particle, explodeOnHit, lifespanTicks);
   }
 
@@ -784,19 +765,6 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
   public void remove(RemovalReason reason) {
     OwnerAttributeBonuses.remove(this);
     super.remove(reason);
-  }
-
-  /// nearest living target to `companion` within `radius`, excluding itself and `owner`
-  protected static LivingEntity findNearestTarget(AbstractCompanion companion, LivingEntity owner, double radius) {
-    AABB area = companion.getBoundingBox().inflate(radius);
-    return companion.level().getEntitiesOfClass(LivingEntity.class, area,
-            e -> e != companion && e != owner && e.isAlive())
-        .stream().min(Comparator.comparingDouble(companion::distanceToSqr)).orElse(null);
-  }
-
-  private static double randOffsetThird(Level level) {
-
-    return ((level.getRandom().nextDouble() * 2.0D) - 1.0D) / 3.0D; // random*2-1 [-1, 1), / 3 [-0.3, 0.3)
   }
   // endregion mode
 }

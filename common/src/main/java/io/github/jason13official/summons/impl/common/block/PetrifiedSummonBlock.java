@@ -12,8 +12,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 
-/// a petrified Innocent Devil waiting in its Summon Gate pocket room; right-clicking shatters
-/// the statue and unlocks `type` into the player's
+/// a petrified Innocent Devil waiting in its Summon Gate pocket room; right-clicking shatters the statue and unlocks `type` into the player's
 /// [io.github.jason13official.summons.impl.common.party.CompanionParty]
 public class PetrifiedSummonBlock extends Block {
 

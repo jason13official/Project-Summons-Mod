@@ -6,8 +6,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TridentItem;
 import org.jetbrains.annotations.Nullable;
 
-/// Evo Crystal color; matches the weapon Hector's holding at the kill (wiki: Sword=Red,
-/// Axe=Blue, Spear=Green, Knuckle=Yellow, Special=White).
+/// Evo Crystal color; matches the weapon Hector's holding at the kill (wiki: Sword=Red, Axe=Blue, Spear=Green, Knuckle=Yellow, Special=White).
 public enum EvoCrystalColor {
   RED,
   BLUE,

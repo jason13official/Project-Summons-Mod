@@ -10,18 +10,17 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
 
-/// "sparking wisp": at 0 Hearts the I.D. goes inert instead of dying, until a Heart revives
-/// it. isWisp()/DATA_WISP_ID stays on AbstractCompanion (thin SynchedEntityData wrapper);
-/// this is the die/revive/heart-consume/hover-movement logic around it.
+/// "sparking wisp": at 0 Hearts the I.D. goes inert instead of dying, until a Heart revives it. isWisp()/DATA_WISP_ID stays on AbstractCompanion (thin SynchedEntityData wrapper); this is the
+/// die/revive/heart-consume/hover-movement logic around it.
 final class CompanionWisp {
+
   private static final float REVIVE_HEALTH = 1.0F;
   private static final float HEART_HEAL_AMOUNT = 4.0F;
 
   private CompanionWisp() {
   }
 
-  /// intercepts a lethal hit; I.D.s go inert instead of dying. Only the dismiss keybind
-  /// fully removes one; a bypass-invulnerability source snapshots it back as a wisp instead
+  /// intercepts a lethal hit; I.D.s go inert instead of dying. Only the dismiss keybind fully removes one; a bypass-invulnerability source snapshots it back as a wisp instead
   static void die(AbstractCompanion companion, DamageSource source) {
     if (companion.level().isClientSide || companion.isWisp()) {
       companion.callSuperDie(source);
@@ -38,8 +37,7 @@ final class CompanionWisp {
     companion.setNoAi(true);
   }
 
-  /// stores the companion back in its party slot like the dismiss keybind, pre-marked as a
-  /// wisp; falls back to a real discard if there's no owner left to return it to
+  /// stores the companion back in its party slot like the dismiss keybind, pre-marked as a wisp; falls back to a real discard if there's no owner left to return it to
   private static void retreatToPartyAsWisp(AbstractCompanion companion) {
     if (!(companion.getOwner() instanceof ServerPlayer player)) {
       companion.callSuperDie(companion.damageSources().generic());
@@ -64,7 +62,9 @@ final class CompanionWisp {
   }
 
   static void consumeHeart(AbstractCompanion companion) {
-    if (companion.isWisp()) revive(companion);
+    if (companion.isWisp()) {
+      revive(companion);
+    }
     companion.heal(HEART_HEAL_AMOUNT);
   }
 
@@ -76,8 +76,7 @@ final class CompanionWisp {
     companion.level().addParticle(ParticleTypes.SOUL, x, y, z, 0.0, 0.02, 0.0);
   }
 
-  /// noAi skips goal-based movement, so a wisp needs hand-rolled hover; eases toward the
-  /// owner's head, no gravity/collision. AbstractCompanion#teleportToOwner covers big jumps
+  /// noAi skips goal-based movement, so a wisp needs hand-rolled hover; eases toward the owner's head, no gravity/collision. AbstractCompanion#teleportToOwner covers big jumps
   static void floatTowardOwner(AbstractCompanion companion) {
     LivingEntity owner = companion.getOwner();
     if (owner == null) {

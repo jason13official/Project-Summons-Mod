@@ -10,8 +10,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import org.jetbrains.annotations.Nullable;
 
-/// Mod hub screen (Curse of Darkness "Player" status page): player stats + this run's owner
-/// bonuses from the active companion, with buttons into the companion-specific screens.
+/// Mod hub screen (Curse of Darkness "Player" status page): player stats + this run's owner bonuses from the active companion, with buttons into the companion-specific screens.
 public class SummonsMenuScreen extends Screen {
 
   private static final int PANEL_WIDTH = 240;
@@ -21,8 +20,7 @@ public class SummonsMenuScreen extends Screen {
   private static final int BUTTON_HEIGHT = 20;
   private static final int BUTTON_GAP = 2;
 
-  /// the whole layout is computed once in #init (top offset included, so the block is
-  /// always vertically centered and never runs off a short window) and reused by #render
+  /// the whole layout is computed once in #init (top offset included, so the block is always vertically centered and never runs off a short window) and reused by #render
   private int bannerY;
   private int statsPanelY;
   private int flavorY;
