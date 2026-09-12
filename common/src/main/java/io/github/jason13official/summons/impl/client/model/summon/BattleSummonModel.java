@@ -92,8 +92,10 @@ public class BattleSummonModel extends HierarchicalModel<AbstractCompanion> {
       this.arm0.xRot = amount;
       this.arm1.xRot = amount;
     } else {
-      this.arm0.xRot = (-0.2F + 1.5F * Mth.triangleWave(limbSwing, 13.0F)) * limbSwingAmount;
-      this.arm1.xRot = (-0.2F - 1.5F * Mth.triangleWave(limbSwing, 13.0F)) * limbSwingAmount;
+      // the limbSwing terms alone zero out at a full stop, so add a slow idle sway that never does
+      float idle = Mth.sin(ageInTicks * 0.05F) * 0.03F;
+      this.arm0.xRot = (-0.2F + 1.5F * Mth.triangleWave(limbSwing, 13.0F)) * limbSwingAmount + idle;
+      this.arm1.xRot = (-0.2F - 1.5F * Mth.triangleWave(limbSwing, 13.0F)) * limbSwingAmount - idle;
     }
   }
 }

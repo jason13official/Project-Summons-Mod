@@ -82,8 +82,10 @@ public class PumpkinSummonModel extends HierarchicalModel<AbstractCompanion> {
       this.arm1.xRot += amount;
       this.arm2.xRot += amount;
     } else {
-      // no torso lean -> only the arms sway with limbSwing, piece1 stays put
-      float sway = Mth.triangleWave(limbSwing, 13.0F) * limbSwingAmount * 0.3F;
+      // no torso lean -> only the arms sway with limbSwing, piece1 stays put.
+      // the limbSwing term alone zeroes out at a full stop, so add a slow idle sway that never does
+      float idle = Mth.sin(ageInTicks * 0.05F) * 0.05F;
+      float sway = Mth.triangleWave(limbSwing, 13.0F) * limbSwingAmount * 0.3F + idle;
       this.arm1.zRot += sway;
       this.arm2.zRot -= sway;
     }

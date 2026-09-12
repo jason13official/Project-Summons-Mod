@@ -98,6 +98,19 @@ public class FairySummonModel extends HierarchicalModel<AbstractCompanion> {
       float flap = Mth.sin(ageInTicks * 2.0F) * 0.5F;
       this.leftWing.zRot -= flap;
       this.rightWing.zRot += flap;
+      return;
     }
+
+    // grounded and not attacking/busy: previously fell all the way through to the raw bind pose (zero motion).
+    // a Fairy never truly rests per lore, so give it a calm hover instead -> slow bob + gentle wing flutter
+    this.applyStatic(FairySummonAnimations.IDLE);
+
+    float bob = Mth.sin(ageInTicks * 0.1F) * 0.6F;
+    this.body.y -= bob;
+    this.head.y -= bob;
+
+    float flutter = Mth.sin(ageInTicks * 0.6F) * 0.15F;
+    this.leftWing.zRot -= flutter;
+    this.rightWing.zRot += flutter;
   }
 }

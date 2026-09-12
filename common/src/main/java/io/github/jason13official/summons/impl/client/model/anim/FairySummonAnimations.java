@@ -40,6 +40,14 @@ public class FairySummonAnimations {
       ))
       .build();
 
+  /// grounded idle: a Fairy never truly rests per lore (bobs around Hector's head) -> a calmer hover pose than FLYING, topped up with a slow
+  /// procedural bob/flutter in FairySummonModel rather than the frozen bind pose this used to fall through to
+  public static final AnimationDefinition IDLE = AnimationDefinition.Builder.withLength(0.0F).looping()
+      .addAnimation("body", new AnimationChannel(AnimationChannel.Targets.ROTATION,
+          new Keyframe(0.0F, KeyframeAnimations.degreeVec(8.0F, 0.0F, 0.0F), AnimationChannel.Interpolations.LINEAR)
+      ))
+      .build();
+
   /// small poison-tick basic attack, learned at level 4+; see FairySummon#doHurtTarget
   public static final AnimationDefinition ATTACK = AnimationDefinition.Builder.withLength(0.0F).looping()
       .addAnimation("head", new AnimationChannel(AnimationChannel.Targets.ROTATION,

@@ -103,7 +103,11 @@ public class DevilSummonModel extends HierarchicalModel<AbstractCompanion> {
       this.leftArm.xRot = amount;
       this.rightArm.xRot = amount;
     } else {
-      this.applyStatic(DevilSummonAnimations.BOB); // subtle idle/hover arm sway
+      // BOB's own keyframe is a fixed tilt (applyStatic alone has zero motion); add the actual bob over time
+      this.applyStatic(DevilSummonAnimations.BOB);
+      float bob = Mth.sin(ageInTicks * 0.08F) * 0.05F;
+      this.leftArm.zRot += bob;
+      this.rightArm.zRot -= bob;
     }
   }
 }
