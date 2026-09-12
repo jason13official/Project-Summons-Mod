@@ -2,8 +2,8 @@ package io.github.jason13official.summons.impl.common.party;
 
 import java.util.Optional;
 
-/// Mirrors the six Innocent Devil types from Curse of Darkness (our Summon types).
-/// A player's [CompanionParty] holds at most one companion per type
+/// Mirrors the six Innocent Devil types from Curse of Darkness (our Summon types). A player's [CompanionParty] holds at most one companion per type
+///
 /// @see CompanionPartyManager
 public enum CompanionType {
 
@@ -32,6 +32,17 @@ public enum CompanionType {
     this.description = description;
   }
 
+  /// canonical Summon Gate unlock order (declaration order: Fairy, Battle, Bird, Mage, Devil, Pumpkin); the first not-yet-unlocked type in a party, or empty once all six are unlocked
+  public static Optional<CompanionType> nextLocked(CompanionParty party) {
+    for (CompanionType type : values()) {
+      if (!party.isUnlocked(type)) {
+        return Optional.of(type);
+      }
+    }
+
+    return Optional.empty();
+  }
+
   /// one-line lore blurb for the Summons menu/stats screens
   public String description() {
     return this.description;
@@ -47,17 +58,5 @@ public enum CompanionType {
   public boolean isChainAttackCapable() {
 
     return this.chainAttackCapable;
-  }
-
-  /// canonical Summon Gate unlock order (declaration order: Fairy, Battle, Bird, Mage, Devil,
-  /// Pumpkin); the first not-yet-unlocked type in a party, or empty once all six are unlocked
-  public static Optional<CompanionType> nextLocked(CompanionParty party) {
-    for (CompanionType type : values()) {
-      if (!party.isUnlocked(type)) {
-        return Optional.of(type);
-      }
-    }
-
-    return Optional.empty();
   }
 }

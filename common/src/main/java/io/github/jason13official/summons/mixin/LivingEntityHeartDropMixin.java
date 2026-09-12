@@ -19,13 +19,23 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/// Heart drops on kill, same shape as Evo Crystals: a chance on any kill credited to a
-/// player or their owned companion, only while they have an active companion to receive one.
+/// Heart drops on kill, same shape as Evo Crystals: a chance on any kill credited to a player or their owned companion, only while they have an active companion to receive one.
 @Mixin(LivingEntity.class)
 public class LivingEntityHeartDropMixin {
 
   @Unique
   private static final float SUMMONS$DROP_CHANCE = 0.15F;
+
+  @Unique
+  private static Player summons$resolveCreditedPlayer(Entity killer) {
+    if (killer instanceof ServerPlayer player) {
+      return player;
+    }
+    if (killer instanceof AbstractCompanion companion && companion.getOwner() instanceof ServerPlayer player) {
+      return player;
+    }
+    return null;
+  }
 
   @Inject(method = "die", at = @At("HEAD"))
   private void summons$die(DamageSource source, CallbackInfo ci) {
@@ -47,16 +57,5 @@ public class LivingEntityHeartDropMixin {
 
     ItemStack stack = new ItemStack(ModItems.HEART);
     level.addFreshEntity(new ItemEntity(level, self.getX(), self.getY(), self.getZ(), stack));
-  }
-
-  @Unique
-  private static Player summons$resolveCreditedPlayer(Entity killer) {
-    if (killer instanceof ServerPlayer player) {
-      return player;
-    }
-    if (killer instanceof AbstractCompanion companion && companion.getOwner() instanceof ServerPlayer player) {
-      return player;
-    }
-    return null;
   }
 }

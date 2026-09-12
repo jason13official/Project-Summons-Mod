@@ -11,9 +11,8 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.phys.Vec3;
 
-/// "Chain Attack" (wiki: land a combo's final hit, a "Chain!" prompt appears, attacking
-/// again warps the companion in for a bonus hit). Per-player combo state kept here, not on
-/// the entity; transient bookkeeping, no need to survive a relog or NBT round-trip.
+/// "Chain Attack" (wiki: land a combo's final hit, a "Chain!" prompt appears, attacking again warps the companion in for a bonus hit). Per-player combo state kept here, not on the entity; transient
+/// bookkeeping, no need to survive a relog or NBT round-trip.
 public final class ChainAttackTracker {
 
   private static final int COMBO_HITS_TO_ARM = 3; // consecutive same-weapon hits to arm Chain!
@@ -22,13 +21,6 @@ public final class ChainAttackTracker {
   private static final double CHAIN_WARP_DISTANCE = 1.2;
 
   private static final Map<UUID, State> STATES = new HashMap<>();
-
-  private static final class State {
-    UUID targetId;
-    Item weapon;
-    int comboHits;
-    int lastHitTick;
-  }
 
   /// called from LivingEntityChainAttackMixin on every landed player melee hit
   public static void onPlayerMeleeHit(ServerPlayer player, LivingEntity target) {
@@ -61,8 +53,7 @@ public final class ChainAttackTracker {
     }
   }
 
-  /// warps the companion to just beside the target (not on top of it) and lands a real
-  /// direct attack via #doHurtTarget, so it's a genuine bonus hit, not a scripted number
+  /// warps the companion to just beside the target (not on top of it) and lands a real direct attack via #doHurtTarget, so it's a genuine bonus hit, not a scripted number
   private static void triggerChain(AbstractCompanion companion, LivingEntity target) {
     if (!(companion.level() instanceof ServerLevel level)) {
       return;
@@ -80,5 +71,13 @@ public final class ChainAttackTracker {
 
     level.sendParticles(ParticleTypes.CLOUD, companion.getX(), companion.getY() + 0.5, companion.getZ(), 10, 0.3, 0.3, 0.3, 0.0);
     companion.doHurtTarget(target);
+  }
+
+  private static final class State {
+
+    UUID targetId;
+    Item weapon;
+    int comboHits;
+    int lastHitTick;
   }
 }

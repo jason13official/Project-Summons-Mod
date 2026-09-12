@@ -10,10 +10,10 @@ import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.effect.MobEffectCategory;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
-import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -27,8 +27,7 @@ import net.minecraft.world.level.block.LeverBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 
-/// Fairy-Type: support only, heals/cures the owner. Per wiki, most forms don't attack at
-/// all; here it learns a weak poison-tick basic attack at [#DIRECT_ATTACK_MIN_LEVEL].
+/// Fairy-Type: support only, heals/cures the owner. Per wiki, most forms don't attack at all; here it learns a weak poison-tick basic attack at [#DIRECT_ATTACK_MIN_LEVEL].
 public class FairySummon extends AbstractFlyingCompanion {
 
   private static final int DIRECT_ATTACK_MIN_LEVEL = 4;
@@ -218,9 +217,9 @@ public class FairySummon extends AbstractFlyingCompanion {
 
   public static AttributeSupplier.Builder createAttributes() {
 
-    return AbstractFlyingCompanion.createAttributes().add(Attributes.MAX_HEALTH, (double) 6.0F)
-        .add(Attributes.FLYING_SPEED, (double) 0.5F).add(Attributes.MOVEMENT_SPEED, (double) 0.3F)
-        .add(Attributes.ATTACK_DAMAGE, (double) 0.0F);
+    return AbstractFlyingCompanion.createAttributes().add(Attributes.MAX_HEALTH, 6.0F)
+        .add(Attributes.FLYING_SPEED, 0.5F).add(Attributes.MOVEMENT_SPEED, 0.3F)
+        .add(Attributes.ATTACK_DAMAGE, 0.0F);
   }
 
   @Override

@@ -33,9 +33,6 @@ public class DevilSummon extends AbstractFlyingCompanion {
   private static final int MAGIC_CIRCLE_DURATION = 100;
   private static final double MAGIC_CIRCLE_SCALE_DELTA = -0.5;
   private static final ResourceLocation MAGIC_CIRCLE_SCALE_MODIFIER_ID = Summons.identifier("magic_circle_scale");
-
-  private int magicCircleTicksRemaining;
-
   private static final List<CompanionAbility> ABILITIES = List.of(
       CompanionAbility.base("Magic Circle", 30, "Turns Hector into a magic circle, letting him slide under low gaps.", (companion, owner) -> {
         AttributeInstance scale = owner.getAttribute(Attributes.SCALE);
@@ -83,6 +80,7 @@ public class DevilSummon extends AbstractFlyingCompanion {
         spawnAbilityParticles(target, ParticleTypes.EXPLOSION, 4);
       })
   );
+  private int magicCircleTicksRemaining;
 
   public DevilSummon(EntityType<? extends AbstractFlyingCompanion> entityType, Level level) {
     super(entityType, level);
@@ -90,9 +88,9 @@ public class DevilSummon extends AbstractFlyingCompanion {
 
   public static AttributeSupplier.Builder createAttributes() {
 
-    return AbstractFlyingCompanion.createAttributes().add(Attributes.MAX_HEALTH, (double) 40.0F)
-        .add(Attributes.FLYING_SPEED, (double) 0.45F).add(Attributes.MOVEMENT_SPEED, (double) 0.28F)
-        .add(Attributes.ATTACK_DAMAGE, (double) 10.0F).add(Attributes.KNOCKBACK_RESISTANCE, (double) 0.3F);
+    return AbstractFlyingCompanion.createAttributes().add(Attributes.MAX_HEALTH, 40.0F)
+        .add(Attributes.FLYING_SPEED, 0.45F).add(Attributes.MOVEMENT_SPEED, 0.28F)
+        .add(Attributes.ATTACK_DAMAGE, 10.0F).add(Attributes.KNOCKBACK_RESISTANCE, 0.3F);
   }
 
   @Override

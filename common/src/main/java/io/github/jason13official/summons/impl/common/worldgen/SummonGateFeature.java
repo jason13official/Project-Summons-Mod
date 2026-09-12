@@ -10,8 +10,7 @@ import net.minecraft.world.level.levelgen.feature.Feature;
 import net.minecraft.world.level.levelgen.feature.FeaturePlaceContext;
 import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
 
-/// the overworld "green door" landmark (Castlevania: Curse of Darkness) -> a small gothic
-/// archway, two blocks deep, housing a walk-through/right-clickable
+/// the overworld "green door" landmark (Castlevania: Curse of Darkness) -> a small gothic archway, two blocks deep, housing a walk-through/right-clickable
 /// [io.github.jason13official.summons.impl.common.block.SummonGateBlock] opening
 public class SummonGateFeature extends Feature<NoneFeatureConfiguration> {
 

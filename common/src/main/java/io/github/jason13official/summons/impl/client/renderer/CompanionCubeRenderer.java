@@ -5,7 +5,6 @@ import com.mojang.math.Axis;
 import io.github.jason13official.summons.Summons;
 import io.github.jason13official.summons.impl.client.model.CompanionCubeModel;
 import io.github.jason13official.summons.impl.common.entity.AbstractCompanion;
-import io.github.jason13official.summons.impl.common.entity.ground.CompanionCube;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRenderer;

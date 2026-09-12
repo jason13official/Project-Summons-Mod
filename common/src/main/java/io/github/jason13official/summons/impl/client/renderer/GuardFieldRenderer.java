@@ -8,8 +8,7 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import org.joml.Matrix4f;
 
-/// Draws the Guard Field ring/disc under a companion in DEFEND mode. Reuses vanilla's
-/// lightning render type; no new texture needed.
+/// Draws the Guard Field ring/disc under a companion in DEFEND mode. Reuses vanilla's lightning render type; no new texture needed.
 public final class GuardFieldRenderer {
 
   private static final int SEGMENTS = 32;

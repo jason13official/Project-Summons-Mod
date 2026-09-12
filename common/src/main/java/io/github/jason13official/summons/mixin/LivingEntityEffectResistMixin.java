@@ -10,8 +10,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
-/// CON owner buff: reduces the duration of a harmful effect landing on an owner with an active companion,
-/// capped at 80% -> no vanilla attribute for this, so it's applied here instead of via
+/// CON owner buff: reduces the duration of a harmful effect landing on an owner with an active companion, capped at 80% -> no vanilla attribute for this, so it's applied here instead of via
 /// AttributeModifier (see AbstractCompanion#ownerStatBonus).
 @Mixin(LivingEntity.class)
 public class LivingEntityEffectResistMixin {

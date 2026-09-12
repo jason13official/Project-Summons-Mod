@@ -3,7 +3,6 @@ package io.github.jason13official.summons.impl.client.renderer.summon;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import io.github.jason13official.summons.Summons;
-import io.github.jason13official.summons.impl.client.model.summon.BattleSummonModel;
 import io.github.jason13official.summons.impl.client.model.summon.FairySummonModel;
 import io.github.jason13official.summons.impl.common.entity.AbstractCompanion;
 import net.minecraft.client.renderer.MultiBufferSource;

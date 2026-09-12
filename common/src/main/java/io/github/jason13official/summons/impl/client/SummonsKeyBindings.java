@@ -7,9 +7,8 @@ import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import org.lwjgl.glfw.GLFW;
 
-/// Mirrors Curse of Darkness Innocent Devil controls: UP/DOWN cycles Auto/Command/Defend,
-/// LEFT/RIGHT cycles the selected ability, COMMAND activates it, TOGGLE_SUMMON/CYCLE_PARTY
-/// dismiss/switch the active companion.
+/// Mirrors Curse of Darkness Innocent Devil controls: UP/DOWN cycles Auto/Command/Defend, LEFT/RIGHT cycles the selected ability, COMMAND activates it, TOGGLE_SUMMON/CYCLE_PARTY dismiss/switch the
+/// active companion.
 public class SummonsKeyBindings {
 
   private static final String CATEGORY = "key.categories.summons";

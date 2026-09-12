@@ -9,8 +9,7 @@ import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
-/// Curse of Darkness Innocent Devil status page: level/HP/EXP, evo crystal counts, and the
-/// unlocked Command-mode ability list for the active companion.
+/// Curse of Darkness Innocent Devil status page: level/HP/EXP, evo crystal counts, and the unlocked Command-mode ability list for the active companion.
 public class CompanionStatsScreen extends Screen {
 
   private static final int PANEL_WIDTH = 260;
@@ -24,8 +23,7 @@ public class CompanionStatsScreen extends Screen {
 
   private final AbstractCompanion companion;
 
-  /// the whole layout is computed once in #init (top offset included, so the block is
-  /// always vertically centered and never runs off a short window) and reused by #render
+  /// the whole layout is computed once in #init (top offset included, so the block is always vertically centered and never runs off a short window) and reused by #render
   private int bannerY;
   private int statsPanelY;
   private int listY;
@@ -37,6 +35,16 @@ public class CompanionStatsScreen extends Screen {
   public CompanionStatsScreen(AbstractCompanion companion) {
     super(Component.literal("Companion"));
     this.companion = companion;
+  }
+
+  private static int crystalColor(EvoCrystalColor color) {
+    return switch (color) {
+      case RED -> 0xFFFF5555;
+      case BLUE -> 0xFF5599FF;
+      case GREEN -> 0xFF55CC55;
+      case YELLOW -> 0xFFDDDD55;
+      case WHITE -> 0xFFEEEEEE;
+    };
   }
 
   @Override
@@ -135,16 +143,6 @@ public class CompanionStatsScreen extends Screen {
     if (hoveredDescription != null && !hoveredDescription.isEmpty()) {
       graphics.renderTooltip(this.font, Component.literal(hoveredDescription), mouseX, mouseY);
     }
-  }
-
-  private static int crystalColor(EvoCrystalColor color) {
-    return switch (color) {
-      case RED -> 0xFFFF5555;
-      case BLUE -> 0xFF5599FF;
-      case GREEN -> 0xFF55CC55;
-      case YELLOW -> 0xFFDDDD55;
-      case WHITE -> 0xFFEEEEEE;
-    };
   }
 
   @Override

@@ -15,9 +15,8 @@ import net.minecraft.world.level.material.MapColor;
 
 public class ModBlocks {
 
-  public static Block SUMMON_GATE;
-
   private static final Map<CompanionType, Block> PETRIFIED = new EnumMap<>(CompanionType.class);
+  public static Block SUMMON_GATE;
 
   public static void register(BiConsumer<Block, ResourceLocation> consumer) {
 

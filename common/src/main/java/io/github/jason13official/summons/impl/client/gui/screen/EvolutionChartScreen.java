@@ -10,8 +10,7 @@ import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
-/// Curse of Darkness Innocent Devil Chart: every form in this companion's line, grouped by
-/// stage; reached forms are named, unreached ones show as "???" same as the in-game chart.
+/// Curse of Darkness Innocent Devil Chart: every form in this companion's line, grouped by stage; reached forms are named, unreached ones show as "???" same as the in-game chart.
 public class EvolutionChartScreen extends Screen {
 
   private static final int PANEL_WIDTH = 260;
@@ -22,8 +21,7 @@ public class EvolutionChartScreen extends Screen {
 
   private final AbstractCompanion companion;
 
-  /// the whole layout is computed once in #init (top offset included, so the block is
-  /// always vertically centered and never runs off a short window) and reused by #render
+  /// the whole layout is computed once in #init (top offset included, so the block is always vertically centered and never runs off a short window) and reused by #render
   private int bannerY;
   private int chartPanelY;
   private int chartPanelHeight;

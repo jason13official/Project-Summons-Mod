@@ -15,8 +15,7 @@ import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 
-/// `/summons debug unlockall`; unlocks every [CompanionType] without a real Devil Shard item.
-/// `/summons debug addxp <amount>`; grants XP without dozens of manual ability uses.
+/// `/summons debug unlockall`; unlocks every [CompanionType] without a real Devil Shard item. `/summons debug addxp <amount>`; grants XP without dozens of manual ability uses.
 public class SummonsDebugCommand {
 
   public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
@@ -85,8 +84,7 @@ public class SummonsDebugCommand {
     return 1;
   }
 
-  /// `/summons debug gate` -> jumps straight to the player's Summon Gate pocket room instead of
-  /// hunting for a rare world-gen door
+  /// `/summons debug gate` -> jumps straight to the player's Summon Gate pocket room instead of hunting for a rare world-gen door
   private static int gate(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
 
     ServerPlayer player = ctx.getSource().getPlayerOrException();

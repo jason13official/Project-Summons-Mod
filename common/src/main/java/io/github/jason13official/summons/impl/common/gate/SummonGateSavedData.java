@@ -10,8 +10,7 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.util.datafix.DataFixTypes;
 import net.minecraft.world.level.saveddata.SavedData;
 
-/// per-player cell assignment inside the shared Summon pocket dimension; each player gets a
-/// permanent, deterministically-spaced cell the first time they use a
+/// per-player cell assignment inside the shared Summon pocket dimension; each player gets a permanent, deterministically-spaced cell the first time they use a
 /// [io.github.jason13official.summons.impl.common.block.SummonGateBlock]
 public class SummonGateSavedData extends SavedData {
 

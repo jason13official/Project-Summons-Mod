@@ -6,9 +6,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 
-/// Evo Crystal spending + evolution-form checks. The crystal-point/form entityData itself
-/// stays on AbstractCompanion (thin SynchedEntityData wrappers, and baseForm/resolveForm/
-/// evolutionThresholds are per-type override hooks); this is the multi-step logic around it.
+/// Evo Crystal spending + evolution-form checks. The crystal-point/form entityData itself stays on AbstractCompanion (thin SynchedEntityData wrappers, and baseForm/resolveForm/ evolutionThresholds
+/// are per-type override hooks); this is the multi-step logic around it.
 final class CompanionEvolution {
 
   private CompanionEvolution() {

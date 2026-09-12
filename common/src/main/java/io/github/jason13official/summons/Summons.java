@@ -7,8 +7,8 @@ import io.github.jason13official.summons.impl.common.entity.flying.AbstractFlyin
 import io.github.jason13official.summons.impl.common.entity.flying.BirdSummon;
 import io.github.jason13official.summons.impl.common.entity.flying.DevilSummon;
 import io.github.jason13official.summons.impl.common.entity.flying.FairySummon;
-import io.github.jason13official.summons.impl.common.entity.ground.BattleSummon;
 import io.github.jason13official.summons.impl.common.entity.flying.MageSummon;
+import io.github.jason13official.summons.impl.common.entity.ground.BattleSummon;
 import io.github.jason13official.summons.impl.common.entity.ground.PumpkinSummon;
 import io.github.jason13official.summons.impl.common.registry.ModEntities;
 import java.util.function.BiConsumer;

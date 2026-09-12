@@ -24,9 +24,8 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
-/// the green-door "pocket dimension" entrance (Castlevania: Curse of Darkness's Innocent Devil rooms);
-/// this is the walk-through opening of `SummonGateFeature`'s archway -> sends the player to their `SummonGateManager` pocket room,
-/// to unlock their next `CompanionType`, on right-click or by simply walking into it
+/// the green-door "pocket dimension" entrance (Castlevania: Curse of Darkness's Innocent Devil rooms); this is the walk-through opening of `SummonGateFeature`'s archway -> sends the player to their
+/// `SummonGateManager` pocket room, to unlock their next `CompanionType`, on right-click or by simply walking into it
 public class SummonGateBlock extends Block {
 
   public static final EnumProperty<Axis> AXIS = BlockStateProperties.HORIZONTAL_AXIS;

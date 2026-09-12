@@ -10,8 +10,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/// Touching a Heart instantly consumes it to heal/revive the player's active companion; it
-/// never enters the inventory, active companion or not.
+/// Touching a Heart instantly consumes it to heal/revive the player's active companion; it never enters the inventory, active companion or not.
 @Mixin(ItemEntity.class)
 public class ItemEntityHeartPickupMixin {
 

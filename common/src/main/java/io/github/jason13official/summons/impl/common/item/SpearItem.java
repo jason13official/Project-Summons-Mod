@@ -7,9 +7,8 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
 
-/// Curse of Darkness "Spear" weapon class (pole weapons: Deck Brush, Naginata, Trident,
-/// etc). No vanilla equivalent -> a distinct marker type so [EvoCrystalColor#fromWeapon]
-/// can recognize it (GREEN, mirroring the wiki's Sword/Axe/Spear/Knuckle mapping).
+/// Curse of Darkness "Spear" weapon class (pole weapons: Deck Brush, Naginata, Trident, etc). No vanilla equivalent -> a distinct marker type so [EvoCrystalColor#fromWeapon] can recognize it (GREEN,
+/// mirroring the wiki's Sword/Axe/Spear/Knuckle mapping).
 public class SpearItem extends Item {
 
   public SpearItem(float attackDamage, float attackSpeed, Properties properties) {

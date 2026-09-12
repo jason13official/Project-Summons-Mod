@@ -43,7 +43,8 @@ public abstract class AbstractFlyingCompanion extends AbstractCompanion implemen
   public static AttributeSupplier.Builder createAttributes() {
 
     // Parrot.class
-    return AbstractCompanion.createAttributes().add(Attributes.MAX_HEALTH, (double)6.0F).add(Attributes.FLYING_SPEED, (double)0.4F).add(Attributes.MOVEMENT_SPEED, (double)0.2F).add(Attributes.ATTACK_DAMAGE, (double)3.0F);
+    return AbstractCompanion.createAttributes().add(Attributes.MAX_HEALTH, 6.0F).add(Attributes.FLYING_SPEED, 0.4F).add(Attributes.MOVEMENT_SPEED, 0.2F)
+        .add(Attributes.ATTACK_DAMAGE, 3.0F);
   }
 
   @Override
@@ -59,7 +60,7 @@ public abstract class AbstractFlyingCompanion extends AbstractCompanion implemen
     // wandering, not the other way around -> see CompanionFollowOwnerGoal note
     this.goalSelector.addGoal(2, new CompanionFollowOwnerGoal(this, 1.0, 6.0F, 3.0F));
     // this.goalSelector.addGoal(3, new LandOnOwnersShoulderGoal(this));
-    this.goalSelector.addGoal(3, new CustomWanderGoal(this, (double)1.0F));
+    this.goalSelector.addGoal(3, new CustomWanderGoal(this, 1.0F));
   }
 
   // region flight
@@ -128,6 +129,7 @@ public abstract class AbstractFlyingCompanion extends AbstractCompanion implemen
 
   /// Parrot$CustomWanderGoal.class
   public static class CustomWanderGoal extends WaterAvoidingRandomFlyingGoal {
+
     public CustomWanderGoal(PathfinderMob pathfinder, double speed) {
       super(pathfinder, speed);
     }
@@ -152,8 +154,9 @@ public abstract class AbstractFlyingCompanion extends AbstractCompanion implemen
       BlockPos.MutableBlockPos mutableBlockPos = new BlockPos.MutableBlockPos();
       BlockPos.MutableBlockPos mutableBlockPos2 = new BlockPos.MutableBlockPos();
 
-      for(BlockPos blockPos2 : BlockPos.betweenClosed(
-          Mth.floor(this.mob.getX() - (double)3.0F), Mth.floor(this.mob.getY() - (double)6.0F), Mth.floor(this.mob.getZ() - (double)3.0F), Mth.floor(this.mob.getX() + (double)3.0F), Mth.floor(this.mob.getY() + (double)6.0F), Mth.floor(this.mob.getZ() + (double)3.0F))) {
+      for (BlockPos blockPos2 : BlockPos.betweenClosed(
+          Mth.floor(this.mob.getX() - (double) 3.0F), Mth.floor(this.mob.getY() - (double) 6.0F), Mth.floor(this.mob.getZ() - (double) 3.0F), Mth.floor(this.mob.getX() + (double) 3.0F),
+          Mth.floor(this.mob.getY() + (double) 6.0F), Mth.floor(this.mob.getZ() + (double) 3.0F))) {
         if (!blockPos.equals(blockPos2)) {
           BlockState blockState = this.mob.level().getBlockState(mutableBlockPos2.setWithOffset(blockPos2, Direction.DOWN));
           boolean bl = blockState.getBlock() instanceof LeavesBlock || blockState.is(BlockTags.LOGS);

@@ -10,8 +10,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/// Holding the ability-scroll modifier key steals the scroll wheel from vanilla's hotbar
-/// switch and cycles the active companion's ability instead.
+/// Holding the ability-scroll modifier key steals the scroll wheel from vanilla's hotbar switch and cycles the active companion's ability instead.
 @Mixin(MouseHandler.class)
 public class MouseHandlerAbilityScrollMixin {
 
@@ -36,7 +35,7 @@ public class MouseHandlerAbilityScrollMixin {
 
     // invert to match vanilla hotbar directionality
     Services.network().sendCompanionInput(delta > 0 ? Action.ABILITY_LEFT : Action.ABILITY_RIGHT);
-    
+
     ci.cancel();
   }
 }

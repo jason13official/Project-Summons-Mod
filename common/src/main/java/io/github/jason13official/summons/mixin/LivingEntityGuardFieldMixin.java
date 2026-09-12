@@ -9,8 +9,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-/// Protects an owner standing inside their companion's Guard Field. Companion self-immunity
-/// is handled separately in [AbstractCompanion#hurt].
+/// Protects an owner standing inside their companion's Guard Field. Companion self-immunity is handled separately in [AbstractCompanion#hurt].
 @Mixin(LivingEntity.class)
 public class LivingEntityGuardFieldMixin {
 

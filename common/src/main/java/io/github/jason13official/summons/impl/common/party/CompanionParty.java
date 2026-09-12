@@ -7,8 +7,9 @@ import java.util.Set;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
 
-/// Per-player collection of up to one Innocent Devil per [CompanionType]; only one summoned
-/// at a time. @see CompanionPartyManager
+/// Per-player collection of up to one Innocent Devil per [CompanionType]; only one summoned at a time.
+///
+/// @see CompanionPartyManager
 public class CompanionParty {
 
   private static final String ROOT_TAG = "summons_party";
@@ -77,8 +78,7 @@ public class CompanionParty {
     return Optional.of(this.slot(type).getString(ENTITY_TYPE_TAG));
   }
 
-  /// removes and returns the slot's stored snapshot, if any;
-  /// a companion has one while dismissed, and none while it is the live, summoned entity
+  /// removes and returns the slot's stored snapshot, if any; a companion has one while dismissed, and none while it is the live, summoned entity
   public Optional<CompoundTag> takeSnapshot(CompanionType type) {
     CompoundTag slot = this.slot(type);
     if (!slot.contains(SNAPSHOT_TAG)) {

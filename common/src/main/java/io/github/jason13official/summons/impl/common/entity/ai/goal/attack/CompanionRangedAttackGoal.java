@@ -6,8 +6,7 @@ import java.util.function.BiConsumer;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.goal.Goal;
 
-/// Generic ranged basic attack: closes to `attackRadius`, then fires `effect` on cooldown.
-/// Used by types whose basic attack isn't melee (Bird's arrows, Mage's zap).
+/// Generic ranged basic attack: closes to `attackRadius`, then fires `effect` on cooldown. Used by types whose basic attack isn't melee (Bird's arrows, Mage's zap).
 public class CompanionRangedAttackGoal extends Goal {
 
   private final AbstractCompanion companion;
@@ -18,7 +17,7 @@ public class CompanionRangedAttackGoal extends Goal {
   private int cooldown;
 
   public CompanionRangedAttackGoal(AbstractCompanion companion, double speed, int cooldownTicks,
-                                    double attackRadius, BiConsumer<AbstractCompanion, LivingEntity> effect) {
+      double attackRadius, BiConsumer<AbstractCompanion, LivingEntity> effect) {
     this.companion = companion;
     this.speed = speed;
     this.cooldownTicks = cooldownTicks;

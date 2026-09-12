@@ -8,8 +8,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 
-/// top-left HP gauges + bottom-left mode/ability readout, styled after Curse of Darkness'
-/// Innocent Devil HUD. placeholder using text and flat colors
+/// top-left HP gauges + bottom-left mode/ability readout, styled after Curse of Darkness' Innocent Devil HUD. placeholder using text and flat colors
 public class SummonsHUD {
 
   private static final int BAR_WIDTH = 140;
@@ -65,10 +64,9 @@ public class SummonsHUD {
     }
   }
 
-  /// flat-color HP gauge: label above, a dark backing bar, a colored fill scaled to
-  /// current/max, and the "current/max" text over it
+  /// flat-color HP gauge: label above, a dark backing bar, a colored fill scaled to current/max, and the "current/max" text over it
   private static void renderHealthBar(GuiGraphics graphics, Font font, int x, int y, String label,
-                                       float current, float max, int fillColor) {
+      float current, float max, int fillColor) {
     graphics.drawString(font, label, x, y - 9, 0xFFFFFF);
 
     graphics.fill(x, y, x + BAR_WIDTH, y + BAR_HEIGHT, 0xFF202020);
@@ -83,8 +81,7 @@ public class SummonsHUD {
     graphics.drawCenteredString(font, text, x + BAR_WIDTH / 2, y + 1, 0xFFFFFF);
   }
 
-  /// "the word 'Chain!' is flashed in an orange bubble" (wiki) -> small centered popup
-  /// while the active companion's Chain Attack window is open
+  /// "the word 'Chain!' is flashed in an orange bubble" (wiki) -> small centered popup while the active companion's Chain Attack window is open
   private static void renderChainPopup(GuiGraphics graphics, Font font, int centerX, int centerY) {
     String text = "Chain!";
     int halfWidth = font.width(text) / 2;

@@ -12,20 +12,23 @@ public class Services {
   public static final IPlatformHelper PLATFORM = load(IPlatformHelper.class);
 
   private static INetworkHelper network;
+  private static IServerNetworkHelper serverNetwork;
 
   /// lazy-loaded on first use
   public static INetworkHelper network() {
 
-    if (network == null) network = load(INetworkHelper.class);
+    if (network == null) {
+      network = load(INetworkHelper.class);
+    }
     return network;
   }
-
-  private static IServerNetworkHelper serverNetwork;
 
   /// lazy-loaded on first use; server -> tracking-clients, the mirror of #network()
   public static IServerNetworkHelper serverNetwork() {
 
-    if (serverNetwork == null) serverNetwork = load(IServerNetworkHelper.class);
+    if (serverNetwork == null) {
+      serverNetwork = load(IServerNetworkHelper.class);
+    }
     return serverNetwork;
   }
 

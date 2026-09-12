@@ -212,6 +212,10 @@ public class BattleSummon extends AbstractGroundCompanion {
       })
   );
 
+  public BattleSummon(EntityType<? extends AbstractCompanion> entityType, Level level) {
+    super(entityType, level);
+  }
+
   private static void grandWave(AbstractCompanion companion, LivingEntity owner) {
     LivingEntity target = findNearestTarget(companion, owner, AURA_BLAST_RADIUS * 2.5);
     if (target == null) {
@@ -223,12 +227,9 @@ public class BattleSummon extends AbstractGroundCompanion {
     spawnAbilityParticles(target, ParticleTypes.SWEEP_ATTACK, 6);
   }
 
-  public BattleSummon(EntityType<? extends AbstractCompanion> entityType, Level level) {
-    super(entityType, level);
-  }
-
   public static AttributeSupplier.Builder createAttributes() {
-    return Mob.createMobAttributes().add(Attributes.MAX_HEALTH, (double)100.0F).add(Attributes.MOVEMENT_SPEED, (double)0.25F).add(Attributes.KNOCKBACK_RESISTANCE, (double)1.0F).add(Attributes.ATTACK_DAMAGE, (double)15.0F).add(Attributes.STEP_HEIGHT, (double)1.0F);
+    return Mob.createMobAttributes().add(Attributes.MAX_HEALTH, 100.0F).add(Attributes.MOVEMENT_SPEED, 0.25F).add(Attributes.KNOCKBACK_RESISTANCE, 1.0F)
+        .add(Attributes.ATTACK_DAMAGE, 15.0F).add(Attributes.STEP_HEIGHT, 1.0F);
   }
 
   @Override

@@ -6,11 +6,10 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 
-/// Server -> tracking clients: fastest-changing companion fields (crystal pickups, XP).
-/// Split from CompanionStateSyncPayload/CompanionIdentitySyncPayload so a crystal tick
-/// doesn't also resend rarely-changing fields like evolution form.
+/// Server -> tracking clients: fastest-changing companion fields (crystal pickups, XP). Split from CompanionStateSyncPayload/CompanionIdentitySyncPayload so a crystal tick doesn't also resend
+/// rarely-changing fields like evolution form.
 public record CompanionProgressSyncPayload(int entityId, CrystalPoints crystals, int level,
-                                            int experience) implements CustomPacketPayload {
+                                           int experience) implements CustomPacketPayload {
 
   public static final CustomPacketPayload.Type<CompanionProgressSyncPayload> TYPE =
       new CustomPacketPayload.Type<>(Summons.identifier("companion_sync_progress"));

@@ -11,9 +11,9 @@ import java.util.List;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
-import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityDimensions;
 import net.minecraft.world.entity.EntityType;
@@ -27,8 +27,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
-/// Bird-Type: air mobility, lifts/carries the owner and juggles light enemies. Glide/Long
-/// Glide are real rides (see #beginGlide/#tick), not a status-effect proxy.
+/// Bird-Type: air mobility, lifts/carries the owner and juggles light enemies. Glide/Long Glide are real rides (see #beginGlide/#tick), not a status-effect proxy.
 public class BirdSummon extends AbstractFlyingCompanion {
 
   // wiki: CON +4 initial, +12 growth
@@ -43,17 +42,12 @@ public class BirdSummon extends AbstractFlyingCompanion {
   private static final double GLIDE_UP_BURST = 1.2;
   private static final double GLIDE_DESCENT_PER_TICK = 0.015; // custom drag; noGravity replaces vanilla's ~0.08/tick
   private static final int GLIDE_GROUND_CHECK_GRACE_TICKS = 10; // skip ground-touch checks right after launch
-
-  /// direction locked in at cast time (owner's look, horizontal only); held constant every
-  /// tick for the ride, since the owner's own look can drift once they're along for the ride
-  private Vec3 glideDirection = Vec3.ZERO;
-  private int glideGraceTicks;
-
   private static final List<CompanionAbility> ABILITIES = List.of(
       // "Uses legs to propel Hector long distances. Allows access to places a normal jump
       // cannot reach." -> a real ride: owner mounts, gets launched in their look direction,
       // and the companion counters gravity for a slow glide-down instead of a hard drop
-      CompanionAbility.base("Glide", 60, "Uses its legs to propel Hector long distances, letting him clear gaps a normal jump can't reach.", (companion, owner) -> beginGlide(companion, owner, GLIDE_BOOST_SPEED)),
+      CompanionAbility.base("Glide", 60, "Uses its legs to propel Hector long distances, letting him clear gaps a normal jump can't reach.",
+          (companion, owner) -> beginGlide(companion, owner, GLIDE_BOOST_SPEED)),
       // "Spreads explosive caltrops, which explode after a brief period." TODO: no delayed
       // detonation, proxied as an immediate AoE hit around the target instead
       CompanionAbility.gated("Caltrops", 30, Form.GOLDFINCH, 5, "Spreads explosive caltrops that detonate after a brief delay.", (companion, owner) -> {
@@ -238,6 +232,9 @@ public class BirdSummon extends AbstractFlyingCompanion {
         spawnAbilityParticles(companion, ParticleTypes.FLAME, 16);
       })
   );
+  /// direction locked in at cast time (owner's look, horizontal only); held constant every tick for the ride, since the owner's own look can drift once they're along for the ride
+  private Vec3 glideDirection = Vec3.ZERO;
+  private int glideGraceTicks;
 
   public BirdSummon(EntityType<? extends AbstractFlyingCompanion> entityType, Level level) {
     super(entityType, level);
@@ -245,9 +242,60 @@ public class BirdSummon extends AbstractFlyingCompanion {
 
   public static AttributeSupplier.Builder createAttributes() {
 
-    return AbstractFlyingCompanion.createAttributes().add(Attributes.MAX_HEALTH, (double) 14.0F)
-        .add(Attributes.FLYING_SPEED, (double) 0.5F).add(Attributes.MOVEMENT_SPEED, (double) 0.25F)
-        .add(Attributes.ATTACK_DAMAGE, (double) 4.0F);
+    return AbstractFlyingCompanion.createAttributes().add(Attributes.MAX_HEALTH, 14.0F)
+        .add(Attributes.FLYING_SPEED, 0.5F).add(Attributes.MOVEMENT_SPEED, 0.25F)
+        .add(Attributes.ATTACK_DAMAGE, 4.0F);
+  }
+
+  /// no `setNoAi` here; that ties into `isControlledByLocalInstance()`, which `LivingEntity#travel` checks before integrating `deltaMovement` at all. Warps the companion to the owner first (Curse of
+  /// Darkness's warp-to-Hector visual), not vice versa.
+  private static void beginGlide(AbstractCompanion companion, LivingEntity owner, double boostSpeed) {
+    spawnAbilityParticles(companion, ParticleTypes.POOF, 10);
+
+    // absorb any existing fall speed (mid-air activation shouldn't carry momentum into the
+    // glide) and fold it into the launch, so jumping/falling in doesn't fight the take-off
+    double fallSpeed = Math.max(0.0, -owner.getDeltaMovement().y);
+    owner.setDeltaMovement(owner.getDeltaMovement().x, 0.0, owner.getDeltaMovement().z);
+
+    companion.moveTo(owner.getX(), owner.getY() + 1.2, owner.getZ(), owner.getYRot(), 0.0F);
+    spawnAbilityParticles(companion, ParticleTypes.CLOUD, 10);
+
+    BirdSummon bird = (BirdSummon) companion;
+    Vec3 look = owner.getLookAngle();
+    bird.glideDirection = new Vec3(look.x, 0.0, look.z).normalize().scale(boostSpeed);
+    bird.glideGraceTicks = GLIDE_GROUND_CHECK_GRACE_TICKS;
+    companion.setNoGravity(true);
+    companion.setDeltaMovement(0.0, GLIDE_UP_BURST + fallSpeed * 0.5, 0.0); // up-burst; forward comes from #tick
+    owner.startRiding(companion, true);
+  }
+
+  /// physical swoop/dive-bomb -> Bird's basic direct attack
+  private static void diveAttack(AbstractCompanion companion, LivingEntity target) {
+    companion.swing(InteractionHand.MAIN_HAND);
+    float damage = (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * companion.directAttackDamageMultiplier();
+    target.hurt(companion.damageSources().mobAttack(companion), damage);
+    target.knockback(0.6, companion.getX() - target.getX(), companion.getZ() - target.getZ());
+    spawnAbilityParticles(target, ParticleTypes.CLOUD, 4);
+    companion.grantDirectAttackExperience();
+  }
+
+  /// fires a real Arrow entity -> used by the Bone Shot ability
+  private static void shootArrow(AbstractCompanion companion, LivingEntity target) {
+    if (!(companion.level() instanceof ServerLevel serverLevel)) {
+      return;
+    }
+
+    companion.swing(InteractionHand.MAIN_HAND);
+    Arrow arrow = new Arrow(serverLevel, companion, new ItemStack(Items.ARROW), null);
+    arrow.setBaseDamage(companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * 0.5);
+
+    double dx = target.getX() - companion.getX();
+    double dy = target.getY(0.3333333333333333) - arrow.getY();
+    double dz = target.getZ() - companion.getZ();
+    double horizontalDistance = Math.sqrt(dx * dx + dz * dz);
+    arrow.shoot(dx, dy + horizontalDistance * 0.2, dz, 1.6F, 6.0F);
+
+    serverLevel.addFreshEntity(arrow);
   }
 
   @Override
@@ -282,9 +330,8 @@ public class BirdSummon extends AbstractFlyingCompanion {
     }
   }
 
-  /// goals (LookAtPlayerGoal, wander) still run and would otherwise slowly rotate the
-  /// companion off its travel heading despite velocity staying locked; forces both
-  /// companion and rider to visibly face `glideDirection` every tick instead
+  /// goals (LookAtPlayerGoal, wander) still run and would otherwise slowly rotate the companion off its travel heading despite velocity staying locked; forces both companion and rider to visibly face
+  /// `glideDirection` every tick instead
   private void faceGlideDirection() {
     if (this.glideDirection.lengthSqr() < 1.0E-4) {
       return;
@@ -303,9 +350,8 @@ public class BirdSummon extends AbstractFlyingCompanion {
     }
   }
 
-  /// `getBoundingBox()` already reflects the rider's current position (vanilla keeps
-  /// passengers synced to their vehicle every tick); a small probe box just below its feet
-  /// -> real block collision, not just a fixed Y threshold, so slopes/overhangs work too
+  /// `getBoundingBox()` already reflects the rider's current position (vanilla keeps passengers synced to their vehicle every tick); a small probe box just below its feet -> real block collision, not
+  /// just a fixed Y threshold, so slopes/overhangs work too
   private boolean riderTouchingGround() {
     LivingEntity owner = this.getOwner();
     if (owner == null) {
@@ -322,63 +368,11 @@ public class BirdSummon extends AbstractFlyingCompanion {
     this.ejectPassengers();
   }
 
-  /// no `setNoAi` here; that ties into `isControlledByLocalInstance()`, which
-  /// `LivingEntity#travel` checks before integrating `deltaMovement` at all. Warps the
-  /// companion to the owner first (Curse of Darkness's warp-to-Hector visual), not vice versa.
-  private static void beginGlide(AbstractCompanion companion, LivingEntity owner, double boostSpeed) {
-    spawnAbilityParticles(companion, ParticleTypes.POOF, 10);
-
-    // absorb any existing fall speed (mid-air activation shouldn't carry momentum into the
-    // glide) and fold it into the launch, so jumping/falling in doesn't fight the take-off
-    double fallSpeed = Math.max(0.0, -owner.getDeltaMovement().y);
-    owner.setDeltaMovement(owner.getDeltaMovement().x, 0.0, owner.getDeltaMovement().z);
-
-    companion.moveTo(owner.getX(), owner.getY() + 1.2, owner.getZ(), owner.getYRot(), 0.0F);
-    spawnAbilityParticles(companion, ParticleTypes.CLOUD, 10);
-
-    BirdSummon bird = (BirdSummon) companion;
-    Vec3 look = owner.getLookAngle();
-    bird.glideDirection = new Vec3(look.x, 0.0, look.z).normalize().scale(boostSpeed);
-    bird.glideGraceTicks = GLIDE_GROUND_CHECK_GRACE_TICKS;
-    companion.setNoGravity(true);
-    companion.setDeltaMovement(0.0, GLIDE_UP_BURST + fallSpeed * 0.5, 0.0); // up-burst; forward comes from #tick
-    owner.startRiding(companion, true);
-  }
-
   /// renders/positions the rider below the companion, gripping its legs, instead of on top
   @Override
   protected Vec3 getPassengerAttachmentPoint(Entity entity, EntityDimensions dimensions, float partialTick) {
     // return new Vec3(0.0, -0.6, 0.0);
     return new Vec3(0.0, -1.2, 0.0);
-  }
-
-  /// physical swoop/dive-bomb -> Bird's basic direct attack
-  private static void diveAttack(AbstractCompanion companion, LivingEntity target) {
-    companion.swing(InteractionHand.MAIN_HAND);
-    float damage = (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * companion.directAttackDamageMultiplier();
-    target.hurt(companion.damageSources().mobAttack(companion), damage);
-    target.knockback(0.6, companion.getX() - target.getX(), companion.getZ() - target.getZ());
-    spawnAbilityParticles(target, ParticleTypes.CLOUD, 4);
-    companion.grantDirectAttackExperience();
-  }
-
-  /// fires a real Arrow entity -> used by the Bone Shot ability
-  private static void shootArrow(AbstractCompanion companion, LivingEntity target) {
-    if (!(companion.level() instanceof ServerLevel serverLevel)) {
-      return;
-    }
-
-    companion.swing(InteractionHand.MAIN_HAND);
-    Arrow arrow = new Arrow(serverLevel, companion, new ItemStack(Items.ARROW), null);
-    arrow.setBaseDamage(companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * 0.5);
-
-    double dx = target.getX() - companion.getX();
-    double dy = target.getY(0.3333333333333333) - arrow.getY();
-    double dz = target.getZ() - companion.getZ();
-    double horizontalDistance = Math.sqrt(dx * dx + dz * dz);
-    arrow.shoot(dx, dy + horizontalDistance * 0.2, dz, 1.6F, 6.0F);
-
-    serverLevel.addFreshEntity(arrow);
   }
 
   @Override

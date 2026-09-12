@@ -4,7 +4,6 @@ import io.github.jason13official.summons.impl.common.entity.AbstractCompanion;
 import io.github.jason13official.summons.impl.common.entity.OwnerStatBonusKit;
 import io.github.jason13official.summons.impl.common.entity.ability.CompanionAbility;
 import io.github.jason13official.summons.impl.common.entity.ai.goal.attack.CompanionRangedAttackGoal;
-import io.github.jason13official.summons.impl.common.entity.ground.AbstractGroundCompanion;
 import io.github.jason13official.summons.impl.common.evolution.EvoCrystalColor;
 import io.github.jason13official.summons.impl.common.evolution.EvolutionForm;
 import io.github.jason13official.summons.impl.common.evolution.EvolutionThreshold;
@@ -33,12 +32,6 @@ public class MageSummon extends AbstractFlyingCompanion {
   private static final double SPELL_RADIUS = 12.0;
   private static final double DIRECT_ATTACK_RADIUS = 10.0;
   private static final int DIRECT_ATTACK_COOLDOWN = 40;
-
-  /// client-side render animation phase; one model instance is shared by every Mage
-  /// Summon, so this state has to live on the entity, not the model.
-  public final AnimationState idleAnimationState = new AnimationState();
-  public final AnimationState flyAnimationState = new AnimationState();
-
   /// Mage-type https://gamefaqs.gamespot.com/ps2/925894-castlevania-curse-of-darkness/faqs
   private static final List<CompanionAbility> ABILITIES = List.of(
       // "Stops time for enemies, leaving Hector to beat on them unopposed." TODO: no true
@@ -218,6 +211,9 @@ public class MageSummon extends AbstractFlyingCompanion {
           companion.spawnOrbitingBits(3, 2.2, 0.4, 1.0,
               (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * 0.5F, ParticleTypes.END_ROD, false, 100))
   );
+  /// client-side render animation phase; one model instance is shared by every Mage Summon, so this state has to live on the entity, not the model.
+  public final AnimationState idleAnimationState = new AnimationState();
+  public final AnimationState flyAnimationState = new AnimationState();
 
   public MageSummon(EntityType<? extends AbstractCompanion> entityType, Level level) {
     super(entityType, level);
@@ -227,9 +223,17 @@ public class MageSummon extends AbstractFlyingCompanion {
 
     // physically weak per lore ("low DEF... open to enemy attacks"); ATTACK_DAMAGE still
     // carries spell power for the ability kit above, so it's toned down, not gutted
-    return AbstractFlyingCompanion.createAttributes().add(Attributes.MAX_HEALTH, (double) 12.0F)
-        .add(Attributes.FLYING_SPEED, (double) 0.45F).add(Attributes.MOVEMENT_SPEED, (double) 0.28F)
-        .add(Attributes.ATTACK_DAMAGE, (double) 6.0F).add(Attributes.KNOCKBACK_RESISTANCE, (double) 0.0F);
+    return AbstractFlyingCompanion.createAttributes().add(Attributes.MAX_HEALTH, 12.0F)
+        .add(Attributes.FLYING_SPEED, 0.45F).add(Attributes.MOVEMENT_SPEED, 0.28F)
+        .add(Attributes.ATTACK_DAMAGE, 6.0F).add(Attributes.KNOCKBACK_RESISTANCE, 0.0F);
+  }
+
+  /// small lightning zap: physically weak, so its basic attack is a light instant spell, a scaled fraction of ATTACK_DAMAGE, no projectile entity.
+  private static void castZap(AbstractCompanion companion, LivingEntity target) {
+    float damage = (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * 0.3F * companion.directAttackDamageMultiplier();
+    target.hurt(companion.damageSources().magic(), damage);
+    spawnAbilityParticles(target, ParticleTypes.ELECTRIC_SPARK, 6);
+    companion.grantDirectAttackExperience();
   }
 
   @Override
@@ -237,15 +241,6 @@ public class MageSummon extends AbstractFlyingCompanion {
     super.registerGoals();
     this.goalSelector.addGoal(1,
         new CompanionRangedAttackGoal(this, 1.0, DIRECT_ATTACK_COOLDOWN, DIRECT_ATTACK_RADIUS, MageSummon::castZap));
-  }
-
-  /// small lightning zap: physically weak, so its basic attack is a light
-  /// instant spell, a scaled fraction of ATTACK_DAMAGE, no projectile entity.
-  private static void castZap(AbstractCompanion companion, LivingEntity target) {
-    float damage = (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * 0.3F * companion.directAttackDamageMultiplier();
-    target.hurt(companion.damageSources().magic(), damage);
-    spawnAbilityParticles(target, ParticleTypes.ELECTRIC_SPARK, 6);
-    companion.grantDirectAttackExperience();
   }
 
   @Override

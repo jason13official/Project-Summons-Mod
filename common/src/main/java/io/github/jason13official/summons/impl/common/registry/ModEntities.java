@@ -7,10 +7,10 @@ import io.github.jason13official.summons.impl.common.entity.flying.DevilSummon;
 import io.github.jason13official.summons.impl.common.entity.flying.FairySummon;
 import io.github.jason13official.summons.impl.common.entity.flying.FlyingCompanionCube;
 import io.github.jason13official.summons.impl.common.entity.flying.FlyingCompanionPrism;
+import io.github.jason13official.summons.impl.common.entity.flying.MageSummon;
 import io.github.jason13official.summons.impl.common.entity.ground.BattleSummon;
 import io.github.jason13official.summons.impl.common.entity.ground.CompanionCube;
 import io.github.jason13official.summons.impl.common.entity.ground.CompanionPrism;
-import io.github.jason13official.summons.impl.common.entity.flying.MageSummon;
 import io.github.jason13official.summons.impl.common.entity.ground.PumpkinSummon;
 import io.github.jason13official.summons.impl.common.party.CompanionType;
 import java.util.function.BiConsumer;
@@ -41,43 +41,43 @@ public class ModEntities {
 
   public static void registerGround(BiConsumer<EntityType<?>, ResourceLocation> consumer) {
 
-    CUBE = EntityType.Builder.<CompanionCube>of(CompanionCube::new, MobCategory.MISC).sized(0.5f, 0.5f).clientTrackingRange(32).build("summons:cube");
+    CUBE = EntityType.Builder.of(CompanionCube::new, MobCategory.MISC).sized(0.5f, 0.5f).clientTrackingRange(32).build("summons:cube");
     consumer.accept(CUBE, Summons.identifier("cube"));
 
-    PRISM = EntityType.Builder.<CompanionPrism>of(CompanionPrism::new, MobCategory.MISC).sized(0.5f, 1.0f).clientTrackingRange(32).build("summons:prism");
+    PRISM = EntityType.Builder.of(CompanionPrism::new, MobCategory.MISC).sized(0.5f, 1.0f).clientTrackingRange(32).build("summons:prism");
     consumer.accept(PRISM, Summons.identifier("prism"));
 
     // EntityType.class IRON_GOLEM sized
-    BATTLE = EntityType.Builder.<BattleSummon>of(BattleSummon::new, MobCategory.MISC).sized(1.4F, 2.7F).clientTrackingRange(32).build("summons:battle");
+    BATTLE = EntityType.Builder.of(BattleSummon::new, MobCategory.MISC).sized(1.4F, 2.7F).clientTrackingRange(32).build("summons:battle");
     consumer.accept(BATTLE, Summons.identifier("battle"));
 
     // EntityType.class PUMPKIN_GOLEM sized
-    PUMPKIN = EntityType.Builder.<PumpkinSummon>of(PumpkinSummon::new, MobCategory.MISC).sized(0.7F, 1.9F).clientTrackingRange(32).build("summons:pumpkin");
+    PUMPKIN = EntityType.Builder.of(PumpkinSummon::new, MobCategory.MISC).sized(0.7F, 1.9F).clientTrackingRange(32).build("summons:pumpkin");
     consumer.accept(PUMPKIN, Summons.identifier("pumpkin"));
   }
 
   public static void registerFlying(BiConsumer<EntityType<?>, ResourceLocation> consumer) {
 
-    FLYING_CUBE = EntityType.Builder.<FlyingCompanionCube>of(FlyingCompanionCube::new, MobCategory.MISC).sized(0.5f, 0.5f).clientTrackingRange(32).build("summons:flying_cube");
+    FLYING_CUBE = EntityType.Builder.of(FlyingCompanionCube::new, MobCategory.MISC).sized(0.5f, 0.5f).clientTrackingRange(32).build("summons:flying_cube");
     consumer.accept(FLYING_CUBE, Summons.identifier("flying_cube"));
 
-    FLYING_PRISM = EntityType.Builder.<FlyingCompanionPrism>of(FlyingCompanionPrism::new, MobCategory.MISC).sized(0.5f, 1.0f).clientTrackingRange(32).build("summons:flying_prism");
+    FLYING_PRISM = EntityType.Builder.of(FlyingCompanionPrism::new, MobCategory.MISC).sized(0.5f, 1.0f).clientTrackingRange(32).build("summons:flying_prism");
     consumer.accept(FLYING_PRISM, Summons.identifier("flying_prism"));
 
     // EntityType.class BAT sized
-    FAIRY = EntityType.Builder.<FairySummon>of(FairySummon::new, MobCategory.MISC).sized(0.5F, 0.9F).clientTrackingRange(32).build("summons:fairy");
+    FAIRY = EntityType.Builder.of(FairySummon::new, MobCategory.MISC).sized(0.5F, 0.9F).clientTrackingRange(32).build("summons:fairy");
     consumer.accept(FAIRY, Summons.identifier("fairy"));
 
     // EntityType.class PARROT sized
-    BIRD = EntityType.Builder.<BirdSummon>of(BirdSummon::new, MobCategory.MISC).sized(0.5F, 0.9F).clientTrackingRange(32).build("summons:bird");
+    BIRD = EntityType.Builder.of(BirdSummon::new, MobCategory.MISC).sized(0.5F, 0.9F).clientTrackingRange(32).build("summons:bird");
     consumer.accept(BIRD, Summons.identifier("bird"));
 
     // EntityType.class ALLAY sized
-    MAGE = EntityType.Builder.<MageSummon>of(MageSummon::new, MobCategory.MISC).sized(0.35F, 0.6F).clientTrackingRange(32).build("summons:mage");
+    MAGE = EntityType.Builder.of(MageSummon::new, MobCategory.MISC).sized(0.35F, 0.6F).clientTrackingRange(32).build("summons:mage");
     consumer.accept(MAGE, Summons.identifier("mage"));
 
     // EntityType.class ENDERMAN sized
-    DEVIL = EntityType.Builder.<DevilSummon>of(DevilSummon::new, MobCategory.MISC).sized(0.6F, 2.9F).clientTrackingRange(32).build("summons:devil");
+    DEVIL = EntityType.Builder.of(DevilSummon::new, MobCategory.MISC).sized(0.6F, 2.9F).clientTrackingRange(32).build("summons:devil");
     consumer.accept(DEVIL, Summons.identifier("devil"));
   }
 

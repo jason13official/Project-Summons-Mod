@@ -1,10 +1,9 @@
 package io.github.jason13official.summons.impl.common.entity;
 
-/// Per-type passive owner buff: `total = initial + growth * (level-1) / 98` (wiki formula).
-/// STR -> owner ATTACK_DAMAGE; CON -> % harmful-effect duration cut; LCK -> % chance to
-/// duplicate a kill's drop. Only STR maps to a real attribute; CON/LCK read on demand.
+/// Per-type passive owner buff: `total = initial + growth * (level-1) / 98` (wiki formula). STR -> owner ATTACK_DAMAGE; CON -> % harmful-effect duration cut; LCK -> % chance to duplicate a kill's
+/// drop. Only STR maps to a real attribute; CON/LCK read on demand.
 public record OwnerStatBonusKit(double strInitial, double strGrowth, double conInitial, double conGrowth,
-                                 double lckInitial, double lckGrowth) {
+                                double lckInitial, double lckGrowth) {
 
   public static final OwnerStatBonusKit NONE = new OwnerStatBonusKit(0, 0, 0, 0, 0, 0);
 

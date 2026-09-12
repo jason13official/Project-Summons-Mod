@@ -30,15 +30,15 @@ public abstract class AbstractGroundCompanion extends AbstractCompanion {
 
     // Cow.class
     this.goalSelector.addGoal(0, new FloatGoal(this));
-    this.goalSelector.addGoal(1, new PanicGoal(this, (double)2.0F));
+    this.goalSelector.addGoal(1, new PanicGoal(this, 2.0F));
     // ahead of the wander goal below: no ground companion had any owner-follow goal at all
     // before this, just the 24-block teleport safety net -> they'd stand around/wander
     // idly until that kicked in
     this.goalSelector.addGoal(2, new CompanionFollowOwnerGoal(this, 1.0, 6.0F, 2.0F));
     // this.goalSelector.addGoal(2, new BreedGoal(this, (double)1.0F));
-    this.goalSelector.addGoal(3, new TemptGoal(this, (double)1.25F, (p_335386_) -> p_335386_.is(ItemTags.COW_FOOD), false));
+    this.goalSelector.addGoal(3, new TemptGoal(this, 1.25F, (p_335386_) -> p_335386_.is(ItemTags.COW_FOOD), false));
     // this.goalSelector.addGoal(4, new FollowParentGoal(this, (double)1.25F));
-    this.goalSelector.addGoal(5, new WaterAvoidingRandomStrollGoal(this, (double)1.0F));
+    this.goalSelector.addGoal(5, new WaterAvoidingRandomStrollGoal(this, 1.0F));
     this.goalSelector.addGoal(6, new LookAtPlayerGoal(this, Player.class, 6.0F));
     this.goalSelector.addGoal(7, new RandomLookAroundGoal(this));
   }

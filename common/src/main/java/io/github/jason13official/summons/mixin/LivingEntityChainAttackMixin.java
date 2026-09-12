@@ -10,9 +10,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-/// feeds every landed player melee hit into ChainAttackTracker. `getDirectEntity() == the
-/// player` (not just `getEntity()`) rules out arrows/other indirect sources -> only a real
-/// melee swing (Player#attack) counts toward a combo.
+/// feeds every landed player melee hit into ChainAttackTracker. `getDirectEntity() == the player` (not just `getEntity()`) rules out arrows/other indirect sources -> only a real melee swing
+/// (Player#attack) counts toward a combo.
 @Mixin(LivingEntity.class)
 public class LivingEntityChainAttackMixin {
 

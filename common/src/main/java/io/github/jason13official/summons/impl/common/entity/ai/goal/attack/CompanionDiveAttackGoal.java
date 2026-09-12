@@ -6,8 +6,7 @@ import java.util.function.BiConsumer;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.goal.Goal;
 
-/// Physical swoop/dive-bomb basic attack for flying types: closes on the target directly
-/// (no ground pathfinding) and fires `onHit` on contact, cooldown-gated.
+/// Physical swoop/dive-bomb basic attack for flying types: closes on the target directly (no ground pathfinding) and fires `onHit` on contact, cooldown-gated.
 public class CompanionDiveAttackGoal extends Goal {
 
   private final AbstractCompanion companion;
@@ -18,7 +17,7 @@ public class CompanionDiveAttackGoal extends Goal {
   private int cooldown;
 
   public CompanionDiveAttackGoal(AbstractCompanion companion, double speed, double hitRadius, int hitCooldownTicks,
-                                  BiConsumer<AbstractCompanion, LivingEntity> onHit) {
+      BiConsumer<AbstractCompanion, LivingEntity> onHit) {
     this.companion = companion;
     this.speed = speed;
     this.hitRadius = hitRadius;

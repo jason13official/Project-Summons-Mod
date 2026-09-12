@@ -16,8 +16,7 @@ import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 
-/// Pumpkin-Type: bad at fighting and low health, but a big stat boost to the owner
-/// (owner stat bonuses not implemented yet).
+/// Pumpkin-Type: bad at fighting and low health, but a big stat boost to the owner (owner stat bonuses not implemented yet).
 public class PumpkinSummon extends AbstractGroundCompanion {
 
   private static final double POSE_RADIUS = 2.0;
@@ -25,8 +24,7 @@ public class PumpkinSummon extends AbstractGroundCompanion {
   // wiki: STR +10/CON +4/LCK +5 initial, +60/+18/+50 growth; biggest owner buff of any type
   private static final OwnerStatBonusKit OWNER_STAT_BONUS = new OwnerStatBonusKit(10, 60, 4, 18, 5, 50);
 
-  /// "They only have one ability, Pose, which inflicts minimum damage to nearby enemies,
-  /// although Pumpkin will be completely vulnerable while performing it."
+  /// "They only have one ability, Pose, which inflicts minimum damage to nearby enemies, although Pumpkin will be completely vulnerable while performing it."
   private static final List<CompanionAbility> ABILITIES = List.of(
       CompanionAbility.base("Pose", 40, "Inflicts minimum damage to nearby enemies -- Pumpkin is completely vulnerable while posing.", (companion, owner) -> {
         AABB area = companion.getBoundingBox().inflate(POSE_RADIUS);
@@ -47,8 +45,8 @@ public class PumpkinSummon extends AbstractGroundCompanion {
 
   public static AttributeSupplier.Builder createAttributes() {
 
-    return AbstractCompanion.createAttributes().add(Attributes.MAX_HEALTH, (double) 8.0F)
-        .add(Attributes.MOVEMENT_SPEED, (double) 0.18F).add(Attributes.ATTACK_DAMAGE, (double) 1.0F);
+    return AbstractCompanion.createAttributes().add(Attributes.MAX_HEALTH, 8.0F)
+        .add(Attributes.MOVEMENT_SPEED, 0.18F).add(Attributes.ATTACK_DAMAGE, 1.0F);
   }
 
   @Override
@@ -101,9 +99,8 @@ public class PumpkinSummon extends AbstractGroundCompanion {
     };
   }
 
-  /// Innocent Devil Data (Pumpkin-Types); evolutions are purely cosmetic; Pose stays the
-  /// only ability regardless. Queen/New Deli are final at Level 2; the rest need a specific
-  /// weapon (Death's Scythe/Short Sword/Frying Pan) for their Level 3, not just crystals.
+  /// Innocent Devil Data (Pumpkin-Types); evolutions are purely cosmetic; Pose stays the only ability regardless. Queen/New Deli are final at Level 2; the rest need a specific weapon (Death's
+  /// Scythe/Short Sword/Frying Pan) for their Level 3, not just crystals.
   public enum Form implements EvolutionForm {
     PUMPKIN("Pumpkin", 0),
     QUEEN("Queen", 1),

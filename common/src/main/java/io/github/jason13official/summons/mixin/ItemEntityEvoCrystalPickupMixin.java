@@ -10,8 +10,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/// Touching an Evo Crystal credits it straight to the player's active companion instead of
-/// going to their inventory; falls through to a normal pickup if nothing is summoned.
+/// Touching an Evo Crystal credits it straight to the player's active companion instead of going to their inventory; falls through to a normal pickup if nothing is summoned.
 @Mixin(ItemEntity.class)
 public class ItemEntityEvoCrystalPickupMixin {
 

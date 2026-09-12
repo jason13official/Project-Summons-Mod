@@ -10,7 +10,7 @@ public class CompanionLevelGatedMeleeAttackGoal extends MeleeAttackGoal {
   private final int minLevel;
 
   public CompanionLevelGatedMeleeAttackGoal(AbstractCompanion companion, double speed, boolean followEvenIfNotSeen,
-                                             int minLevel) {
+      int minLevel) {
     super(companion, speed, followEvenIfNotSeen);
     this.companion = companion;
     this.minLevel = minLevel;

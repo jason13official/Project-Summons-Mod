@@ -8,8 +8,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/// player respawns/dimension changes transfer data atypically by swapping in a new server player instance,
-/// and copying values. here we copy our companion party/other data (to-be-implemented)
+/// player respawns/dimension changes transfer data atypically by swapping in a new server player instance, and copying values. here we copy our companion party/other data (to-be-implemented)
 @Mixin(ServerPlayer.class)
 public class ServerPlayerPersistentDataMixin {
 

@@ -9,14 +9,14 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.AABB;
 
-/// Owns the short-lived "orbiting bit" VFX+hitboxes a companion can spawn (Mage's "B"
-/// spells, such as Floating B, Satellite B, etc). One instance per companion, held as a field
-/// rather than static, since bits belong to whichever companion cast the ability.
+/// Owns the short-lived "orbiting bit" VFX+hitboxes a companion can spawn (Mage's "B" spells, such as Floating B, Satellite B, etc). One instance per companion, held as a field rather than static,
+/// since bits belong to whichever companion cast the ability.
 public final class OrbitingBitManager {
+
   private final List<OrbitingBit> bits = new ArrayList<>();
 
   public void spawn(int count, double radius, double angularSpeed, double heightOffset,
-                     float damage, ParticleOptions particle, boolean explodeOnHit, int lifespanTicks) {
+      float damage, ParticleOptions particle, boolean explodeOnHit, int lifespanTicks) {
     for (int i = 0; i < count; i++) {
       double startAngle = (2.0 * Math.PI / count) * i;
       this.bits.add(new OrbitingBit(startAngle, radius, angularSpeed, heightOffset, damage, particle, explodeOnHit, lifespanTicks));

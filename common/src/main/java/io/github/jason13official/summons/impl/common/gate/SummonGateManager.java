@@ -31,9 +31,8 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 
-/// the per-player "petrified Innocent Devil" pocket room; each visit unlocks the next
-/// [CompanionType] in enum order. Rooms live in [ModDimensions#SUMMON_POCKET], one deterministic
-/// 512-block-spaced cell per player ([SummonGateSavedData]).
+/// the per-player "petrified Innocent Devil" pocket room; each visit unlocks the next [CompanionType] in enum order. Rooms live in [ModDimensions#SUMMON_POCKET], one deterministic 512-block-spaced
+/// cell per player ([SummonGateSavedData]).
 public class SummonGateManager {
 
   private static final String ROOT_TAG = "summons_gate";
@@ -58,23 +57,6 @@ public class SummonGateManager {
   // walk-through opening right after a teleport can't immediately bounce them back
   private static final int GATE_COOLDOWN_TICKS = 20;
   private static final Map<UUID, Integer> COOLDOWN = new HashMap<>();
-
-  /// a running "statue awakening" cutscene: the pedestal glows brighter each tick until
-  /// `ticksLeft` hits 0, then [SummonGateManager#finishWarp] fires
-  private static final class PendingWarp {
-
-    private final ServerLevel level;
-    private final BlockPos pos;
-    private final CompanionType type;
-    private int ticksLeft;
-
-    private PendingWarp(ServerLevel level, BlockPos pos, CompanionType type, int ticksLeft) {
-      this.level = level;
-      this.pos = pos;
-      this.type = type;
-      this.ticksLeft = ticksLeft;
-    }
-  }
 
   /// right-clicking a [io.github.jason13official.summons.impl.common.block.SummonGateBlock]
   public static void enterGate(ServerPlayer player) {
@@ -111,9 +93,8 @@ public class SummonGateManager {
         "A petrified " + displayName(next.get()) + "-type Innocent Devil awaits..."));
   }
 
-  /// right-clicking the petrified statue for `type` inside a pocket room; unlocks immediately,
-  /// then starts a [PendingWarp] cutscene ([SummonGateManager#tick] drives it) -> the statue
-  /// glows brighter each tick instead of the player being warped home on the spot
+  /// right-clicking the petrified statue for `type` inside a pocket room; unlocks immediately, then starts a [PendingWarp] cutscene ([SummonGateManager#tick] drives it) -> the statue glows brighter
+  /// each tick instead of the player being warped home on the spot
   public static void unlockAtStatue(ServerPlayer player, ServerLevel level, BlockPos pos, CompanionType type) {
 
     CompanionParty party = CompanionParty.of(player);
@@ -156,8 +137,7 @@ public class SummonGateManager {
     }
   }
 
-  /// drives every in-progress [PendingWarp] plus every gate-teleport cooldown; call once per
-  /// server tick
+  /// drives every in-progress [PendingWarp] plus every gate-teleport cooldown; call once per server tick
   public static void tick(MinecraftServer server) {
 
     tickCooldowns();
@@ -207,8 +187,7 @@ public class SummonGateManager {
     CompanionPartyManager.setActive(player, warp.type);
   }
 
-  /// teleports back to the stored pre-gate position/dimension and restores the cached gamemode;
-  /// a no-op if the player has no stored return point (never entered, or already left)
+  /// teleports back to the stored pre-gate position/dimension and restores the cached gamemode; a no-op if the player has no stored return point (never entered, or already left)
   public static void leaveGate(ServerPlayer player) {
 
     CompoundTag root = ((SummonsDataHolder) player).summons$getPersistentData();
@@ -235,9 +214,8 @@ public class SummonGateManager {
     root.remove(ROOT_TAG);
   }
 
-  /// stashes where to send the player back to; walking into the gate leaves them standing
-  /// inside the block itself, so [SummonGateManager#findSafeReturnPos] steps back to a spot
-  /// that won't immediately re-trigger [io.github.jason13official.summons.impl.common.block.SummonGateBlock]
+  /// stashes where to send the player back to; walking into the gate leaves them standing inside the block itself, so [SummonGateManager#findSafeReturnPos] steps back to a spot that won't immediately
+  /// re-trigger [io.github.jason13official.summons.impl.common.block.SummonGateBlock]
   private static void storeReturnPoint(ServerPlayer player) {
 
     CompoundTag root = ((SummonsDataHolder) player).summons$getPersistentData();
@@ -256,8 +234,7 @@ public class SummonGateManager {
     root.put(ROOT_TAG, tag);
   }
 
-  /// steps backwards from the player's position, looking for a spot that isn't a gate block
-  /// and has two clear blocks over solid ground; falls back to the raw position otherwise
+  /// steps backwards from the player's position, looking for a spot that isn't a gate block and has two clear blocks over solid ground; falls back to the raw position otherwise
   private static BlockPos findSafeReturnPos(ServerPlayer player) {
 
     ServerLevel level = player.serverLevel();
@@ -293,9 +270,8 @@ public class SummonGateManager {
     return new BlockPos(cell * CELL_SPACING, FLOOR_Y, 0);
   }
 
-  /// builds (or rebuilds) the room shell + a fresh petrified statue for `type`; idempotent and
-  /// cheap enough to run on every visit, so a re-entry always reflects current progress instead
-  /// of relying on a separate "already built" flag
+  /// builds (or rebuilds) the room shell + a fresh petrified statue for `type`; idempotent and cheap enough to run on every visit, so a re-entry always reflects current progress instead of relying on
+  /// a separate "already built" flag
   private static void buildRoom(ServerLevel level, BlockPos origin, CompanionType type) {
 
     BlockState floor = Blocks.POLISHED_BLACKSTONE.defaultBlockState();
@@ -325,5 +301,21 @@ public class SummonGateManager {
 
   private static String displayName(CompanionType type) {
     return type.name().charAt(0) + type.name().substring(1).toLowerCase();
+  }
+
+  /// a running "statue awakening" cutscene: the pedestal glows brighter each tick until `ticksLeft` hits 0, then [SummonGateManager#finishWarp] fires
+  private static final class PendingWarp {
+
+    private final ServerLevel level;
+    private final BlockPos pos;
+    private final CompanionType type;
+    private int ticksLeft;
+
+    private PendingWarp(ServerLevel level, BlockPos pos, CompanionType type, int ticksLeft) {
+      this.level = level;
+      this.pos = pos;
+      this.type = type;
+      this.ticksLeft = ticksLeft;
+    }
   }
 }

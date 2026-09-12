@@ -17,10 +17,20 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/// LCK owner buff: a % chance to duplicate one of a kill's vanilla drops, credited the same
-/// way as Evo Crystals/Hearts. Injects at TAIL, after dropAllDeathLoot already spawned items.
+/// LCK owner buff: a % chance to duplicate one of a kill's vanilla drops, credited the same way as Evo Crystals/Hearts. Injects at TAIL, after dropAllDeathLoot already spawned items.
 @Mixin(LivingEntity.class)
 public class LivingEntityLuckyDropMixin {
+
+  @Unique
+  private static Player summons$resolveCreditedPlayer(Entity killer) {
+    if (killer instanceof ServerPlayer player) {
+      return player;
+    }
+    if (killer instanceof AbstractCompanion companion && companion.getOwner() instanceof ServerPlayer player) {
+      return player;
+    }
+    return null;
+  }
 
   @Inject(method = "die", at = @At("TAIL"))
   private void summons$dieLucky(DamageSource source, CallbackInfo ci) {
@@ -52,16 +62,5 @@ public class LivingEntityLuckyDropMixin {
 
     ItemEntity original = drops.get(level.random.nextInt(drops.size()));
     level.addFreshEntity(new ItemEntity(level, original.getX(), original.getY(), original.getZ(), original.getItem().copy()));
-  }
-
-  @Unique
-  private static Player summons$resolveCreditedPlayer(Entity killer) {
-    if (killer instanceof ServerPlayer player) {
-      return player;
-    }
-    if (killer instanceof AbstractCompanion companion && companion.getOwner() instanceof ServerPlayer player) {
-      return player;
-    }
-    return null;
   }
 }

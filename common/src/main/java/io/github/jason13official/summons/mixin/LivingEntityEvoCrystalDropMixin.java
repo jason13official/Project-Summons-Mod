@@ -20,13 +20,23 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/// Evo Crystal drops on kill (wiki: all enemies but bosses); color matches whatever weapon
-/// the credited player is holding, whether they or their companion landed the kill.
+/// Evo Crystal drops on kill (wiki: all enemies but bosses); color matches whatever weapon the credited player is holding, whether they or their companion landed the kill.
 @Mixin(LivingEntity.class)
 public class LivingEntityEvoCrystalDropMixin {
 
   @Unique
   private static final float SUMMONS$DROP_CHANCE = 0.2F;
+
+  @Unique
+  private static Player summons$resolveCreditedPlayer(Entity killer) {
+    if (killer instanceof ServerPlayer player) {
+      return player;
+    }
+    if (killer instanceof AbstractCompanion companion && companion.getOwner() instanceof ServerPlayer player) {
+      return player;
+    }
+    return null;
+  }
 
   @Inject(method = "die", at = @At("HEAD"))
   private void summons$die(DamageSource source, CallbackInfo ci) {
@@ -59,16 +69,5 @@ public class LivingEntityEvoCrystalDropMixin {
     for (int i = 0; i < count; i++) {
       level.addFreshEntity(new ItemEntity(level, self.getX(), self.getY(), self.getZ(), stack.copy()));
     }
-  }
-
-  @Unique
-  private static Player summons$resolveCreditedPlayer(Entity killer) {
-    if (killer instanceof ServerPlayer player) {
-      return player;
-    }
-    if (killer instanceof AbstractCompanion companion && companion.getOwner() instanceof ServerPlayer player) {
-      return player;
-    }
-    return null;
   }
 }

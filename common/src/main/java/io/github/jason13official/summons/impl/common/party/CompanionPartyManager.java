@@ -17,8 +17,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.entity.EntityTypeTest;
 import org.jetbrains.annotations.Nullable;
 
-/// Logical-side "only one active companion at a time" rule for [CompanionParty]; other
-/// owners (bosses, etc) spawn [AbstractCompanion]s directly and never touch this class.
+/// Logical-side "only one active companion at a time" rule for [CompanionParty]; other owners (bosses, etc) spawn [AbstractCompanion]s directly and never touch this class.
 public class CompanionPartyManager {
 
   /// accepts `Level` rather than `ServerLevel` so it can resolve client-side too (e.g. for our HUD)
@@ -32,8 +31,7 @@ public class CompanionPartyManager {
     return found.isEmpty() ? null : found.get(0);
   }
 
-  /// server-side only: searches every loaded dimension, since the companion can briefly be
-  /// mid-follow in a different one than the owner when this is called
+  /// server-side only: searches every loaded dimension, since the companion can briefly be mid-follow in a different one than the owner when this is called
   @Nullable
   private static AbstractCompanion findActiveAnywhere(ServerPlayer owner) {
     for (ServerLevel level : owner.server.getAllLevels()) {
@@ -46,8 +44,7 @@ public class CompanionPartyManager {
     return null;
   }
 
-  /// record a newly acquired Innocent Devil/Summon into its party slot; no-op if that slot is
-  /// already unlocked.
+  /// record a newly acquired Innocent Devil/Summon into its party slot; no-op if that slot is already unlocked.
   public static void unlock(ServerPlayer player, CompanionType type) {
     CompanionParty party = CompanionParty.of(player);
     if (party.isUnlocked(type)) {
@@ -66,8 +63,7 @@ public class CompanionPartyManager {
     party.unlock(type, entityTypeId.toString(), companion.saveWithoutId(new CompoundTag()));
   }
 
-  /// swap the player's summoned companion to `type`, dismissing whatever was active first.
-  /// returns false if `type` was never unlocked for this player
+  /// swap the player's summoned companion to `type`, dismissing whatever was active first. returns false if `type` was never unlocked for this player
   public static boolean setActive(ServerPlayer player, CompanionType type) {
     CompanionParty party = CompanionParty.of(player);
     if (!party.isUnlocked(type)) {
