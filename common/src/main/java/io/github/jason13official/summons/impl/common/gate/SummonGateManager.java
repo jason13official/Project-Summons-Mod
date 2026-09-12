@@ -140,7 +140,7 @@ public class SummonGateManager {
       ServerPlayer player = server.getPlayerList().getPlayer(entry.getKey());
 
       if (player == null || player.serverLevel() != warp.level) {
-        iterator.remove(); // disconnected, or left the room some other way - abandon the cutscene
+        iterator.remove(); // disconnected, or left the room some other way; abandon the cutscene
         continue;
       }
 
@@ -170,7 +170,8 @@ public class SummonGateManager {
     player.sendSystemMessage(Component.literal(
         "The statue shatters... your " + displayName(warp.type) + "-type Innocent Devil awakens!"));
 
-    leaveGate(player);
+    leaveGate(player); // run first; move the player back to the overworld position `setActive` spawns at
+    CompanionPartyManager.setActive(player, warp.type);
   }
 
   /// teleports back to the stored pre-gate position/dimension and restores the cached gamemode;
