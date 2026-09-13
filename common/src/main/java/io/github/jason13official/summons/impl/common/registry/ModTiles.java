@@ -14,6 +14,10 @@ public class ModTiles {
 
   public static void register(BiConsumer<BlockEntityType<?>, ResourceLocation> consumer) {
 
+    petrified(consumer);
+  }
+
+  private static void petrified(BiConsumer<BlockEntityType<?>, ResourceLocation> consumer) {
     Block[] petrifiedBlocks = new Block[CompanionType.values().length];
     for (int i = 0; i < petrifiedBlocks.length; i++) {
       petrifiedBlocks[i] = ModBlocks.forPetrified(CompanionType.values()[i]);
