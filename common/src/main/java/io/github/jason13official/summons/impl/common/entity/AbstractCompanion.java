@@ -441,6 +441,19 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     this.reachedForms = this.reachedForms + "," + form.id();
     this.identitySyncDirty = true;
   }
+
+  /// Debug/creative-only: forces this companion straight to the form named `id` (must be one of [#allForms]), bypassing crystal-point costs; still marks it reached so gated abilities work.
+  /// Real evolution should go through [#addCrystalPoints] -> `CompanionEvolution.checkEvolution`. Returns false if `id` doesn't name a form in this type's chart.
+  public boolean debugSetEvolutionFormById(String id) {
+    for (EvolutionForm form : this.allForms()) {
+      if (form.id().equals(id)) {
+        this.setEvolutionForm(form);
+        this.markFormReached(form);
+        return true;
+      }
+    }
+    return false;
+  }
   // endregion leveling
 
   /// evolution routes out of this companion's *current* form; override per type, switching on [#getEvolutionForm]. See [EvolutionThreshold] for the alternate-vs-"Any" distinction.
@@ -675,8 +688,8 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     return List.of();
   }
 
-  /// this companion's currently-unlocked Command-mode abilities: [CompanionAbility#requiredForms] empty, or [#hasReachedForm] true for at least one of them, AND [#getLevel] at least
-  /// [CompanionAbility#minLevel] (soft-gated by level on top of evolution form)
+  /// this companion's currently-unlocked Command-mode abilities: [CompanionAbility#requiredForms()] empty, or [#hasReachedForm] true for at least one of them, AND [#getLevel] at least
+  /// [CompanionAbility#minLevel()] (soft-gated by level on top of evolution form)
   public final List<CompanionAbility> abilities() {
     List<CompanionAbility> unlocked = new ArrayList<>();
     for (CompanionAbility ability : this.allAbilities()) {

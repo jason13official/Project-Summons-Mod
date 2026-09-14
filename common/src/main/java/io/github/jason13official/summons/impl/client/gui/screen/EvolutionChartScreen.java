@@ -2,8 +2,11 @@ package io.github.jason13official.summons.impl.client.gui.screen;
 
 import io.github.jason13official.summons.impl.common.entity.AbstractCompanion;
 import io.github.jason13official.summons.impl.common.evolution.EvolutionForm;
+import io.github.jason13official.summons.platform.Services;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.List;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
@@ -20,6 +23,16 @@ public class EvolutionChartScreen extends Screen {
   private static final int BUTTON_HEIGHT = 20;
 
   private final AbstractCompanion companion;
+
+  /// debug: creative-only "click a form to jump straight to it" -> rebuilt every #render, read back by #mouseClicked
+  private final List<FormHit> formHits = new ArrayList<>();
+
+  private record FormHit(EvolutionForm form, int x0, int y0, int x1, int y1) {
+
+    boolean contains(double mouseX, double mouseY) {
+      return mouseX >= this.x0 && mouseX < this.x1 && mouseY >= this.y0 && mouseY < this.y1;
+    }
+  }
 
   /// the whole layout is computed once in #init (top offset included, so the block is always vertically centered and never runs off a short window) and reused by #render
   private int bannerY;
@@ -76,6 +89,10 @@ public class EvolutionChartScreen extends Screen {
     EvolutionForm[] forms = this.companion.allForms();
     EvolutionForm current = this.companion.getEvolutionForm();
 
+    boolean debugPickable = this.minecraft != null && this.minecraft.player != null && this.minecraft.player.isCreative();
+    this.formHits.clear();
+    EvolutionForm hovered = null;
+
     int maxStage = 0;
     for (EvolutionForm form : forms) {
       maxStage = Math.max(maxStage, form.stage());
@@ -107,9 +124,23 @@ public class EvolutionChartScreen extends Screen {
         boolean isCurrent = form.id().equals(current.id());
         int color = isCurrent ? SummonsScreenStyle.TEXT_ACCENT : reached ? SummonsScreenStyle.TEXT_PRIMARY : 0x66666666;
 
+        int labelWidth = widths[i];
+        int cellY0 = rowY - 2;
+        int cellY1 = rowY + 10;
+
         if (isCurrent) {
-          int labelWidth = widths[i];
-          graphics.fill(cellX - 3, rowY - 2, cellX + labelWidth + 3, rowY + 10, 0x40FFD24A);
+          graphics.fill(cellX - 3, cellY0, cellX + labelWidth + 3, cellY1, 0x40FFD24A);
+        }
+
+        if (debugPickable) {
+          FormHit hit = new FormHit(form, cellX - 3, cellY0, cellX + labelWidth + 3, cellY1);
+          this.formHits.add(hit);
+          if (hit.contains(mouseX, mouseY)) {
+            hovered = form;
+            if (!isCurrent) {
+              graphics.fill(hit.x0(), hit.y0(), hit.x1(), hit.y1(), 0x4066FF88);
+            }
+          }
         }
 
         graphics.drawString(this.font, this.labelFor(form), cellX, rowY, color);
@@ -120,6 +151,26 @@ public class EvolutionChartScreen extends Screen {
     }
 
     SummonsScreenStyle.textBox(graphics, this.font, x, this.flavorY, PANEL_WIDTH, this.flavorHeight, this.flavorText, SummonsScreenStyle.TEXT_MUTED);
+
+    if (hovered != null) {
+      boolean isCurrent = hovered.id().equals(current.id());
+      Component tooltip = Component.literal(hovered.displayName() + (isCurrent ? " (current)" : " - click to set (debug)"));
+      graphics.renderTooltip(this.font, tooltip, mouseX, mouseY);
+    }
+  }
+
+  @Override
+  public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    if (button == 0 && this.minecraft != null && this.minecraft.player != null && this.minecraft.player.isCreative()) {
+      for (FormHit hit : this.formHits) {
+        if (hit.contains(mouseX, mouseY)) {
+          Services.network().sendDebugSetForm(hit.form().id());
+          return true;
+        }
+      }
+    }
+
+    return super.mouseClicked(mouseX, mouseY, button);
   }
 
   private String labelFor(EvolutionForm form) {

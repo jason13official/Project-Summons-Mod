@@ -5,6 +5,7 @@ import io.github.jason13official.summons.impl.common.network.CompanionProgressSy
 import io.github.jason13official.summons.impl.common.network.CompanionStateSyncPayload;
 import io.github.jason13official.summons.impl.common.network.SummonsNetworking;
 import io.github.jason13official.summons.impl.common.network.SummonsNetworking.CompanionInputPayload;
+import io.github.jason13official.summons.impl.common.network.SummonsNetworking.CompanionSetFormPayload;
 import io.github.jason13official.summons.impl.common.gate.SummonGateManager;
 import io.github.jason13official.summons.impl.common.party.CompanionPartyManager;
 import io.github.jason13official.summons.impl.common.registry.ModBlocks;
@@ -88,6 +89,11 @@ public class SummonsNeoForge {
       registrar.playToServer(CompanionInputPayload.TYPE, CompanionInputPayload.STREAM_CODEC, (payload, context) -> {
         if (context.player() instanceof ServerPlayer player) {
           SummonsNetworking.handle(player, payload.action());
+        }
+      });
+      registrar.playToServer(CompanionSetFormPayload.TYPE, CompanionSetFormPayload.STREAM_CODEC, (payload, context) -> {
+        if (context.player() instanceof ServerPlayer player) {
+          SummonsNetworking.handleSetForm(player, payload.formId());
         }
       });
       registrar.playToClient(CompanionProgressSyncPayload.TYPE, CompanionProgressSyncPayload.STREAM_CODEC,

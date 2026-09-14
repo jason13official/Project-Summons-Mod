@@ -5,4 +5,7 @@ import io.github.jason13official.summons.impl.common.network.SummonsNetworking.A
 public interface INetworkHelper {
 
   void sendCompanionInput(Action action);
+
+  /// @see io.github.jason13official.summons.impl.client.gui.screen.EvolutionChartScreen
+  void sendDebugSetForm(String formId);
 }

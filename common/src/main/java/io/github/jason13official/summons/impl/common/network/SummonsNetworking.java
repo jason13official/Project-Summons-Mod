@@ -6,6 +6,7 @@ import io.github.jason13official.summons.impl.common.party.CompanionPartyManager
 import java.util.function.Consumer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
@@ -22,6 +23,20 @@ public class SummonsNetworking {
       case ABILITY_LEFT -> withActive(player, companion -> companion.cycleAbility(-1));
       case ABILITY_RIGHT -> withActive(player, companion -> companion.cycleAbility(1));
       case COMMAND -> withActive(player, AbstractCompanion::performCommandAbility);
+    }
+  }
+
+  /// Evolution Chart screen "click a form to set it" -> only while the player is in creative; the debug command has its own, separate permission-2 gate. Silently no-ops on rejection/bad id,
+  /// same as the rest of this class's handlers.
+  public static void handleSetForm(ServerPlayer player, String formId) {
+    if (!player.isCreative()) {
+      return;
+    }
+
+    AbstractCompanion active = CompanionPartyManager.findActive(player.serverLevel(), player);
+    if (active != null && active.debugSetEvolutionFormById(formId)) {
+      player.displayClientMessage(Component.literal(
+          active.getCompanionType().name() + "-Type set to " + active.getEvolutionForm().displayName()), false);
     }
   }
 
@@ -75,6 +90,23 @@ public class SummonsNetworking {
     public static final StreamCodec<FriendlyByteBuf, CompanionInputPayload> STREAM_CODEC = CustomPacketPayload.codec(
         (payload, buf) -> buf.writeEnum(payload.action()),
         buf -> new CompanionInputPayload(buf.readEnum(Action.class)));
+
+    @Override
+    public Type<? extends CustomPacketPayload> type() {
+
+      return TYPE;
+    }
+  }
+
+  /// @see io.github.jason13official.summons.impl.client.gui.screen.EvolutionChartScreen
+  public record CompanionSetFormPayload(String formId) implements CustomPacketPayload {
+
+    public static final CustomPacketPayload.Type<CompanionSetFormPayload> TYPE =
+        new CustomPacketPayload.Type<>(Summons.identifier("companion_set_form"));
+
+    public static final StreamCodec<FriendlyByteBuf, CompanionSetFormPayload> STREAM_CODEC = CustomPacketPayload.codec(
+        (payload, buf) -> buf.writeUtf(payload.formId()),
+        buf -> new CompanionSetFormPayload(buf.readUtf()));
 
     @Override
     public Type<? extends CustomPacketPayload> type() {

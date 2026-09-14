@@ -5,6 +5,7 @@ import io.github.jason13official.summons.impl.common.network.CompanionProgressSy
 import io.github.jason13official.summons.impl.common.network.CompanionStateSyncPayload;
 import io.github.jason13official.summons.impl.common.network.SummonsNetworking;
 import io.github.jason13official.summons.impl.common.network.SummonsNetworking.CompanionInputPayload;
+import io.github.jason13official.summons.impl.common.network.SummonsNetworking.CompanionSetFormPayload;
 import io.github.jason13official.summons.impl.common.gate.SummonGateManager;
 import io.github.jason13official.summons.impl.common.party.CompanionPartyManager;
 import io.github.jason13official.summons.impl.common.registry.ModBlocks;
@@ -60,6 +61,10 @@ public class SummonsFabric implements ModInitializer {
     PayloadTypeRegistry.playC2S().register(CompanionInputPayload.TYPE, CompanionInputPayload.STREAM_CODEC);
     ServerPlayNetworking.registerGlobalReceiver(CompanionInputPayload.TYPE, (payload, context) ->
         context.server().execute(() -> SummonsNetworking.handle(context.player(), payload.action())));
+
+    PayloadTypeRegistry.playC2S().register(CompanionSetFormPayload.TYPE, CompanionSetFormPayload.STREAM_CODEC);
+    ServerPlayNetworking.registerGlobalReceiver(CompanionSetFormPayload.TYPE, (payload, context) ->
+        context.server().execute(() -> SummonsNetworking.handleSetForm(context.player(), payload.formId())));
 
     PayloadTypeRegistry.playS2C().register(CompanionProgressSyncPayload.TYPE, CompanionProgressSyncPayload.STREAM_CODEC);
     PayloadTypeRegistry.playS2C().register(CompanionStateSyncPayload.TYPE, CompanionStateSyncPayload.STREAM_CODEC);
