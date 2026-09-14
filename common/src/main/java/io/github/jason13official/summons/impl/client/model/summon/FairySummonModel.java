@@ -28,6 +28,7 @@ public class FairySummonModel extends HierarchicalModel<AbstractCompanion> {
   private final ModelPart rightWingTip;
   private final ModelPart leftWing;
   private final ModelPart leftWingTip;
+  private final ModelPart crystal;
 
   public FairySummonModel(ModelPart root) {
     this.root = root;
@@ -39,6 +40,7 @@ public class FairySummonModel extends HierarchicalModel<AbstractCompanion> {
     this.rightWingTip = this.rightWing.getChild("rightWingTip");
     this.leftWing = this.body.getChild("leftWing");
     this.leftWingTip = this.leftWing.getChild("leftWingTip");
+    this.crystal = this.body.getChild("crystal");
   }
 
   public static LayerDefinition createBodyLayer() {
@@ -55,7 +57,7 @@ public class FairySummonModel extends HierarchicalModel<AbstractCompanion> {
         PartPose.offset(0.0F, 0.0F, 0.0F));
 
     PartDefinition body = partdefinition.addOrReplaceChild("body", CubeListBuilder.create().texOffs(0, 16).addBox(-3.0F, 4.0F, -3.0F, 6.0F, 12.0F, 6.0F, new CubeDeformation(0.0F))
-        .texOffs(0, 34).addBox(-5.0F, 16.0F, 0.0F, 10.0F, 16.0F, 1.0F, new CubeDeformation(0.0F)), PartPose.offset(0.0F, 0.0F, 0.0F));
+        .texOffs(1, 34).addBox(-4.0F, 16.0F, 0.0F, 8.0F, 8.0F, 1.0F, new CubeDeformation(0.0F)), PartPose.offset(0.0F, 0.0F, 0.0F));
 
     PartDefinition rightWing = body.addOrReplaceChild("rightWing", CubeListBuilder.create().texOffs(42, 0).addBox(-12.0F, 1.0F, 1.5F, 10.0F, 16.0F, 1.0F, new CubeDeformation(0.0F)),
         PartPose.offset(0.0F, 0.0F, 0.0F));
@@ -68,6 +70,14 @@ public class FairySummonModel extends HierarchicalModel<AbstractCompanion> {
 
     PartDefinition leftWingTip = leftWing.addOrReplaceChild("leftWingTip",
         CubeListBuilder.create().texOffs(24, 16).mirror().addBox(0.0F, 1.0F, 0.0F, 8.0F, 12.0F, 1.0F, new CubeDeformation(0.0F)).mirror(false), PartPose.offset(12.0F, 1.0F, 1.5F));
+
+    PartDefinition crystal = body.addOrReplaceChild("crystal", CubeListBuilder.create(), PartPose.offset(0.0F, 1.0F, 0.0F));
+
+    PartDefinition crystal_r1 = crystal.addOrReplaceChild("crystal_r1", CubeListBuilder.create().texOffs(46, 51).addBox(-1.0F, -1.0F, -1.0F, 2.0F, 2.0F, 2.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(-2.0F, 14.0F, 3.0F, -0.9599F, 0.5236F, -0.6109F));
+
+    PartDefinition crystal_r2 = crystal.addOrReplaceChild("crystal_r2", CubeListBuilder.create().texOffs(46, 51).addBox(-1.0F, -1.0F, -1.0F, 2.0F, 2.0F, 2.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(2.0F, 14.0F, 3.0F, -0.9599F, 0.5236F, -0.6109F));
+
+    PartDefinition crystal_r3 = crystal.addOrReplaceChild("crystal_r3", CubeListBuilder.create().texOffs(36, 37).addBox(-2.0F, -3.0F, -1.0F, 4.0F, 4.0F, 7.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 15.0F, 3.0F, -0.4363F, 0.0F, 0.0F));
 
     return LayerDefinition.create(meshdefinition, 64, 64);
   }

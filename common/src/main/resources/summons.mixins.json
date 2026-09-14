@@ -14,7 +14,8 @@
     "ItemEntityHeartPickupMixin",
     "LivingEntityEffectResistMixin",
     "LivingEntityLuckyDropMixin",
-    "LivingEntityChainAttackMixin"
+    "LivingEntityChainAttackMixin",
+    "LivingEntityShieldMixin"
   ],
   "client": [
     "MinecraftMixin",

@@ -11,6 +11,7 @@ import java.util.Comparator;
 import java.util.List;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.tags.EntityTypeTags;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.AnimationState;
@@ -96,14 +97,19 @@ public class MageSummon extends AbstractFlyingCompanion {
         spawnAbilityParticles(target, ParticleTypes.SNOWFLAKE, 10);
       }),
       // "This is the skill that allows the Mage ID to kill blood skeletons... affects all
-      // undead." TODO: no Blood Skeleton equivalent mob exists, just hits hard for now
-      CompanionAbility.gated("Purify", 40, Form.NAUTILUS_ROD, 8, "Deals heavy holy damage, especially effective against the undead.", (companion, owner) -> {
+      // undead." No Blood Skeleton equivalent mob exists, so this instakills any vanilla
+      // EntityTypeTags.UNDEAD target instead -> the closest real equivalent to "affects all undead"
+      CompanionAbility.gated("Purify", 40, Form.NAUTILUS_ROD, 8, "Deals heavy holy damage -- an instant kill against the undead.", (companion, owner) -> {
         LivingEntity target = findNearestTarget(companion, owner, SPELL_RADIUS);
         if (target == null) {
           return;
         }
 
-        target.hurt(companion.damageSources().magic(), (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * 2.0F);
+        if (target.getType().is(EntityTypeTags.UNDEAD)) {
+          target.hurt(companion.damageSources().magic(), Float.MAX_VALUE);
+        } else {
+          target.hurt(companion.damageSources().magic(), (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * 2.0F);
+        }
         spawnAbilityParticles(target, ParticleTypes.END_ROD, 14);
       }),
       // "Summons three small laser-cannons that shoot at enemies for decent damage."
@@ -178,10 +184,10 @@ public class MageSummon extends AbstractFlyingCompanion {
         }
         spawnAbilityParticles(companion, ParticleTypes.EXPLOSION, 6);
       }),
-      // "Blocks one enemy attack completely." -> proxied as Absorption hearts, not a literal
-      // one-hit block
-      CompanionAbility.gated("Shield", 20, Form.CRYSTAL_ROD, 10, "Blocks incoming damage completely for a short time.", (companion, owner) -> {
-        owner.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, 200, 1));
+      // "Blocks one enemy attack completely." -> a real one-hit block now (LivingEntityShieldMixin),
+      // not a timed Absorption proxy
+      CompanionAbility.gated("Shield", 20, Form.CRYSTAL_ROD, 10, "Blocks Hector's next incoming attack completely.", (companion, owner) -> {
+        companion.armOwnerShield();
         spawnAbilityParticles(owner, ParticleTypes.END_ROD, 10);
       }),
       // "Summons a meteor from the sky to crash down on an enemy."

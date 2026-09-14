@@ -104,17 +104,19 @@ public class BirdSummon extends AbstractFlyingCompanion {
       }),
       // "Trades own life for a massive explosion that completely wipes out all enemies in
       // the vicinity." -> "the only attack besides Purify that can kill Isaac's Abel," and
-      // it also kills the Phoenix using it
+      // it also kills the Phoenix using it: a real self-sacrifice (forced into wisp state),
+      // not just incidental splash damage from its own blast
       CompanionAbility.gated("Big Bang", 60, Form.PHOENIX, 8, "Trades its own life for a massive explosion that wipes out every enemy nearby.", (companion, owner) -> {
         AABB area = companion.getBoundingBox().inflate(4.0);
         float damage = (float) companion.getAttributeValue(Attributes.ATTACK_DAMAGE) * 2.0F;
 
         for (LivingEntity target : companion.level().getEntitiesOfClass(LivingEntity.class, area,
-            e -> e != owner && e.isAlive())) {
-          target.hurt(companion.damageSources().mobAttack(companion), damage); // includes the companion itself
+            e -> e != companion && e != owner && e.isAlive())) {
+          target.hurt(companion.damageSources().mobAttack(companion), damage);
         }
 
         spawnAbilityParticles(companion, ParticleTypes.FLAME, 16);
+        companion.die(companion.damageSources().generic()); // "kills the Phoenix using it"
       }),
       // "Smashes into foes with its flaming body, burning them to a crisp."
       CompanionAbility.gated("Fire Bird", 25, Form.PHOENIX, 8, "Smashes into foes with its flaming body, burning them to a crisp.", (companion, owner) -> {

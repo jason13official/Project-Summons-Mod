@@ -8,6 +8,7 @@ import io.github.jason13official.summons.impl.common.evolution.EvolutionForm;
 import io.github.jason13official.summons.impl.common.evolution.EvolutionThreshold;
 import java.util.List;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
@@ -20,6 +21,7 @@ import net.minecraft.world.phys.AABB;
 public class PumpkinSummon extends AbstractGroundCompanion {
 
   private static final double POSE_RADIUS = 2.0;
+  private static final float POSE_VULNERABILITY_MULTIPLIER = 2.0F;
 
   // wiki: STR +10/CON +4/LCK +5 initial, +60/+18/+50 growth; biggest owner buff of any type
   private static final OwnerStatBonusKit OWNER_STAT_BONUS = new OwnerStatBonusKit(10, 60, 4, 18, 5, 50);
@@ -53,6 +55,16 @@ public class PumpkinSummon extends AbstractGroundCompanion {
   protected void registerGoals() {
     super.registerGoals();
     this.goalSelector.addGoal(0, new MeleeAttackGoal(this, 1.0, true));
+  }
+
+  /// "Pumpkin will be completely vulnerable while performing it" -> doubles incoming damage for Pose's busy window
+  @Override
+  public boolean hurt(DamageSource source, float amount) {
+    if (this.isAbilityBusy()) {
+      amount *= POSE_VULNERABILITY_MULTIPLIER;
+    }
+
+    return super.hurt(source, amount);
   }
 
   @Override

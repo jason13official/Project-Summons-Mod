@@ -94,6 +94,9 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
   private int chainArmedTicks;
   /// Guard field radius for DEFEND mode; shrinks per hit, regenerates over time.
   private float guardFieldRadius = GUARD_FIELD_MAX_RADIUS;
+  /// Mage's "Shield" ability: true once cast, until it blocks the owner's next hit; see CompanionShield/LivingEntityShieldMixin. Not synced -> purely
+  /// server-side gameplay state, nothing renders off it.
+  boolean ownerShieldArmed;
   private CrystalPoints crystals = CrystalPoints.ZERO;
   // comma-joined form ids ever reached; abilities stay learned once unlocked, even past
   // whatever form originally granted them (matches the wiki: evolving never revokes one)
@@ -119,6 +122,16 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
   /// protects an owner standing inside a DEFEND-mode companion's field; also shrinks it, same as a direct hit would
   public static boolean isProtectedByGuardField(LivingEntity owner) {
     return CompanionGuardField.isProtecting(owner);
+  }
+
+  /// Mage's "Shield" ability: arms a one-time block on this companion's owner's next incoming hit
+  public void armOwnerShield() {
+    CompanionShield.arm(this);
+  }
+
+  /// consumes a still-armed Shield near `owner`, if any; true means the incoming hit should be fully blocked. Called from LivingEntityShieldMixin.
+  public static boolean consumeOwnerShield(LivingEntity owner) {
+    return CompanionShield.consume(owner);
   }
 
   /// XP needed to advance from `level` to `level + 1`
