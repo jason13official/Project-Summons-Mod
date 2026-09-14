@@ -5,6 +5,10 @@ import com.mojang.math.Axis;
 import io.github.jason13official.summons.Summons;
 import io.github.jason13official.summons.impl.client.model.summon.PumpkinSummonModel;
 import io.github.jason13official.summons.impl.common.entity.AbstractCompanion;
+import io.github.jason13official.summons.impl.common.entity.ground.PumpkinSummon;
+import io.github.jason13official.summons.impl.common.entity.ground.PumpkinSummon.Form;
+import java.util.HashMap;
+import java.util.Map;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRenderer;
@@ -14,7 +18,21 @@ import net.minecraft.resources.ResourceLocation;
 
 public class PumpkinSummonRenderer extends EntityRenderer<AbstractCompanion> {
 
-  public static final ResourceLocation TEXTURE_LOCATION = Summons.identifier("textures/entity/summon/pumpkin.png");
+  public static final ResourceLocation DEFAULT_TEXTURE_LOCATION = Summons.identifier("textures/entity/summon/pumpkin.png");
+
+  private static final Map<Form, ResourceLocation> TEXTURE_BY_FORM = new HashMap<>();
+
+  static {
+    TEXTURE_BY_FORM.put(Form.PUMPKIN, DEFAULT_TEXTURE_LOCATION);
+    TEXTURE_BY_FORM.put(Form.QUEEN, Summons.identifier("textures/entity/summon/pumpkin/queen.png"));
+    TEXTURE_BY_FORM.put(Form.BLOODY, Summons.identifier("textures/entity/summon/pumpkin/bloody.png"));
+    TEXTURE_BY_FORM.put(Form.TINY_KING, Summons.identifier("textures/entity/summon/pumpkin/tiny_king.png"));
+    TEXTURE_BY_FORM.put(Form.CLOWN_NOSE, Summons.identifier("textures/entity/summon/pumpkin/clown_nose.png"));
+    TEXTURE_BY_FORM.put(Form.NEW_DELI, Summons.identifier("textures/entity/summon/pumpkin/new_deli.png"));
+    TEXTURE_BY_FORM.put(Form.CURSED_PUMPKIN, Summons.identifier("textures/entity/summon/pumpkin/cursed_pumpkin.png"));
+    TEXTURE_BY_FORM.put(Form.WHIMSICAL_ANGEL, Summons.identifier("textures/entity/summon/pumpkin/whimsical_angel.png"));
+    TEXTURE_BY_FORM.put(Form.GENIUS_CHEF, Summons.identifier("textures/entity/summon/pumpkin/genius_chef.png"));
+  }
 
   private final PumpkinSummonModel model;
 
@@ -26,7 +44,12 @@ public class PumpkinSummonRenderer extends EntityRenderer<AbstractCompanion> {
   @Override
   public ResourceLocation getTextureLocation(AbstractCompanion companionCube) {
 
-    return TEXTURE_LOCATION;
+    if (!(companionCube instanceof PumpkinSummon pumpkin) || !(pumpkin.getEvolutionForm() instanceof Form pumpkinForm)) {
+
+      return DEFAULT_TEXTURE_LOCATION;
+    }
+
+    return TEXTURE_BY_FORM.get(pumpkinForm);
   }
 
   @Override
@@ -46,7 +69,7 @@ public class PumpkinSummonRenderer extends EntityRenderer<AbstractCompanion> {
 
     this.model.setupAnim(cube, cube.walkAnimation.position(partialTick), Math.min(cube.walkAnimation.speed(partialTick), 1.0F),
         cube.tickCount + partialTick, 0.0F, 0.0F);
-    this.model.renderToBuffer(poseStack, bufferSource.getBuffer(RenderType.entityCutout(TEXTURE_LOCATION)), packedLight, OverlayTexture.NO_OVERLAY);
+    this.model.renderToBuffer(poseStack, bufferSource.getBuffer(RenderType.entityCutout(getTextureLocation(cube))), packedLight, OverlayTexture.NO_OVERLAY);
     poseStack.popPose();
 
     super.render(cube, entityYaw, partialTick, poseStack, bufferSource, packedLight);

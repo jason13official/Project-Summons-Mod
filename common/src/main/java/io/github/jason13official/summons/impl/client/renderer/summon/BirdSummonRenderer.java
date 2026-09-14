@@ -5,6 +5,10 @@ import com.mojang.math.Axis;
 import io.github.jason13official.summons.Summons;
 import io.github.jason13official.summons.impl.client.model.summon.BirdSummonModel;
 import io.github.jason13official.summons.impl.common.entity.AbstractCompanion;
+import io.github.jason13official.summons.impl.common.entity.flying.BirdSummon;
+import io.github.jason13official.summons.impl.common.entity.flying.BirdSummon.Form;
+import java.util.HashMap;
+import java.util.Map;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRenderer;
@@ -14,7 +18,22 @@ import net.minecraft.resources.ResourceLocation;
 
 public class BirdSummonRenderer extends EntityRenderer<AbstractCompanion> {
 
-  public static final ResourceLocation TEXTURE_LOCATION = Summons.identifier("textures/entity/summon/bird.png");
+  public static final ResourceLocation DEFAULT_TEXTURE_LOCATION = Summons.identifier("textures/entity/summon/bird.png");
+
+  private static final Map<Form, ResourceLocation> TEXTURE_BY_FORM = new HashMap<>();
+
+  static {
+    TEXTURE_BY_FORM.put(Form.CROW, DEFAULT_TEXTURE_LOCATION);
+    TEXTURE_BY_FORM.put(Form.GOLDFINCH, Summons.identifier("textures/entity/summon/bird/goldfinch.png"));
+    TEXTURE_BY_FORM.put(Form.SKULL_WING, Summons.identifier("textures/entity/summon/bird/skull_wing.png"));
+    TEXTURE_BY_FORM.put(Form.KHAOS, Summons.identifier("textures/entity/summon/bird/khaos.png"));
+    TEXTURE_BY_FORM.put(Form.PHOENIX, Summons.identifier("textures/entity/summon/bird/phoenix.png"));
+    TEXTURE_BY_FORM.put(Form.WINGOSAURUS, Summons.identifier("textures/entity/summon/bird/wingosaurus.png"));
+    TEXTURE_BY_FORM.put(Form.BLAGSDEATH, Summons.identifier("textures/entity/summon/bird/blagsdeath.png"));
+    TEXTURE_BY_FORM.put(Form.GARGOYLE, Summons.identifier("textures/entity/summon/bird/gargoyle.png"));
+    TEXTURE_BY_FORM.put(Form.INDIGO, Summons.identifier("textures/entity/summon/bird/indigo.png"));
+    TEXTURE_BY_FORM.put(Form.CRIMSON, Summons.identifier("textures/entity/summon/bird/crimson.png"));
+  }
 
   private final BirdSummonModel model;
 
@@ -26,7 +45,12 @@ public class BirdSummonRenderer extends EntityRenderer<AbstractCompanion> {
   @Override
   public ResourceLocation getTextureLocation(AbstractCompanion companionCube) {
 
-    return TEXTURE_LOCATION;
+    if (!(companionCube instanceof BirdSummon bird) || !(bird.getEvolutionForm() instanceof Form birdForm)) {
+
+      return DEFAULT_TEXTURE_LOCATION;
+    }
+
+    return TEXTURE_BY_FORM.get(birdForm);
   }
 
   @Override
@@ -46,7 +70,7 @@ public class BirdSummonRenderer extends EntityRenderer<AbstractCompanion> {
 
     this.model.setupAnim(cube, cube.walkAnimation.position(partialTick), Math.min(cube.walkAnimation.speed(partialTick), 1.0F),
         cube.tickCount + partialTick, 0.0F, 0.0F);
-    this.model.renderToBuffer(poseStack, bufferSource.getBuffer(RenderType.entityCutout(TEXTURE_LOCATION)), packedLight, OverlayTexture.NO_OVERLAY);
+    this.model.renderToBuffer(poseStack, bufferSource.getBuffer(RenderType.entityCutout(getTextureLocation(cube))), packedLight, OverlayTexture.NO_OVERLAY);
     poseStack.popPose();
 
     super.render(cube, entityYaw, partialTick, poseStack, bufferSource, packedLight);

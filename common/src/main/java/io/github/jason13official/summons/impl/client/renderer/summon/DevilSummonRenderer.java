@@ -6,6 +6,10 @@ import io.github.jason13official.summons.Summons;
 import io.github.jason13official.summons.impl.client.model.summon.DevilSummonModel;
 import io.github.jason13official.summons.impl.client.renderer.GuardFieldRenderer;
 import io.github.jason13official.summons.impl.common.entity.AbstractCompanion;
+import io.github.jason13official.summons.impl.common.entity.flying.DevilSummon;
+import io.github.jason13official.summons.impl.common.entity.flying.DevilSummon.Form;
+import java.util.HashMap;
+import java.util.Map;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRenderer;
@@ -15,7 +19,15 @@ import net.minecraft.resources.ResourceLocation;
 
 public class DevilSummonRenderer extends EntityRenderer<AbstractCompanion> {
 
-  public static final ResourceLocation TEXTURE_LOCATION = Summons.identifier("textures/entity/summon/devil.png");
+  public static final ResourceLocation DEFAULT_TEXTURE_LOCATION = Summons.identifier("textures/entity/summon/devil.png");
+
+  private static final Map<Form, ResourceLocation> TEXTURE_BY_FORM = new HashMap<>();
+
+  static {
+    TEXTURE_BY_FORM.put(Form.GALE, DEFAULT_TEXTURE_LOCATION);
+    TEXTURE_BY_FORM.put(Form.BROW, Summons.identifier("textures/entity/summon/devil/brow.png"));
+    TEXTURE_BY_FORM.put(Form.THE_END, Summons.identifier("textures/entity/summon/devil/the_end.png"));
+  }
 
   private final DevilSummonModel model;
 
@@ -27,7 +39,12 @@ public class DevilSummonRenderer extends EntityRenderer<AbstractCompanion> {
   @Override
   public ResourceLocation getTextureLocation(AbstractCompanion companionCube) {
 
-    return TEXTURE_LOCATION;
+    if (!(companionCube instanceof DevilSummon devil) || !(devil.getEvolutionForm() instanceof Form devilForm)) {
+
+      return DEFAULT_TEXTURE_LOCATION;
+    }
+
+    return TEXTURE_BY_FORM.get(devilForm);
   }
 
   @Override
@@ -47,7 +64,7 @@ public class DevilSummonRenderer extends EntityRenderer<AbstractCompanion> {
 
     this.model.setupAnim(cube, cube.walkAnimation.position(partialTick), Math.min(cube.walkAnimation.speed(partialTick), 1.0F),
         cube.tickCount + partialTick, 0.0F, 0.0F);
-    this.model.renderToBuffer(poseStack, bufferSource.getBuffer(RenderType.entityCutout(TEXTURE_LOCATION)), packedLight, OverlayTexture.NO_OVERLAY);
+    this.model.renderToBuffer(poseStack, bufferSource.getBuffer(RenderType.entityCutout(getTextureLocation(cube))), packedLight, OverlayTexture.NO_OVERLAY);
     poseStack.popPose();
 
     GuardFieldRenderer.render(cube, poseStack, bufferSource);

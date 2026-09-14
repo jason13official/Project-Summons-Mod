@@ -6,6 +6,10 @@ import io.github.jason13official.summons.Summons;
 import io.github.jason13official.summons.impl.client.model.summon.BattleSummonModel;
 import io.github.jason13official.summons.impl.client.renderer.GuardFieldRenderer;
 import io.github.jason13official.summons.impl.common.entity.AbstractCompanion;
+import io.github.jason13official.summons.impl.common.entity.ground.BattleSummon;
+import io.github.jason13official.summons.impl.common.entity.ground.BattleSummon.Form;
+import java.util.HashMap;
+import java.util.Map;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRenderer;
@@ -15,7 +19,21 @@ import net.minecraft.resources.ResourceLocation;
 
 public class BattleSummonRenderer extends EntityRenderer<AbstractCompanion> {
 
-  public static final ResourceLocation TEXTURE_LOCATION = Summons.identifier("textures/entity/summon/battle.png");
+  public static final ResourceLocation DEFAULT_TEXTURE_LOCATION = Summons.identifier("textures/entity/summon/battle.png");
+
+  private static final Map<Form, ResourceLocation> TEXTURE_BY_FORM = new HashMap<>();
+
+  static {
+    TEXTURE_BY_FORM.put(Form.MAGMARD, DEFAULT_TEXTURE_LOCATION);
+    TEXTURE_BY_FORM.put(Form.SPEED_MAIL, Summons.identifier("textures/entity/summon/battle/speed_mail.png"));
+    TEXTURE_BY_FORM.put(Form.GOLEM, Summons.identifier("textures/entity/summon/battle/golem.png"));
+    TEXTURE_BY_FORM.put(Form.IYTEI, Summons.identifier("textures/entity/summon/battle/iytei.png"));
+    TEXTURE_BY_FORM.put(Form.JUGGERNAUT, Summons.identifier("textures/entity/summon/battle/juggernaut.png"));
+    TEXTURE_BY_FORM.put(Form.RASETZ, Summons.identifier("textures/entity/summon/battle/rasetz.png"));
+    TEXTURE_BY_FORM.put(Form.CORPSEY, Summons.identifier("textures/entity/summon/battle/corpsey.png"));
+    TEXTURE_BY_FORM.put(Form.IRONSIDE, Summons.identifier("textures/entity/summon/battle/ironside.png"));
+    TEXTURE_BY_FORM.put(Form.LIQUID_GOLEM, Summons.identifier("textures/entity/summon/battle/liquid_golem.png"));
+  }
 
   private final BattleSummonModel model;
 
@@ -27,7 +45,12 @@ public class BattleSummonRenderer extends EntityRenderer<AbstractCompanion> {
   @Override
   public ResourceLocation getTextureLocation(AbstractCompanion companionCube) {
 
-    return TEXTURE_LOCATION;
+    if (!(companionCube instanceof BattleSummon battle) || !(battle.getEvolutionForm() instanceof Form battleForm)) {
+
+      return DEFAULT_TEXTURE_LOCATION;
+    }
+
+    return TEXTURE_BY_FORM.get(battleForm);
   }
 
   @Override
@@ -47,7 +70,7 @@ public class BattleSummonRenderer extends EntityRenderer<AbstractCompanion> {
 
     this.model.setupAnim(cube, cube.walkAnimation.position(partialTick), Math.min(cube.walkAnimation.speed(partialTick), 1.0F),
         cube.tickCount + partialTick, 0.0F, 0.0F);
-    this.model.renderToBuffer(poseStack, bufferSource.getBuffer(RenderType.entityCutout(TEXTURE_LOCATION)), packedLight, OverlayTexture.NO_OVERLAY);
+    this.model.renderToBuffer(poseStack, bufferSource.getBuffer(RenderType.entityCutout(getTextureLocation(cube))), packedLight, OverlayTexture.NO_OVERLAY);
     poseStack.popPose();
 
     GuardFieldRenderer.render(cube, poseStack, bufferSource);
