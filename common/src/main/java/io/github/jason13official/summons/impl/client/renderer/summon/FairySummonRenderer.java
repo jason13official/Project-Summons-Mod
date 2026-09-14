@@ -27,7 +27,6 @@ public class FairySummonRenderer extends EntityRenderer<AbstractCompanion> {
     TEXTURE_BY_FORM.put(Form.LEAFFLE, Summons.identifier("textures/entity/summon/fairy/leaffle.png"));
     TEXTURE_BY_FORM.put(Form.HERBEST, Summons.identifier("textures/entity/summon/fairy/herbest.png"));
 
-    // TODO below need actual textures
     TEXTURE_BY_FORM.put(Form.HONEY_BEE, Summons.identifier("textures/entity/summon/fairy/honey_bee.png"));
     TEXTURE_BY_FORM.put(Form.KILLER_BEE, Summons.identifier("textures/entity/summon/fairy/killer_bee.png"));
     TEXTURE_BY_FORM.put(Form.HORNET, Summons.identifier("textures/entity/summon/fairy/hornet.png"));
