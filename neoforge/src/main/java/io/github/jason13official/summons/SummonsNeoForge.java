@@ -6,6 +6,8 @@ import io.github.jason13official.summons.impl.common.network.CompanionStateSyncP
 import io.github.jason13official.summons.impl.common.network.SummonsNetworking;
 import io.github.jason13official.summons.impl.common.network.SummonsNetworking.CompanionInputPayload;
 import io.github.jason13official.summons.impl.common.network.SummonsNetworking.CompanionSetFormPayload;
+import io.github.jason13official.summons.impl.common.network.SummonsNetworking.ForgeShardPayload;
+import io.github.jason13official.summons.impl.common.network.SummonsNetworking.OpenShardForgeScreenPayload;
 import io.github.jason13official.summons.impl.common.gate.SummonGateManager;
 import io.github.jason13official.summons.impl.common.party.CompanionPartyManager;
 import io.github.jason13official.summons.impl.common.registry.ModBlocks;
@@ -96,12 +98,19 @@ public class SummonsNeoForge {
           SummonsNetworking.handleSetForm(player, payload.formId());
         }
       });
+      registrar.playToServer(ForgeShardPayload.TYPE, ForgeShardPayload.STREAM_CODEC, (payload, context) -> {
+        if (context.player() instanceof ServerPlayer player) {
+          SummonsNetworking.handleForgeShard(player, payload.inventorySlot());
+        }
+      });
       registrar.playToClient(CompanionProgressSyncPayload.TYPE, CompanionProgressSyncPayload.STREAM_CODEC,
           (payload, context) -> SummonsNetworking.handleProgressSync(payload));
       registrar.playToClient(CompanionStateSyncPayload.TYPE, CompanionStateSyncPayload.STREAM_CODEC,
           (payload, context) -> SummonsNetworking.handleStateSync(payload));
       registrar.playToClient(CompanionIdentitySyncPayload.TYPE, CompanionIdentitySyncPayload.STREAM_CODEC,
           (payload, context) -> SummonsNetworking.handleIdentitySync(payload));
+      registrar.playToClient(OpenShardForgeScreenPayload.TYPE, OpenShardForgeScreenPayload.STREAM_CODEC,
+          (payload, context) -> SummonsNetworking.handleOpenShardForge());
     });
 
     if (FMLLoader.getDist() == Dist.CLIENT) {

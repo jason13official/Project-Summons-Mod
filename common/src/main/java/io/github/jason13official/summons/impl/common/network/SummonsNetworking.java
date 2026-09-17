@@ -1,8 +1,11 @@
 package io.github.jason13official.summons.impl.common.network;
 
 import io.github.jason13official.summons.Summons;
+import io.github.jason13official.summons.impl.client.gui.screen.ShardForgeScreen;
 import io.github.jason13official.summons.impl.common.entity.AbstractCompanion;
+import io.github.jason13official.summons.impl.common.item.DevilShardItem;
 import io.github.jason13official.summons.impl.common.party.CompanionPartyManager;
+import io.github.jason13official.summons.impl.common.party.CompanionShopRoster;
 import java.util.function.Consumer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.FriendlyByteBuf;
@@ -11,6 +14,7 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.item.ItemStack;
 
 public class SummonsNetworking {
 
@@ -38,6 +42,30 @@ public class SummonsNetworking {
       player.displayClientMessage(Component.literal(
           active.getCompanionType().name() + "-Type set to " + active.getEvolutionForm().displayName()), false);
     }
+  }
+
+  /// ShardForgeScreen "forge" button -> consumes one Devil Shard from the given inventory slot and parks a new companion entry in the player's [CompanionShopRoster]. Re-validates the slot
+  /// server-side rather than trusting the client's own read of its inventory.
+  public static void handleForgeShard(ServerPlayer player, int inventorySlot) {
+    ItemStack stack = player.getInventory().getItem(inventorySlot);
+    var type = DevilShardItem.type(stack);
+    if (type.isEmpty()) {
+      return;
+    }
+
+    int parentLevel = DevilShardItem.parentLevel(stack);
+    int generation = DevilShardItem.generation(stack);
+    int seededLevel = Math.max(1, Math.round(parentLevel * 0.1F));
+
+    stack.shrink(1);
+    CompanionShopRoster.of(player).add(type.get(), seededLevel, generation);
+    player.displayClientMessage(Component.literal(
+        "Forged a new level-" + seededLevel + " " + type.get().name() + "-Type (Gen." + generation + ") - see it at the shop"), false);
+  }
+
+  /// ShardMerchant#mobInteract -> client opens the Forge screen
+  public static void handleOpenShardForge() {
+    Minecraft.getInstance().setScreen(new ShardForgeScreen());
   }
 
   /// client-side receivers for the three companion sync payloads; each applied to whichever companion entity matches the id in the client's own level (the normal tracked-entity mirror), if any
@@ -111,6 +139,38 @@ public class SummonsNetworking {
     @Override
     public Type<? extends CustomPacketPayload> type() {
 
+      return TYPE;
+    }
+  }
+
+  /// @see io.github.jason13official.summons.impl.client.gui.screen.ShardForgeScreen
+  public record ForgeShardPayload(int inventorySlot) implements CustomPacketPayload {
+
+    public static final CustomPacketPayload.Type<ForgeShardPayload> TYPE =
+        new CustomPacketPayload.Type<>(Summons.identifier("forge_shard"));
+
+    public static final StreamCodec<FriendlyByteBuf, ForgeShardPayload> STREAM_CODEC = CustomPacketPayload.codec(
+        (payload, buf) -> buf.writeVarInt(payload.inventorySlot()),
+        buf -> new ForgeShardPayload(buf.readVarInt()));
+
+    @Override
+    public Type<? extends CustomPacketPayload> type() {
+      return TYPE;
+    }
+  }
+
+  /// server -> the interacting player only; @see io.github.jason13official.summons.impl.common.entity.misc.ShardMerchant
+  public record OpenShardForgeScreenPayload() implements CustomPacketPayload {
+
+    public static final CustomPacketPayload.Type<OpenShardForgeScreenPayload> TYPE =
+        new CustomPacketPayload.Type<>(Summons.identifier("open_shard_forge_screen"));
+
+    public static final StreamCodec<FriendlyByteBuf, OpenShardForgeScreenPayload> STREAM_CODEC = CustomPacketPayload.codec(
+        (payload, buf) -> { },
+        buf -> new OpenShardForgeScreenPayload());
+
+    @Override
+    public Type<? extends CustomPacketPayload> type() {
       return TYPE;
     }
   }

@@ -8,4 +8,7 @@ public interface INetworkHelper {
 
   /// @see io.github.jason13official.summons.impl.client.gui.screen.EvolutionChartScreen
   void sendDebugSetForm(String formId);
+
+  /// @see io.github.jason13official.summons.impl.client.gui.screen.ShardForgeScreen
+  void sendForgeShard(int inventorySlot);
 }

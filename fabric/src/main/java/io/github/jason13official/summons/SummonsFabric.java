@@ -6,6 +6,8 @@ import io.github.jason13official.summons.impl.common.network.CompanionStateSyncP
 import io.github.jason13official.summons.impl.common.network.SummonsNetworking;
 import io.github.jason13official.summons.impl.common.network.SummonsNetworking.CompanionInputPayload;
 import io.github.jason13official.summons.impl.common.network.SummonsNetworking.CompanionSetFormPayload;
+import io.github.jason13official.summons.impl.common.network.SummonsNetworking.ForgeShardPayload;
+import io.github.jason13official.summons.impl.common.network.SummonsNetworking.OpenShardForgeScreenPayload;
 import io.github.jason13official.summons.impl.common.gate.SummonGateManager;
 import io.github.jason13official.summons.impl.common.party.CompanionPartyManager;
 import io.github.jason13official.summons.impl.common.registry.ModBlocks;
@@ -66,9 +68,14 @@ public class SummonsFabric implements ModInitializer {
     ServerPlayNetworking.registerGlobalReceiver(CompanionSetFormPayload.TYPE, (payload, context) ->
         context.server().execute(() -> SummonsNetworking.handleSetForm(context.player(), payload.formId())));
 
+    PayloadTypeRegistry.playC2S().register(ForgeShardPayload.TYPE, ForgeShardPayload.STREAM_CODEC);
+    ServerPlayNetworking.registerGlobalReceiver(ForgeShardPayload.TYPE, (payload, context) ->
+        context.server().execute(() -> SummonsNetworking.handleForgeShard(context.player(), payload.inventorySlot())));
+
     PayloadTypeRegistry.playS2C().register(CompanionProgressSyncPayload.TYPE, CompanionProgressSyncPayload.STREAM_CODEC);
     PayloadTypeRegistry.playS2C().register(CompanionStateSyncPayload.TYPE, CompanionStateSyncPayload.STREAM_CODEC);
     PayloadTypeRegistry.playS2C().register(CompanionIdentitySyncPayload.TYPE, CompanionIdentitySyncPayload.STREAM_CODEC);
+    PayloadTypeRegistry.playS2C().register(OpenShardForgeScreenPayload.TYPE, OpenShardForgeScreenPayload.STREAM_CODEC);
 
     CommandRegistrationCallback.EVENT.register(ModCommands::register);
 

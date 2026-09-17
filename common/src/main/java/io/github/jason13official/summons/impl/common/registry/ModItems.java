@@ -21,6 +21,7 @@ public class ModItems {
   public static Item MAGE_SPAWN_EGG;
   public static Item DEVIL_SPAWN_EGG;
   public static Item PUMPKIN_SPAWN_EGG;
+  public static Item SHARD_MERCHANT_SPAWN_EGG;
 
   public static Item EVO_CRYSTAL_RED;
   public static Item EVO_CRYSTAL_BLUE;
@@ -49,6 +50,7 @@ public class ModItems {
     MAGE_SPAWN_EGG = Services.PLATFORM.createSpawnEggItem(() -> ModEntities.MAGE, 0x5A2A8C, 0xE0C040, new Properties());
     DEVIL_SPAWN_EGG = Services.PLATFORM.createSpawnEggItem(() -> ModEntities.DEVIL, 0x8B0000, 0x1A1A1A, new Properties());
     PUMPKIN_SPAWN_EGG = Services.PLATFORM.createSpawnEggItem(() -> ModEntities.PUMPKIN, 0xE8790C, 0x3A7D22, new Properties());
+    SHARD_MERCHANT_SPAWN_EGG = Services.PLATFORM.createSpawnEggItem(() -> ModEntities.SHARD_MERCHANT, 0x4A2C1A, 0x8B5A2B, new Properties());
 
     EVO_CRYSTAL_RED = new EvoCrystalItem(EvoCrystalColor.RED, new Properties());
     EVO_CRYSTAL_BLUE = new EvoCrystalItem(EvoCrystalColor.BLUE, new Properties());
@@ -73,6 +75,7 @@ public class ModItems {
     consumer.accept(MAGE_SPAWN_EGG, Summons.identifier("mage_spawn_egg"));
     consumer.accept(DEVIL_SPAWN_EGG, Summons.identifier("devil_spawn_egg"));
     consumer.accept(PUMPKIN_SPAWN_EGG, Summons.identifier("pumpkin_spawn_egg"));
+    consumer.accept(SHARD_MERCHANT_SPAWN_EGG, Summons.identifier("shard_merchant_spawn_egg"));
 
     consumer.accept(EVO_CRYSTAL_RED, Summons.identifier("evo_crystal_red"));
     consumer.accept(EVO_CRYSTAL_BLUE, Summons.identifier("evo_crystal_blue"));

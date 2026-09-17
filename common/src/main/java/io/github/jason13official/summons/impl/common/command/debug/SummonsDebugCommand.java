@@ -14,6 +14,7 @@ import io.github.jason13official.summons.impl.common.evolution.EvolutionForm;
 import io.github.jason13official.summons.impl.common.gate.SummonGateManager;
 import io.github.jason13official.summons.impl.common.item.DevilShardItem;
 import io.github.jason13official.summons.impl.common.party.CompanionPartyManager;
+import io.github.jason13official.summons.impl.common.party.CompanionShopRoster;
 import io.github.jason13official.summons.impl.common.party.CompanionType;
 import java.util.concurrent.CompletableFuture;
 import net.minecraft.commands.CommandSourceStack;
@@ -25,7 +26,8 @@ import net.minecraft.world.item.ItemStack;
 /// `/summons debug unlockall`; unlocks every [CompanionType] without a real Devil Shard item. `/summons debug addxp <amount>`; grants XP without dozens of manual ability uses.
 /// `/summons debug setform <form>`; jumps the active companion straight to any form in its evolution chart, same permission-2 gate as the rest of this command (see also the Evolution Chart
 /// screen's own creative-only "click a form" path in `SummonsNetworking#handleSetForm`). `/summons debug devilshard`; forces a Devil Shard drop for the active companion instead of waiting on
-/// the 3% combat-kill chance (see LivingEntityDevilShardDropMixin).
+/// the 3% combat-kill chance (see LivingEntityDevilShardDropMixin). `/summons debug shoproster`; lists the player's forged-but-unplaced companions parked at the shop ([CompanionShopRoster]) -
+/// no listing UI exists yet (see ShardForgeScreen's own note), so this is currently the only way to see what forging actually produced.
 public class SummonsDebugCommand {
 
   public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
@@ -70,6 +72,11 @@ public class SummonsDebugCommand {
         Commands.literal("devilshard")
             .executes(SummonsDebugCommand::devilShard);
     debug.then(devilShard);
+
+    LiteralArgumentBuilder<CommandSourceStack> shopRoster =
+        Commands.literal("shoproster")
+            .executes(SummonsDebugCommand::shopRoster);
+    debug.then(shopRoster);
     root.then(debug);
     // endregion debug
 
@@ -165,6 +172,24 @@ public class SummonsDebugCommand {
     ctx.getSource().sendSuccess(() -> Component.literal(
         "Gave a " + active.getCompanionType().name() + "-Type Devil Shard (Lv." + active.getLevel() + ", Gen." + (active.getGeneration() + 1) + ")"), true);
     return 1;
+  }
+
+  /// `/summons debug shoproster` -> lists every entry in the player's CompanionShopRoster, since no in-game listing UI exists yet
+  private static int shopRoster(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+
+    ServerPlayer player = ctx.getSource().getPlayerOrException();
+    var entries = CompanionShopRoster.of(player).entries();
+
+    if (entries.isEmpty()) {
+      ctx.getSource().sendSuccess(() -> Component.literal("Shop roster is empty"), false);
+      return 1;
+    }
+
+    for (CompanionShopRoster.Entry entry : entries) {
+      ctx.getSource().sendSuccess(() -> Component.literal(
+          entry.type().name() + "-Type, Lv." + entry.level() + ", Gen." + entry.generation() + " (id " + entry.id() + ")"), false);
+    }
+    return entries.size();
   }
 
   /// suggests every form id in the active companion's own chart; empty (not an error) if the source isn't a player or has no active companion

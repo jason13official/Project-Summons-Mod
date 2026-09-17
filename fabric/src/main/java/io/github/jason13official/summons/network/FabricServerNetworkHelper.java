@@ -15,4 +15,9 @@ public class FabricServerNetworkHelper implements IServerNetworkHelper {
       ServerPlayNetworking.send(player, payload);
     }
   }
+
+  @Override
+  public void sendToPlayer(ServerPlayer player, CustomPacketPayload payload) {
+    ServerPlayNetworking.send(player, payload);
+  }
 }

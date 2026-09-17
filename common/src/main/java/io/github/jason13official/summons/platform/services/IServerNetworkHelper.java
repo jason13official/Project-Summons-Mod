@@ -1,6 +1,7 @@
 package io.github.jason13official.summons.platform.services;
 
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 
 /// Server -> tracking-clients push; the mirror of INetworkHelper's client -> server send. A separate interface since the two run on different physical sides and use different loader APIs (Fabric's
@@ -8,4 +9,7 @@ import net.minecraft.world.entity.Entity;
 public interface IServerNetworkHelper {
 
   void sendToTrackingClients(Entity entity, CustomPacketPayload payload);
+
+  /// server -> one specific client, e.g. ShardMerchant#mobInteract triggering that player's own Forge screen
+  void sendToPlayer(ServerPlayer player, CustomPacketPayload payload);
 }

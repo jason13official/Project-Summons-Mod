@@ -7,6 +7,7 @@
   "item.summons.mage_spawn_egg": "Mage Spawn Egg",
   "item.summons.devil_spawn_egg": "Devil Spawn Egg",
   "item.summons.pumpkin_spawn_egg": "Pumpkin Spawn Egg",
+  "item.summons.shard_merchant_spawn_egg": "Shard Merchant Spawn Egg",
 
   "item.summons.evo_crystal_red": "Evo Crystal (Sword)",
   "item.summons.evo_crystal_blue": "Evo Crystal (Axe)",
@@ -48,5 +49,6 @@
   "entity.summons.bird": "Bird-Type",
   "entity.summons.mage": "Mage-Type",
   "entity.summons.devil": "Devil-Type",
-  "entity.summons.pumpkin": "Pumpkin-Type"
+  "entity.summons.pumpkin": "Pumpkin-Type",
+  "entity.summons.shard_merchant": "Shard Merchant"
 }

@@ -12,6 +12,7 @@ import io.github.jason13official.summons.impl.common.entity.ground.BattleSummon;
 import io.github.jason13official.summons.impl.common.entity.ground.CompanionCube;
 import io.github.jason13official.summons.impl.common.entity.ground.CompanionPrism;
 import io.github.jason13official.summons.impl.common.entity.ground.PumpkinSummon;
+import io.github.jason13official.summons.impl.common.entity.misc.ShardMerchant;
 import io.github.jason13official.summons.impl.common.party.CompanionType;
 import java.util.function.BiConsumer;
 import net.minecraft.resources.ResourceLocation;
@@ -32,6 +33,8 @@ public class ModEntities {
   public static EntityType<MageSummon> MAGE;
   public static EntityType<DevilSummon> DEVIL;
   public static EntityType<PumpkinSummon> PUMPKIN;
+
+  public static EntityType<ShardMerchant> SHARD_MERCHANT;
 
   public static void register(BiConsumer<EntityType<?>, ResourceLocation> consumer) {
 
@@ -54,6 +57,10 @@ public class ModEntities {
     // EntityType.class PUMPKIN_GOLEM sized
     PUMPKIN = EntityType.Builder.of(PumpkinSummon::new, MobCategory.MISC).sized(0.7F, 1.9F).clientTrackingRange(32).build("summons:pumpkin");
     consumer.accept(PUMPKIN, Summons.identifier("pumpkin"));
+
+    // EntityType.class VILLAGER sized
+    SHARD_MERCHANT = EntityType.Builder.of(ShardMerchant::new, MobCategory.MISC).sized(0.6F, 1.95F).clientTrackingRange(32).build("summons:shard_merchant");
+    consumer.accept(SHARD_MERCHANT, Summons.identifier("shard_merchant"));
   }
 
   public static void registerFlying(BiConsumer<EntityType<?>, ResourceLocation> consumer) {

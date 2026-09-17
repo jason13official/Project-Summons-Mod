@@ -5,6 +5,7 @@ import io.github.jason13official.summons.impl.common.network.CompanionIdentitySy
 import io.github.jason13official.summons.impl.common.network.CompanionProgressSyncPayload;
 import io.github.jason13official.summons.impl.common.network.CompanionStateSyncPayload;
 import io.github.jason13official.summons.impl.common.network.SummonsNetworking;
+import io.github.jason13official.summons.impl.common.network.SummonsNetworking.OpenShardForgeScreenPayload;
 import io.github.jason13official.summons.impl.common.registry.ModBlocks;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -49,6 +50,8 @@ public class SummonsClientFabric implements ClientModInitializer {
         context.client().execute(() -> SummonsNetworking.handleStateSync(payload)));
     ClientPlayNetworking.registerGlobalReceiver(CompanionIdentitySyncPayload.TYPE, (payload, context) ->
         context.client().execute(() -> SummonsNetworking.handleIdentitySync(payload)));
+    ClientPlayNetworking.registerGlobalReceiver(OpenShardForgeScreenPayload.TYPE, (payload, context) ->
+        context.client().execute(SummonsNetworking::handleOpenShardForge));
 
     BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.SUMMON_GATE, RenderType.translucent());
   }

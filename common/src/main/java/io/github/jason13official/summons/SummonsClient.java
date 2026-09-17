@@ -4,6 +4,7 @@ import io.github.jason13official.summons.impl.client.SummonsKeyBindings;
 import io.github.jason13official.summons.impl.client.gui.SummonsHUD;
 import io.github.jason13official.summons.impl.client.model.CompanionCubeModel;
 import io.github.jason13official.summons.impl.client.model.CompanionPrismModel;
+import io.github.jason13official.summons.impl.client.model.ShardMerchantModel;
 import io.github.jason13official.summons.impl.client.model.block.PetrifiedSummonBodyModel;
 import io.github.jason13official.summons.impl.client.model.block.PetrifiedSummonSwirlModel;
 import io.github.jason13official.summons.impl.client.model.summon.BattleSummonModel;
@@ -18,6 +19,7 @@ import io.github.jason13official.summons.impl.client.model.summon.MageSummonMode
 import io.github.jason13official.summons.impl.client.model.summon.PumpkinSummonModel;
 import io.github.jason13official.summons.impl.client.renderer.CompanionCubeRenderer;
 import io.github.jason13official.summons.impl.client.renderer.CompanionPrismRenderer;
+import io.github.jason13official.summons.impl.client.renderer.ShardMerchantRenderer;
 import io.github.jason13official.summons.impl.client.renderer.block.PetrifiedSummonBlockEntityRenderer;
 import io.github.jason13official.summons.impl.client.renderer.summon.BattleSummonRenderer;
 import io.github.jason13official.summons.impl.client.renderer.summon.BirdSummonRenderer;
@@ -71,6 +73,8 @@ public class SummonsClient {
     consumer.accept(ModEntities.MAGE, MageSummonRenderer::new);
     consumer.accept(ModEntities.DEVIL, DevilSummonRenderer::new);
     consumer.accept(ModEntities.PUMPKIN, PumpkinSummonRenderer::new);
+
+    consumer.accept(ModEntities.SHARD_MERCHANT, ShardMerchantRenderer::new);
   }
 
   public static void registerEntityModels(BiConsumer<ModelLayerLocation, Supplier<LayerDefinition>> consumer) {
@@ -91,6 +95,8 @@ public class SummonsClient {
 
     consumer.accept(PetrifiedSummonBodyModel.LAYER_LOCATION, PetrifiedSummonBodyModel::createBodyLayer);
     consumer.accept(PetrifiedSummonSwirlModel.LAYER_LOCATION, PetrifiedSummonSwirlModel::createBodyLayer);
+
+    consumer.accept(ShardMerchantModel.LAYER_LOCATION, ShardMerchantModel::createBodyLayer);
   }
 
   public static void registerBlockEntityRenderers(BiConsumer<BlockEntityType, BlockEntityRendererProvider> consumer) {
