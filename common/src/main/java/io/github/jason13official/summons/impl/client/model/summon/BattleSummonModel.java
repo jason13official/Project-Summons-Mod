@@ -27,6 +27,7 @@ public class BattleSummonModel extends HierarchicalModel<AbstractCompanion> {
   private final ModelPart arm1;
   private final ModelPart leg0;
   private final ModelPart leg1;
+  private final ModelPart crystal;
 
   public BattleSummonModel(ModelPart root) {
     this.root = root;
@@ -36,6 +37,7 @@ public class BattleSummonModel extends HierarchicalModel<AbstractCompanion> {
     this.arm1 = this.body.getChild("arm1");
     this.leg0 = this.body.getChild("leg0");
     this.leg1 = this.body.getChild("leg1");
+    this.crystal = this.body.getChild("crystal");
   }
 
   public static LayerDefinition createBodyLayer() {
@@ -45,7 +47,8 @@ public class BattleSummonModel extends HierarchicalModel<AbstractCompanion> {
     PartDefinition body = partdefinition.addOrReplaceChild("body", CubeListBuilder.create().texOffs(0, 40).addBox(-9.0F, -2.0F, -6.0F, 18.0F, 12.0F, 11.0F, new CubeDeformation(0.0F))
         .texOffs(0, 70).addBox(-4.5F, 10.0F, -3.0F, 9.0F, 5.0F, 6.0F, new CubeDeformation(0.5F)), PartPose.offset(0.0F, -7.0F, 0.0F));
 
-    PartDefinition head = body.addOrReplaceChild("head", CubeListBuilder.create().texOffs(0, 0).addBox(-4.0F, -12.0F, -5.5F, 8.0F, 10.0F, 8.0F, new CubeDeformation(0.0F))
+    // bumped up from 8x10x8 -> better head-to-body ratio for the more humanoid evolutions, while staying inside this canvas's free UV space (leg0 starts at x=37)
+    PartDefinition head = body.addOrReplaceChild("head", CubeListBuilder.create().texOffs(0, 0).addBox(-4.5F, -13.0F, -6.0F, 9.0F, 11.0F, 9.0F, new CubeDeformation(0.0F))
         .texOffs(24, 0).addBox(-1.0F, -5.0F, -7.5F, 2.0F, 4.0F, 2.0F, new CubeDeformation(0.0F)), PartPose.offset(0.0F, 0.0F, -2.0F));
 
     PartDefinition arm0 = body.addOrReplaceChild("arm0", CubeListBuilder.create().texOffs(60, 21).addBox(-13.0F, -2.5F, -3.0F, 4.0F, 30.0F, 6.0F, new CubeDeformation(0.0F)),
@@ -59,6 +62,18 @@ public class BattleSummonModel extends HierarchicalModel<AbstractCompanion> {
 
     PartDefinition leg1 = body.addOrReplaceChild("leg1", CubeListBuilder.create().texOffs(60, 0).mirror().addBox(-3.5F, -3.0F, -3.0F, 6.0F, 16.0F, 5.0F, new CubeDeformation(0.0F)).mirror(false),
         PartPose.offset(5.0F, 18.0F, 0.0F));
+
+    // universal Innocent Devil crystal cluster -- same pattern/angles as FairySummonModel's, on the chest; parked in this canvas's wide-open x[78,128) strip
+    PartDefinition crystal = body.addOrReplaceChild("crystal", CubeListBuilder.create(), PartPose.offset(0.0F, 2.0F, -4.0F));
+
+    PartDefinition crystal_r1 = crystal.addOrReplaceChild("crystal_r1", CubeListBuilder.create().texOffs(80, 0).addBox(-1.0F, -1.0F, -1.0F, 2.0F, 2.0F, 2.0F, new CubeDeformation(0.0F)),
+        PartPose.offsetAndRotation(-2.5F, 0.0F, 1.0F, -0.9599F, 0.5236F, -0.6109F));
+
+    PartDefinition crystal_r2 = crystal.addOrReplaceChild("crystal_r2", CubeListBuilder.create().texOffs(88, 0).addBox(-1.0F, -1.0F, -1.0F, 2.0F, 2.0F, 2.0F, new CubeDeformation(0.0F)),
+        PartPose.offsetAndRotation(2.5F, 0.0F, 1.0F, -0.9599F, 0.5236F, -0.6109F));
+
+    PartDefinition crystal_r3 = crystal.addOrReplaceChild("crystal_r3", CubeListBuilder.create().texOffs(80, 4).addBox(-3.0F, -4.0F, -1.0F, 6.0F, 6.0F, 8.0F, new CubeDeformation(0.0F)),
+        PartPose.offsetAndRotation(0.0F, 1.0F, 1.0F, -0.4363F, 0.0F, 0.0F));
 
     return LayerDefinition.create(meshdefinition, 128, 128);
   }

@@ -4,11 +4,15 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import io.github.jason13official.summons.Summons;
 import io.github.jason13official.summons.impl.client.model.summon.BirdSummonModel;
+import io.github.jason13official.summons.impl.client.model.summon.BirdSummonModelOrb;
+import io.github.jason13official.summons.impl.client.model.summon.BirdSummonModelSerpent;
+import io.github.jason13official.summons.impl.client.model.summon.BirdSummonModelWinged;
 import io.github.jason13official.summons.impl.common.entity.AbstractCompanion;
 import io.github.jason13official.summons.impl.common.entity.flying.BirdSummon;
 import io.github.jason13official.summons.impl.common.entity.flying.BirdSummon.Form;
 import java.util.HashMap;
 import java.util.Map;
+import net.minecraft.client.model.HierarchicalModel;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRenderer;
@@ -35,11 +39,17 @@ public class BirdSummonRenderer extends EntityRenderer<AbstractCompanion> {
     TEXTURE_BY_FORM.put(Form.CRIMSON, Summons.identifier("textures/entity/summon/bird/crimson.png"));
   }
 
-  private final BirdSummonModel model;
+  private final HierarchicalModel<AbstractCompanion> defaultModel;
+  private final HierarchicalModel<AbstractCompanion> wingedModel;
+  private final HierarchicalModel<AbstractCompanion> serpentModel;
+  private final HierarchicalModel<AbstractCompanion> orbModel;
 
   public BirdSummonRenderer(Context context) {
     super(context);
-    this.model = new BirdSummonModel(context.bakeLayer(BirdSummonModel.LAYER_LOCATION));
+    this.defaultModel = new BirdSummonModel(context.bakeLayer(BirdSummonModel.LAYER_LOCATION));
+    this.wingedModel = new BirdSummonModelWinged(context.bakeLayer(BirdSummonModelWinged.LAYER_LOCATION));
+    this.serpentModel = new BirdSummonModelSerpent(context.bakeLayer(BirdSummonModelSerpent.LAYER_LOCATION));
+    this.orbModel = new BirdSummonModelOrb(context.bakeLayer(BirdSummonModelOrb.LAYER_LOCATION));
   }
 
   @Override
@@ -51,6 +61,21 @@ public class BirdSummonRenderer extends EntityRenderer<AbstractCompanion> {
     }
 
     return TEXTURE_BY_FORM.get(birdForm);
+  }
+
+  private HierarchicalModel<AbstractCompanion> modelFor(AbstractCompanion companion) {
+
+    if (!(companion instanceof BirdSummon bird) || !(bird.getEvolutionForm() instanceof Form birdForm)) {
+
+      return this.defaultModel;
+    }
+
+    return switch (birdForm) {
+      case PHOENIX, WINGOSAURUS, CRIMSON, BLAGSDEATH, GARGOYLE -> this.wingedModel;
+      case INDIGO -> this.serpentModel;
+      case SKULL_WING, KHAOS -> this.orbModel;
+      default -> this.defaultModel;
+    };
   }
 
   @Override
@@ -68,9 +93,10 @@ public class BirdSummonRenderer extends EntityRenderer<AbstractCompanion> {
     poseStack.mulPose(Axis.YP.rotationDegrees(180.0F - entityYaw)); // BoatRenderer: face model in look direction
     poseStack.scale(-1.0F, -1.0F, 1.0F); // BoatRenderer: invert coordinate space
 
-    this.model.setupAnim(cube, cube.walkAnimation.position(partialTick), Math.min(cube.walkAnimation.speed(partialTick), 1.0F),
+    HierarchicalModel<AbstractCompanion> model = this.modelFor(cube);
+    model.setupAnim(cube, cube.walkAnimation.position(partialTick), Math.min(cube.walkAnimation.speed(partialTick), 1.0F),
         cube.tickCount + partialTick, 0.0F, 0.0F);
-    this.model.renderToBuffer(poseStack, bufferSource.getBuffer(RenderType.entityCutout(getTextureLocation(cube))), packedLight, OverlayTexture.NO_OVERLAY);
+    model.renderToBuffer(poseStack, bufferSource.getBuffer(RenderType.entityCutout(getTextureLocation(cube))), packedLight, OverlayTexture.NO_OVERLAY);
     poseStack.popPose();
 
     super.render(cube, entityYaw, partialTick, poseStack, bufferSource, packedLight);

@@ -24,8 +24,10 @@ public class PumpkinSummonModel extends HierarchicalModel<AbstractCompanion> {
   private final ModelPart piece1;
   private final ModelPart head;
   private final ModelPart pumpkin;
+  private final ModelPart accessory;
   private final ModelPart arm1;
   private final ModelPart arm2;
+  private final ModelPart crystal;
 
   public PumpkinSummonModel(ModelPart root) {
     this.root = root;
@@ -33,8 +35,10 @@ public class PumpkinSummonModel extends HierarchicalModel<AbstractCompanion> {
     this.piece1 = this.piece2.getChild("piece1");
     this.head = this.piece1.getChild("head");
     this.pumpkin = this.head.getChild("pumpkin");
+    this.accessory = this.head.getChild("accessory");
     this.arm1 = this.piece1.getChild("arm1");
     this.arm2 = this.piece1.getChild("arm2");
+    this.crystal = this.piece1.getChild("crystal");
   }
 
   public static LayerDefinition createBodyLayer() {
@@ -53,11 +57,28 @@ public class PumpkinSummonModel extends HierarchicalModel<AbstractCompanion> {
     PartDefinition pumpkin = head.addOrReplaceChild("pumpkin", CubeListBuilder.create().texOffs(0, 60).addBox(-8.0F, -8.0F, -8.0F, 16.0F, 16.0F, 16.0F, new CubeDeformation(-3.0F)),
         PartPose.offset(0.0F, -5.5F, 0.0F));
 
+    // generic worn-accessory slot: sits on top of the pumpkin head; textured per form as a crown,
+    // chef hat, halo, mask brim, etc. -- one blocky shape standing in for very different silhouettes
+    PartDefinition accessory = head.addOrReplaceChild("accessory", CubeListBuilder.create().texOffs(64, 0).addBox(-4.0F, -4.0F, -4.0F, 8.0F, 4.0F, 8.0F, new CubeDeformation(-0.5F)),
+        PartPose.offset(0.0F, -12.0F, 0.0F));
+
     PartDefinition arm1 = piece1.addOrReplaceChild("arm1", CubeListBuilder.create().texOffs(32, 0).addBox(1.0F, -4.0F, -1.0F, 12.0F, 2.0F, 2.0F, new CubeDeformation(-0.5F)),
         PartPose.offsetAndRotation(0.0F, -7.0F, 0.0F, 0.0F, 0.0F, 1.0001F));
 
     PartDefinition arm2 = piece1.addOrReplaceChild("arm2", CubeListBuilder.create().texOffs(32, 0).mirror().addBox(-13.0F, -4.0F, -1.0F, 12.0F, 2.0F, 2.0F, new CubeDeformation(-0.5F)).mirror(false),
         PartPose.offsetAndRotation(0.0F, -7.0F, 0.0F, 0.0F, 0.0F, -1.0001F));
+
+    // universal Innocent Devil crystal cluster -- same pattern/angles as FairySummonModel's, on the chest
+    PartDefinition crystal = piece1.addOrReplaceChild("crystal", CubeListBuilder.create(), PartPose.offset(0.0F, -5.0F, 0.0F));
+
+    PartDefinition crystal_r1 = crystal.addOrReplaceChild("crystal_r1", CubeListBuilder.create().texOffs(64, 16).addBox(-1.0F, -1.0F, -1.0F, 2.0F, 2.0F, 2.0F, new CubeDeformation(0.0F)),
+        PartPose.offsetAndRotation(-1.5F, -1.0F, 6.0F, -0.9599F, 0.5236F, -0.6109F));
+
+    PartDefinition crystal_r2 = crystal.addOrReplaceChild("crystal_r2", CubeListBuilder.create().texOffs(72, 16).addBox(-1.0F, -1.0F, -1.0F, 2.0F, 2.0F, 2.0F, new CubeDeformation(0.0F)),
+        PartPose.offsetAndRotation(1.5F, -1.0F, 6.0F, -0.9599F, 0.5236F, -0.6109F));
+
+    PartDefinition crystal_r3 = crystal.addOrReplaceChild("crystal_r3", CubeListBuilder.create().texOffs(64, 20).addBox(-2.0F, -3.0F, -1.0F, 4.0F, 4.0F, 7.0F, new CubeDeformation(0.0F)),
+        PartPose.offsetAndRotation(0.0F, 0.0F, 6.0F, -0.4363F, 0.0F, 0.0F));
 
     return LayerDefinition.create(meshdefinition, 128, 128);
   }

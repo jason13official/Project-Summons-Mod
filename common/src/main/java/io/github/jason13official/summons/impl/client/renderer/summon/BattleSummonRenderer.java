@@ -4,12 +4,16 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import io.github.jason13official.summons.Summons;
 import io.github.jason13official.summons.impl.client.model.summon.BattleSummonModel;
+import io.github.jason13official.summons.impl.client.model.summon.BattleSummonModelArmored;
 import io.github.jason13official.summons.impl.client.renderer.GuardFieldRenderer;
 import io.github.jason13official.summons.impl.common.entity.AbstractCompanion;
 import io.github.jason13official.summons.impl.common.entity.ground.BattleSummon;
 import io.github.jason13official.summons.impl.common.entity.ground.BattleSummon.Form;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+import net.minecraft.client.model.HierarchicalModel;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRenderer;
@@ -35,11 +39,16 @@ public class BattleSummonRenderer extends EntityRenderer<AbstractCompanion> {
     TEXTURE_BY_FORM.put(Form.LIQUID_GOLEM, Summons.identifier("textures/entity/summon/battle/liquid_golem.png"));
   }
 
-  private final BattleSummonModel model;
+  /// the humanoid/armored evolutions (all four shown wielding a weapon in their references) use [BattleSummonModelArmored] instead of the chunky Magmard-derived rig
+  private static final Set<Form> ARMORED_FORMS = EnumSet.of(Form.RASETZ, Form.SPEED_MAIL, Form.IRONSIDE, Form.CORPSEY);
+
+  private final HierarchicalModel<AbstractCompanion> chunkyModel;
+  private final HierarchicalModel<AbstractCompanion> armoredModel;
 
   public BattleSummonRenderer(Context context) {
     super(context);
-    this.model = new BattleSummonModel(context.bakeLayer(BattleSummonModel.LAYER_LOCATION));
+    this.chunkyModel = new BattleSummonModel(context.bakeLayer(BattleSummonModel.LAYER_LOCATION));
+    this.armoredModel = new BattleSummonModelArmored(context.bakeLayer(BattleSummonModelArmored.LAYER_LOCATION));
   }
 
   @Override
@@ -51,6 +60,16 @@ public class BattleSummonRenderer extends EntityRenderer<AbstractCompanion> {
     }
 
     return TEXTURE_BY_FORM.get(battleForm);
+  }
+
+  private HierarchicalModel<AbstractCompanion> modelFor(AbstractCompanion companion) {
+
+    if (companion instanceof BattleSummon battle && battle.getEvolutionForm() instanceof Form battleForm && ARMORED_FORMS.contains(battleForm)) {
+
+      return this.armoredModel;
+    }
+
+    return this.chunkyModel;
   }
 
   @Override
@@ -68,9 +87,10 @@ public class BattleSummonRenderer extends EntityRenderer<AbstractCompanion> {
     poseStack.mulPose(Axis.YP.rotationDegrees(180.0F - entityYaw)); // BoatRenderer: face model in look direction
     poseStack.scale(-1.0F, -1.0F, 1.0F); // BoatRenderer: invert coordinate space
 
-    this.model.setupAnim(cube, cube.walkAnimation.position(partialTick), Math.min(cube.walkAnimation.speed(partialTick), 1.0F),
+    HierarchicalModel<AbstractCompanion> model = this.modelFor(cube);
+    model.setupAnim(cube, cube.walkAnimation.position(partialTick), Math.min(cube.walkAnimation.speed(partialTick), 1.0F),
         cube.tickCount + partialTick, 0.0F, 0.0F);
-    this.model.renderToBuffer(poseStack, bufferSource.getBuffer(RenderType.entityCutout(getTextureLocation(cube))), packedLight, OverlayTexture.NO_OVERLAY);
+    model.renderToBuffer(poseStack, bufferSource.getBuffer(RenderType.entityCutout(getTextureLocation(cube))), packedLight, OverlayTexture.NO_OVERLAY);
     poseStack.popPose();
 
     GuardFieldRenderer.render(cube, poseStack, bufferSource);

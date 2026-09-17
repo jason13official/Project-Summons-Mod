@@ -7,7 +7,11 @@ import io.github.jason13official.summons.impl.client.model.CompanionPrismModel;
 import io.github.jason13official.summons.impl.client.model.block.PetrifiedSummonBodyModel;
 import io.github.jason13official.summons.impl.client.model.block.PetrifiedSummonSwirlModel;
 import io.github.jason13official.summons.impl.client.model.summon.BattleSummonModel;
+import io.github.jason13official.summons.impl.client.model.summon.BattleSummonModelArmored;
 import io.github.jason13official.summons.impl.client.model.summon.BirdSummonModel;
+import io.github.jason13official.summons.impl.client.model.summon.BirdSummonModelOrb;
+import io.github.jason13official.summons.impl.client.model.summon.BirdSummonModelSerpent;
+import io.github.jason13official.summons.impl.client.model.summon.BirdSummonModelWinged;
 import io.github.jason13official.summons.impl.client.model.summon.DevilSummonModel;
 import io.github.jason13official.summons.impl.client.model.summon.FairySummonModel;
 import io.github.jason13official.summons.impl.client.model.summon.MageSummonModel;
@@ -76,7 +80,11 @@ public class SummonsClient {
 
     consumer.accept(FairySummonModel.LAYER_LOCATION, FairySummonModel::createBodyLayer);
     consumer.accept(BattleSummonModel.LAYER_LOCATION, BattleSummonModel::createBodyLayer);
+    consumer.accept(BattleSummonModelArmored.LAYER_LOCATION, BattleSummonModelArmored::createBodyLayer);
     consumer.accept(BirdSummonModel.LAYER_LOCATION, BirdSummonModel::createBodyLayer);
+    consumer.accept(BirdSummonModelWinged.LAYER_LOCATION, BirdSummonModelWinged::createBodyLayer);
+    consumer.accept(BirdSummonModelSerpent.LAYER_LOCATION, BirdSummonModelSerpent::createBodyLayer);
+    consumer.accept(BirdSummonModelOrb.LAYER_LOCATION, BirdSummonModelOrb::createBodyLayer);
     consumer.accept(MageSummonModel.LAYER_LOCATION, MageSummonModel::createBodyLayer);
     consumer.accept(DevilSummonModel.LAYER_LOCATION, DevilSummonModel::createBodyLayer);
     consumer.accept(PumpkinSummonModel.LAYER_LOCATION, PumpkinSummonModel::createBodyLayer);

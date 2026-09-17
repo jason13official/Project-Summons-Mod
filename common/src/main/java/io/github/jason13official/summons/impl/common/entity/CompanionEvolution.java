@@ -13,8 +13,6 @@ final class CompanionEvolution {
   private CompanionEvolution() {
   }
 
-  /// TODO: no evolved-form entities/models exist yet, so this just updates the form, spends
-  /// the points, and announces the result.
   static void checkEvolution(AbstractCompanion companion) {
     for (EvolutionThreshold threshold : companion.evolutionThresholds()) {
       int available = threshold.color() != null ? companion.getCrystalPoints(threshold.color()) : totalCrystalPoints(companion);
@@ -39,7 +37,7 @@ final class CompanionEvolution {
 
       if (owner instanceof Player player) {
         player.displayClientMessage(Component.literal(companion.getCompanionType().name() + "-Type evolved into "
-            + threshold.result().displayName() + "! (not yet implemented visually)"), false);
+            + threshold.result().displayName() + "!"), false);
       }
       return;
     }

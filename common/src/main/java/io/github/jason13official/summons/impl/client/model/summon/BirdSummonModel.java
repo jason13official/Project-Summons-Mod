@@ -27,6 +27,7 @@ public class BirdSummonModel extends HierarchicalModel<AbstractCompanion> {
   private final ModelPart tail;
   private final ModelPart leg0;
   private final ModelPart leg1;
+  private final ModelPart crystal;
 
   public BirdSummonModel(ModelPart root) {
     this.root = root;
@@ -37,37 +38,52 @@ public class BirdSummonModel extends HierarchicalModel<AbstractCompanion> {
     this.tail = root.getChild("tail");
     this.leg0 = root.getChild("leg0");
     this.leg1 = root.getChild("leg1");
+    this.crystal = this.body.getChild("crystal");
   }
 
   public static LayerDefinition createBodyLayer() {
     MeshDefinition meshdefinition = new MeshDefinition();
     PartDefinition partdefinition = meshdefinition.getRoot();
 
-    PartDefinition body = partdefinition.addOrReplaceChild("body", CubeListBuilder.create().texOffs(2, 8).addBox(-1.5F, 0.0F, -1.5F, 3.0F, 6.0F, 3.0F, new CubeDeformation(0.0F)),
+    // body/wing/tail bumped up from the original tiny nubs (~1.6x) -- still recognizably a bird (Crow, Goldfinch), just no longer sparrow-scale
+    PartDefinition body = partdefinition.addOrReplaceChild("body", CubeListBuilder.create().texOffs(24, 0).addBox(-2.5F, 0.0F, -2.5F, 5.0F, 9.0F, 5.0F, new CubeDeformation(0.0F)),
         PartPose.offsetAndRotation(0.0F, 16.5F, -3.0F, 0.4363F, 0.0F, 0.0F));
 
-    PartDefinition wing0 = body.addOrReplaceChild("wing0", CubeListBuilder.create().texOffs(19, 8).addBox(-0.5F, 0.0F, -1.5F, 1.0F, 5.0F, 3.0F, new CubeDeformation(0.0F)),
-        PartPose.offsetAndRotation(1.5F, 0.4F, 0.2F, -0.1745F, 3.1416F, 0.0F));
+    PartDefinition wing0 = body.addOrReplaceChild("wing0", CubeListBuilder.create().texOffs(44, 0).addBox(-1.0F, 0.0F, -2.5F, 2.0F, 9.0F, 5.0F, new CubeDeformation(0.0F)),
+        PartPose.offsetAndRotation(2.5F, 0.5F, 0.3F, -0.1745F, 3.1416F, 0.0F));
 
-    PartDefinition wing1 = body.addOrReplaceChild("wing1", CubeListBuilder.create().texOffs(19, 8).addBox(-0.5F, 0.0F, -1.5F, 1.0F, 5.0F, 3.0F, new CubeDeformation(0.0F)),
-        PartPose.offsetAndRotation(-1.5F, 0.4F, 0.2F, -0.1745F, 3.1416F, 0.0F));
+    PartDefinition wing1 = body.addOrReplaceChild("wing1", CubeListBuilder.create().texOffs(44, 0).addBox(-1.0F, 0.0F, -2.5F, 2.0F, 9.0F, 5.0F, new CubeDeformation(0.0F)),
+        PartPose.offsetAndRotation(-2.5F, 0.5F, 0.3F, -0.1745F, 3.1416F, 0.0F));
 
+    // head cluster left untouched -- small/detailed already reads fine at this bucket's still-birdlike scale
     PartDefinition head = partdefinition.addOrReplaceChild("head", CubeListBuilder.create().texOffs(2, 2).addBox(-1.0F, -1.5F, -1.0F, 2.0F, 3.0F, 2.0F, new CubeDeformation(0.0F))
         .texOffs(10, 0).addBox(-1.0F, -2.5F, -3.0F, 2.0F, 1.0F, 4.0F, new CubeDeformation(0.0F))
         .texOffs(11, 7).addBox(-0.5F, -1.5F, -1.9F, 1.0F, 2.0F, 1.0F, new CubeDeformation(0.0F))
         .texOffs(16, 7).addBox(-0.5F, -1.5F, -2.9F, 1.0F, 1.7F, 1.0F, new CubeDeformation(0.0F))
         .texOffs(2, 18).addBox(0.0F, -5.8F, -2.1F, 0.0F, 5.0F, 4.0F, new CubeDeformation(0.0F)), PartPose.offset(0.0F, 15.7F, -2.8F));
 
-    PartDefinition tail = partdefinition.addOrReplaceChild("tail", CubeListBuilder.create().texOffs(22, 1).addBox(-1.5F, -1.0F, -1.0F, 3.0F, 4.0F, 1.0F, new CubeDeformation(0.0F)),
-        PartPose.offsetAndRotation(0.0F, 21.1F, 1.2F, 0.8727F, 0.0F, 0.0F));
+    PartDefinition tail = partdefinition.addOrReplaceChild("tail", CubeListBuilder.create().texOffs(58, 0).addBox(-2.0F, -1.5F, -1.0F, 4.0F, 6.0F, 1.0F, new CubeDeformation(0.0F)),
+        PartPose.offsetAndRotation(0.0F, 22.0F, 1.2F, 0.8727F, 0.0F, 0.0F));
 
     PartDefinition leg0 = partdefinition.addOrReplaceChild("leg0", CubeListBuilder.create().texOffs(14, 18).addBox(-1.0F, -0.5F, -1.0F, 1.0F, 2.0F, 1.0F, new CubeDeformation(0.0F)),
-        PartPose.offset(1.5F, 22.5F, -0.5F));
+        PartPose.offset(1.5F, 25.5F, -0.5F));
 
     PartDefinition leg1 = partdefinition.addOrReplaceChild("leg1", CubeListBuilder.create().texOffs(14, 18).addBox(-1.0F, -0.5F, -1.0F, 1.0F, 2.0F, 1.0F, new CubeDeformation(0.0F)),
-        PartPose.offset(-0.5F, 22.5F, -0.5F));
+        PartPose.offset(-0.5F, 25.5F, -0.5F));
 
-    return LayerDefinition.create(meshdefinition, 32, 32);
+    // universal Innocent Devil crystal cluster, scaled down to fit this bucket's small frame
+    PartDefinition crystal = body.addOrReplaceChild("crystal", CubeListBuilder.create(), PartPose.offset(0.0F, 4.0F, -2.0F));
+
+    PartDefinition crystal_r1 = crystal.addOrReplaceChild("crystal_r1", CubeListBuilder.create().texOffs(68, 0).addBox(-1.0F, -1.0F, -1.0F, 2.0F, 2.0F, 2.0F, new CubeDeformation(0.0F)),
+        PartPose.offsetAndRotation(-0.8F, 0.0F, -0.5F, -0.9599F, 0.5236F, -0.6109F));
+
+    PartDefinition crystal_r2 = crystal.addOrReplaceChild("crystal_r2", CubeListBuilder.create().texOffs(76, 0).addBox(-1.0F, -1.0F, -1.0F, 2.0F, 2.0F, 2.0F, new CubeDeformation(0.0F)),
+        PartPose.offsetAndRotation(0.8F, 0.0F, -0.5F, -0.9599F, 0.5236F, -0.6109F));
+
+    PartDefinition crystal_r3 = crystal.addOrReplaceChild("crystal_r3", CubeListBuilder.create().texOffs(68, 4).addBox(-1.5F, -1.5F, -0.5F, 3.0F, 3.0F, 5.0F, new CubeDeformation(0.0F)),
+        PartPose.offsetAndRotation(0.0F, 0.8F, -0.5F, -0.4363F, 0.0F, 0.0F));
+
+    return LayerDefinition.create(meshdefinition, 96, 32);
   }
 
   @Override
