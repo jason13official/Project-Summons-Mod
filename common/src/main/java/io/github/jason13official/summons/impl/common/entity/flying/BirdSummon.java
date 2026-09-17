@@ -394,11 +394,7 @@ public class BirdSummon extends AbstractFlyingCompanion {
 
   @Override
   protected EvolutionForm resolveForm(String id) {
-    try {
-      return Form.valueOf(id);
-    } catch (IllegalArgumentException e) {
-      return Form.CROW;
-    }
+    return resolveEnumForm(Form.class, id, Form.CROW);
   }
 
   @Override
@@ -457,11 +453,6 @@ public class BirdSummon extends AbstractFlyingCompanion {
     Form(String displayName, int stage) {
       this.displayName = displayName;
       this.stage = stage;
-    }
-
-    @Override
-    public String id() {
-      return this.name();
     }
 
     @Override

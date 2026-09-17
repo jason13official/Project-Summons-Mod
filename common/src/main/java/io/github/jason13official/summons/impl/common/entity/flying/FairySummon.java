@@ -260,11 +260,7 @@ public class FairySummon extends AbstractFlyingCompanion {
 
   @Override
   protected EvolutionForm resolveForm(String id) {
-    try {
-      return Form.valueOf(id);
-    } catch (IllegalArgumentException e) {
-      return Form.INFANT_FAIRY;
-    }
+    return resolveEnumForm(Form.class, id, Form.INFANT_FAIRY);
   }
 
   @Override
@@ -334,11 +330,6 @@ public class FairySummon extends AbstractFlyingCompanion {
     Form(String displayName, int stage) {
       this.displayName = displayName;
       this.stage = stage;
-    }
-
-    @Override
-    public String id() {
-      return this.name();
     }
 
     @Override

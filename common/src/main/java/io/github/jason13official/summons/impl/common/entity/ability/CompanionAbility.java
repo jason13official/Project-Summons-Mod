@@ -20,4 +20,10 @@ public record CompanionAbility(String name, int busyTicks, Set<EvolutionForm> re
       String description, BiConsumer<AbstractCompanion, LivingEntity> effect) {
     return new CompanionAbility(name, busyTicks, Set.of(requiredForm), minLevel, description, effect);
   }
+
+  /// no form gate, level gate only -> e.g. Battle's Brute Force ("all battle type IDs will get this skill after a certain point in the game," independent of evolution branch)
+  public static CompanionAbility levelGated(String name, int busyTicks, int minLevel, String description,
+      BiConsumer<AbstractCompanion, LivingEntity> effect) {
+    return new CompanionAbility(name, busyTicks, Set.of(), minLevel, description, effect);
+  }
 }

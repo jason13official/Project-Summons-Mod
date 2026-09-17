@@ -7,7 +7,6 @@ import io.github.jason13official.summons.impl.common.evolution.EvoCrystalColor;
 import io.github.jason13official.summons.impl.common.evolution.EvolutionForm;
 import io.github.jason13official.summons.impl.common.evolution.EvolutionThreshold;
 import java.util.List;
-import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -47,8 +46,8 @@ public class BattleSummon extends AbstractGroundCompanion {
       }),
       // "Used to lift up heavy objects... all battle type IDs will get this skill after a
       // certain point in the game" -> unlike every other ability here, this isn't tied to any
-      // one evolution branch, so it's ungated by form (empty requiredForms), just by level
-      new CompanionAbility("Brute Force", 40, Set.of(), 5, "Used to lift and break through heavy obstacles like iron doors.", (companion, owner) -> {
+      // one evolution branch, so it's ungated by form, just by level
+      CompanionAbility.levelGated("Brute Force", 40, 5, "Used to lift and break through heavy obstacles like iron doors.", (companion, owner) -> {
         BlockPos center = companion.blockPosition();
         for (BlockPos pos : BlockPos.betweenClosed(center.offset(-1, -1, -1), center.offset(1, 2, 1))) {
           Block block = companion.level().getBlockState(pos).getBlock();
@@ -263,11 +262,7 @@ public class BattleSummon extends AbstractGroundCompanion {
 
   @Override
   protected EvolutionForm resolveForm(String id) {
-    try {
-      return Form.valueOf(id);
-    } catch (IllegalArgumentException e) {
-      return Form.MAGMARD;
-    }
+    return resolveEnumForm(Form.class, id, Form.MAGMARD);
   }
 
   @Override
@@ -324,11 +319,6 @@ public class BattleSummon extends AbstractGroundCompanion {
     Form(String displayName, int stage) {
       this.displayName = displayName;
       this.stage = stage;
-    }
-
-    @Override
-    public String id() {
-      return this.name();
     }
 
     @Override

@@ -95,15 +95,7 @@ public class CompanionParty {
   }
 
   public Optional<CompanionType> getActiveType() {
-    if (!this.data.contains(ACTIVE_TYPE_TAG)) {
-      return Optional.empty();
-    }
-
-    try {
-      return Optional.of(CompanionType.valueOf(this.data.getString(ACTIVE_TYPE_TAG)));
-    } catch (IllegalArgumentException e) {
-      return Optional.empty();
-    }
+    return this.readType(ACTIVE_TYPE_TAG);
   }
 
   public void setActiveType(CompanionType type) {
@@ -116,12 +108,16 @@ public class CompanionParty {
   }
 
   public Optional<CompanionType> getLastActiveType() {
-    if (!this.data.contains(LAST_ACTIVE_TYPE_TAG)) {
+    return this.readType(LAST_ACTIVE_TYPE_TAG);
+  }
+
+  private Optional<CompanionType> readType(String tag) {
+    if (!this.data.contains(tag)) {
       return Optional.empty();
     }
 
     try {
-      return Optional.of(CompanionType.valueOf(this.data.getString(LAST_ACTIVE_TYPE_TAG)));
+      return Optional.of(CompanionType.valueOf(this.data.getString(tag)));
     } catch (IllegalArgumentException e) {
       return Optional.empty();
     }

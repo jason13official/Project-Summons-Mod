@@ -266,11 +266,7 @@ public class MageSummon extends AbstractFlyingCompanion {
 
   @Override
   protected EvolutionForm resolveForm(String id) {
-    try {
-      return Form.valueOf(id);
-    } catch (IllegalArgumentException e) {
-      return Form.WOOD_ROD;
-    }
+    return resolveEnumForm(Form.class, id, Form.WOOD_ROD);
   }
 
   @Override
@@ -340,11 +336,6 @@ public class MageSummon extends AbstractFlyingCompanion {
     Form(String displayName, int stage) {
       this.displayName = displayName;
       this.stage = stage;
-    }
-
-    @Override
-    public String id() {
-      return this.name();
     }
 
     @Override

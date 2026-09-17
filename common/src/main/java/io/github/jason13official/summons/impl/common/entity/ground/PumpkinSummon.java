@@ -84,11 +84,7 @@ public class PumpkinSummon extends AbstractGroundCompanion {
 
   @Override
   protected EvolutionForm resolveForm(String id) {
-    try {
-      return Form.valueOf(id);
-    } catch (IllegalArgumentException e) {
-      return Form.PUMPKIN;
-    }
+    return resolveEnumForm(Form.class, id, Form.PUMPKIN);
   }
 
   @Override
@@ -130,11 +126,6 @@ public class PumpkinSummon extends AbstractGroundCompanion {
     Form(String displayName, int stage) {
       this.displayName = displayName;
       this.stage = stage;
-    }
-
-    @Override
-    public String id() {
-      return this.name();
     }
 
     @Override

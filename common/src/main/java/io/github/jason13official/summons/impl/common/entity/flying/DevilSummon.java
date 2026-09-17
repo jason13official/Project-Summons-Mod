@@ -132,11 +132,7 @@ public class DevilSummon extends AbstractFlyingCompanion {
 
   @Override
   protected EvolutionForm resolveForm(String id) {
-    try {
-      return Form.valueOf(id);
-    } catch (IllegalArgumentException e) {
-      return Form.GALE;
-    }
+    return resolveEnumForm(Form.class, id, Form.GALE);
   }
 
   @Override
@@ -168,11 +164,6 @@ public class DevilSummon extends AbstractFlyingCompanion {
     Form(String displayName, int stage) {
       this.displayName = displayName;
       this.stage = stage;
-    }
-
-    @Override
-    public String id() {
-      return this.name();
     }
 
     @Override

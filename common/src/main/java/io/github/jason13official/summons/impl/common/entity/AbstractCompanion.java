@@ -88,6 +88,9 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
   private int abilityIndex;
   private boolean abilityBusy;
   private int abilityBusyTicks;
+  /// see [#abilities]
+  private List<CompanionAbility> abilitiesCache = List.of();
+  private String abilitiesCacheKey = "";
   /// Chain Attack "window" (Battle/Devil only, see CompanionType#isChainAttackCapable): true while the owner's next landed hit should trigger a bonus companion attack instead of just damage, see
   /// ChainAttackTracker. Synced so SummonsHUD can show the popup.
   private boolean chainArmed;
@@ -416,6 +419,15 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     return NONE_FORM;
   }
 
+  /// shared [#resolveForm] body for every enum-backed [EvolutionForm]: [Enum#valueOf], falling back to `fallback` on an unknown/renamed id
+  protected static <E extends Enum<E> & EvolutionForm> EvolutionForm resolveEnumForm(Class<E> type, String id, E fallback) {
+    try {
+      return Enum.valueOf(type, id);
+    } catch (IllegalArgumentException e) {
+      return fallback;
+    }
+  }
+
   // endregion evolution
 
   public EvolutionForm getEvolutionForm() {
@@ -689,16 +701,22 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
   }
 
   /// this companion's currently-unlocked Command-mode abilities: [CompanionAbility#requiredForms()] empty, or [#hasReachedForm] true for at least one of them, AND [#getLevel] at least
-  /// [CompanionAbility#minLevel()] (soft-gated by level on top of evolution form)
+  /// [CompanionAbility#minLevel()] (soft-gated by level on top of evolution form). Cached against (form, reachedForms, level) since the client HUD calls this every render frame and the
+  /// unlocked set only actually changes on level-up or evolution.
   public final List<CompanionAbility> abilities() {
-    List<CompanionAbility> unlocked = new ArrayList<>();
-    for (CompanionAbility ability : this.allAbilities()) {
-      boolean formOk = ability.requiredForms().isEmpty() || ability.requiredForms().stream().anyMatch(this::hasReachedForm);
-      if (formOk && this.getLevel() >= ability.minLevel()) {
-        unlocked.add(ability);
+    String key = this.evolutionForm + "|" + this.reachedForms + "|" + this.level;
+    if (!key.equals(this.abilitiesCacheKey)) {
+      List<CompanionAbility> unlocked = new ArrayList<>();
+      for (CompanionAbility ability : this.allAbilities()) {
+        boolean formOk = ability.requiredForms().isEmpty() || ability.requiredForms().stream().anyMatch(this::hasReachedForm);
+        if (formOk && this.getLevel() >= ability.minLevel()) {
+          unlocked.add(ability);
+        }
       }
+      this.abilitiesCache = List.copyOf(unlocked);
+      this.abilitiesCacheKey = key;
     }
-    return unlocked;
+    return this.abilitiesCache;
   }
 
   public final int getAbilityCount() {
