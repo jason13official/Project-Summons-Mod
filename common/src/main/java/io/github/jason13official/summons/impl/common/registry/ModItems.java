@@ -2,6 +2,7 @@ package io.github.jason13official.summons.impl.common.registry;
 
 import io.github.jason13official.summons.Summons;
 import io.github.jason13official.summons.impl.common.evolution.EvoCrystalColor;
+import io.github.jason13official.summons.impl.common.item.DevilShardItem;
 import io.github.jason13official.summons.impl.common.item.EvoCrystalItem;
 import io.github.jason13official.summons.impl.common.item.HeartItem;
 import io.github.jason13official.summons.impl.common.item.SpearItem;
@@ -29,6 +30,8 @@ public class ModItems {
 
   public static Item HEART;
 
+  public static Item DEVIL_SHARD;
+
   public static Item SUMMON_GATE;
 
   // Spear-class weapons (wiki: pole weapons); DECK_BRUSH is the starter, CHAUVE_SOURIS is
@@ -55,6 +58,8 @@ public class ModItems {
 
     HEART = new HeartItem(new Properties());
 
+    DEVIL_SHARD = new DevilShardItem(new Properties());
+
     SUMMON_GATE = new BlockItem(ModBlocks.SUMMON_GATE, new Properties());
 
     DECK_BRUSH = new SpearItem(4.0F, -2.6F, new Properties().stacksTo(1));
@@ -76,6 +81,8 @@ public class ModItems {
     consumer.accept(EVO_CRYSTAL_WHITE, Summons.identifier("evo_crystal_white"));
 
     consumer.accept(HEART, Summons.identifier("heart"));
+
+    consumer.accept(DEVIL_SHARD, Summons.identifier("devil_shard"));
 
     consumer.accept(SUMMON_GATE, Summons.identifier("summon_gate"));
 

@@ -12,6 +12,7 @@
     "ItemEntityEvoCrystalPickupMixin",
     "LivingEntityHeartDropMixin",
     "ItemEntityHeartPickupMixin",
+    "LivingEntityDevilShardDropMixin",
     "LivingEntityEffectResistMixin",
     "LivingEntityLuckyDropMixin",
     "LivingEntityChainAttackMixin",

@@ -16,6 +16,9 @@
 
   "item.summons.heart": "Heart",
 
+  "item.summons.devil_shard": "Devil Shard",
+  "item.summons.devil_shard.tooltip": "%s - Lv.%d - Gen.%d",
+
   "item.summons.deck_brush": "Deck Brush",
   "item.summons.bamboo_lance": "Bamboo Lance",
   "item.summons.dung": "Dung",

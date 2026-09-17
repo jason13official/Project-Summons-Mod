@@ -12,6 +12,7 @@ import io.github.jason13official.summons.Constants;
 import io.github.jason13official.summons.impl.common.entity.AbstractCompanion;
 import io.github.jason13official.summons.impl.common.evolution.EvolutionForm;
 import io.github.jason13official.summons.impl.common.gate.SummonGateManager;
+import io.github.jason13official.summons.impl.common.item.DevilShardItem;
 import io.github.jason13official.summons.impl.common.party.CompanionPartyManager;
 import io.github.jason13official.summons.impl.common.party.CompanionType;
 import java.util.concurrent.CompletableFuture;
@@ -19,10 +20,12 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
 
 /// `/summons debug unlockall`; unlocks every [CompanionType] without a real Devil Shard item. `/summons debug addxp <amount>`; grants XP without dozens of manual ability uses.
 /// `/summons debug setform <form>`; jumps the active companion straight to any form in its evolution chart, same permission-2 gate as the rest of this command (see also the Evolution Chart
-/// screen's own creative-only "click a form" path in `SummonsNetworking#handleSetForm`).
+/// screen's own creative-only "click a form" path in `SummonsNetworking#handleSetForm`). `/summons debug devilshard`; forces a Devil Shard drop for the active companion instead of waiting on
+/// the 3% combat-kill chance (see LivingEntityDevilShardDropMixin).
 public class SummonsDebugCommand {
 
   public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
@@ -62,6 +65,11 @@ public class SummonsDebugCommand {
                 .suggests(SummonsDebugCommand::suggestForms)
                 .executes(SummonsDebugCommand::setForm));
     debug.then(setForm);
+
+    LiteralArgumentBuilder<CommandSourceStack> devilShard =
+        Commands.literal("devilshard")
+            .executes(SummonsDebugCommand::devilShard);
+    debug.then(devilShard);
     root.then(debug);
     // endregion debug
 
@@ -135,6 +143,27 @@ public class SummonsDebugCommand {
 
     ctx.getSource().sendSuccess(() -> Component.literal(
         active.getCompanionType().name() + "-Type set to " + active.getEvolutionForm().displayName()), true);
+    return 1;
+  }
+
+  /// `/summons debug devilshard` -> forces a Devil Shard for the active companion straight into the player's inventory, skipping the 3% per-kill chance
+  private static int devilShard(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+
+    ServerPlayer player = ctx.getSource().getPlayerOrException();
+
+    AbstractCompanion active = CompanionPartyManager.findActive(player.serverLevel(), player);
+    if (active == null) {
+      ctx.getSource().sendFailure(Component.literal("No active companion to forge a Devil Shard from"));
+      return 0;
+    }
+
+    ItemStack shard = DevilShardItem.create(active.getCompanionType(), active.getLevel(), active.getGeneration() + 1);
+    if (!player.getInventory().add(shard)) {
+      player.drop(shard, false);
+    }
+
+    ctx.getSource().sendSuccess(() -> Component.literal(
+        "Gave a " + active.getCompanionType().name() + "-Type Devil Shard (Lv." + active.getLevel() + ", Gen." + (active.getGeneration() + 1) + ")"), true);
     return 1;
   }
 

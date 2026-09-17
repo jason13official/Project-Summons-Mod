@@ -109,6 +109,8 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
   private int experience;
   /// at 0 Hearts the I.D. goes inert instead of dying; no wisp entity/model, renderers skip drawing and tick() emits particles instead until a Heart revives it
   private boolean wisp;
+  /// 0 = came from a Summon Gate; N = forged from a Devil Shard dropped by a generation-(N-1) companion of the same type. See DevilShardItem.
+  private int generation;
 
   public AbstractCompanion(EntityType<? extends AbstractCompanion> entityType, Level level) {
     super(entityType, level);
@@ -265,7 +267,7 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
 
   private CompanionIdentitySyncPayload buildIdentitySyncPayload() {
     return new CompanionIdentitySyncPayload(this.getId(), (byte) this.companionType.ordinal(),
-        this.evolutionForm, this.reachedForms, this.wisp);
+        this.evolutionForm, this.reachedForms, this.wisp, this.generation);
   }
   // endregion guard field
 
@@ -290,6 +292,7 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     this.evolutionForm = payload.evolutionForm();
     this.reachedForms = payload.reachedForms();
     this.wisp = payload.wisp();
+    this.generation = payload.generation();
   }
 
   /// safety net for dimension changes, respawns, or falling too far behind
@@ -454,6 +457,16 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     this.identitySyncDirty = true;
   }
 
+  public int getGeneration() {
+    return this.generation;
+  }
+
+  /// set once, at forge time, by whatever creates a companion from a Devil Shard; never changes afterward
+  public void setGeneration(int generation) {
+    this.generation = generation;
+    this.identitySyncDirty = true;
+  }
+
   /// Debug/creative-only: forces this companion straight to the form named `id` (must be one of [#allForms]), bypassing crystal-point costs; still marks it reached so gated abilities work.
   /// Real evolution should go through [#addCrystalPoints] -> `CompanionEvolution.checkEvolution`. Returns false if `id` doesn't name a form in this type's chart.
   public boolean debugSetEvolutionFormById(String id) {
@@ -551,6 +564,7 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     compound.putInt("Level", this.getLevel());
     compound.putInt("Experience", this.getExperience());
     compound.putBoolean("Wisp", this.isWisp());
+    compound.putInt("Generation", this.generation);
   }
 
   @Override
@@ -601,6 +615,9 @@ public abstract class AbstractCompanion extends PathfinderMob implements Traceab
     if (compound.getBoolean("Wisp")) {
       this.setWisp(true);
       this.setNoAi(true);
+    }
+    if (compound.contains("Generation")) {
+      this.generation = compound.getInt("Generation");
     }
     // loaded state needs to reach tracking clients on the next tick, across all three tiers
     this.progressSyncDirty = true;
