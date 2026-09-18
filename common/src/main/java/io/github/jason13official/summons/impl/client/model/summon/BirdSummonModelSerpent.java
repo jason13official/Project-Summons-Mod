@@ -14,7 +14,7 @@ import net.minecraft.client.model.geom.builders.MeshDefinition;
 import net.minecraft.client.model.geom.builders.PartDefinition;
 import net.minecraft.util.Mth;
 
-/// Long serpentine rig for Indigo -- elongated neck (folded into the "head" part as a second box) and tail, small
+/// Long serpentine rig for Indigo -> elongated neck (folded into the "head" part as a second box) and tail, small
 /// torso, bat-style wings, small clawed feet. Part names match [BirdSummonModel] so it shares
 /// [BirdSummonAnimations] unchanged.
 public class BirdSummonModelSerpent extends HierarchicalModel<AbstractCompanion> {
@@ -47,7 +47,7 @@ public class BirdSummonModelSerpent extends HierarchicalModel<AbstractCompanion>
     MeshDefinition meshdefinition = new MeshDefinition();
     PartDefinition partdefinition = meshdefinition.getRoot();
 
-    // head + a single long "neck" box fused into the same part -- not independently posable, but reads as an elongated neck
+    // head + a single long "neck" box fused into the same part -> not independently posable, but reads as an elongated neck
     PartDefinition head = partdefinition.addOrReplaceChild("head", CubeListBuilder.create().texOffs(0, 0).addBox(-2.0F, -2.0F, -4.0F, 4.0F, 4.0F, 4.0F, new CubeDeformation(0.0F))
         .texOffs(16, 0).addBox(-1.5F, -1.5F, -10.0F, 3.0F, 3.0F, 10.0F, new CubeDeformation(0.0F)), PartPose.offset(0.0F, 15.0F, -5.0F));
 
@@ -60,7 +60,7 @@ public class BirdSummonModelSerpent extends HierarchicalModel<AbstractCompanion>
     PartDefinition wing1 = body.addOrReplaceChild("wing1", CubeListBuilder.create().texOffs(28, 19).addBox(-1.0F, 0.0F, -4.0F, 1.0F, 14.0F, 8.0F, new CubeDeformation(0.0F)),
         PartPose.offsetAndRotation(-2.0F, 0.5F, 0.0F, -0.1745F, 3.1416F, 0.0F));
 
-    // single long tapering tail box -- the serpentine counterpart to the elongated neck
+    // single long tapering tail box -> the serpentine counterpart to the elongated neck
     PartDefinition tail = partdefinition.addOrReplaceChild("tail", CubeListBuilder.create().texOffs(0, 19).addBox(-1.0F, -1.0F, 0.0F, 2.0F, 2.0F, 12.0F, new CubeDeformation(0.0F)),
         PartPose.offsetAndRotation(0.0F, 19.0F, 5.5F, 0.3F, 0.0F, 0.0F));
 
@@ -70,7 +70,7 @@ public class BirdSummonModelSerpent extends HierarchicalModel<AbstractCompanion>
     PartDefinition leg1 = partdefinition.addOrReplaceChild("leg1", CubeListBuilder.create().texOffs(42, 0).addBox(-0.75F, -0.5F, -0.75F, 1.5F, 3.0F, 1.5F, new CubeDeformation(0.0F)),
         PartPose.offset(-2.0F, 22.0F, 1.0F));
 
-    // universal Innocent Devil crystal cluster -- on the head, matching Indigo's reference
+    // universal Innocent Devil crystal cluster -> on the head, matching Indigo's reference
     PartDefinition crystal = head.addOrReplaceChild("crystal", CubeListBuilder.create(), PartPose.offset(0.0F, 0.0F, -3.0F));
 
     PartDefinition crystal_r1 = crystal.addOrReplaceChild("crystal_r1", CubeListBuilder.create().texOffs(48, 0).addBox(-1.0F, -1.0F, -1.0F, 2.0F, 2.0F, 2.0F, new CubeDeformation(0.0F)),

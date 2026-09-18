@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import io.github.jason13official.summons.Summons;
 import io.github.jason13official.summons.impl.client.model.summon.BirdSummonModel;
+import io.github.jason13official.summons.impl.client.model.summon.BirdSummonModelHumanoid;
 import io.github.jason13official.summons.impl.client.model.summon.BirdSummonModelOrb;
 import io.github.jason13official.summons.impl.client.model.summon.BirdSummonModelSerpent;
 import io.github.jason13official.summons.impl.client.model.summon.BirdSummonModelWinged;
@@ -43,6 +44,7 @@ public class BirdSummonRenderer extends EntityRenderer<AbstractCompanion> {
   private final HierarchicalModel<AbstractCompanion> wingedModel;
   private final HierarchicalModel<AbstractCompanion> serpentModel;
   private final HierarchicalModel<AbstractCompanion> orbModel;
+  private final HierarchicalModel<AbstractCompanion> humanoidModel;
 
   public BirdSummonRenderer(Context context) {
     super(context);
@@ -50,6 +52,7 @@ public class BirdSummonRenderer extends EntityRenderer<AbstractCompanion> {
     this.wingedModel = new BirdSummonModelWinged(context.bakeLayer(BirdSummonModelWinged.LAYER_LOCATION));
     this.serpentModel = new BirdSummonModelSerpent(context.bakeLayer(BirdSummonModelSerpent.LAYER_LOCATION));
     this.orbModel = new BirdSummonModelOrb(context.bakeLayer(BirdSummonModelOrb.LAYER_LOCATION));
+    this.humanoidModel = new BirdSummonModelHumanoid(context.bakeLayer(BirdSummonModelHumanoid.LAYER_LOCATION));
   }
 
   @Override
@@ -71,7 +74,8 @@ public class BirdSummonRenderer extends EntityRenderer<AbstractCompanion> {
     }
 
     return switch (birdForm) {
-      case PHOENIX, WINGOSAURUS, CRIMSON, BLAGSDEATH, GARGOYLE -> this.wingedModel;
+      case PHOENIX, WINGOSAURUS, CRIMSON -> this.wingedModel;
+      case BLAGSDEATH, GARGOYLE -> this.humanoidModel;
       case INDIGO -> this.serpentModel;
       case SKULL_WING, KHAOS -> this.orbModel;
       default -> this.defaultModel;

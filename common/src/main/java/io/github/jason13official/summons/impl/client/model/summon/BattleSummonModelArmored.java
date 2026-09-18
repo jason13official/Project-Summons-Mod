@@ -59,14 +59,14 @@ public class BattleSummonModelArmored extends HierarchicalModel<AbstractCompanio
     PartDefinition head = body.addOrReplaceChild("head", CubeListBuilder.create().texOffs(34, 0).addBox(-4.5F, -10.0F, -4.5F, 9.0F, 10.0F, 9.0F, new CubeDeformation(0.0F)),
         PartPose.offset(0.0F, -10.0F, 0.0F));
 
-    // horns -- the single biggest silhouette read in every armored reference (curved horns, helmet spikes, ...)
+    // horns -> the single biggest silhouette read in every armored reference (curved horns, helmet spikes, ...)
     PartDefinition hornR = head.addOrReplaceChild("hornR", CubeListBuilder.create().texOffs(70, 0).addBox(-0.5F, -4.0F, -0.5F, 1.0F, 4.0F, 1.0F, new CubeDeformation(0.0F)),
         PartPose.offsetAndRotation(2.5F, -9.5F, -1.0F, 0.0F, 0.0F, -0.45F));
 
     PartDefinition hornL = head.addOrReplaceChild("hornL", CubeListBuilder.create().texOffs(70, 0).addBox(-0.5F, -4.0F, -0.5F, 1.0F, 4.0F, 1.0F, new CubeDeformation(0.0F)),
         PartPose.offsetAndRotation(-2.5F, -9.5F, -1.0F, 0.0F, 0.0F, 0.45F));
 
-    // pauldrons -- flare the shoulders out past the chest so arms don't visually fuse into one flat tower
+    // pauldrons -> flare the shoulders out past the chest so arms don't visually fuse into one flat tower
     PartDefinition pauldronR = body.addOrReplaceChild("pauldronR", CubeListBuilder.create().texOffs(70, 4).addBox(-2.0F, -1.5F, -2.5F, 4.0F, 3.0F, 5.0F, new CubeDeformation(0.3F)),
         PartPose.offset(8.0F, -9.0F, 0.0F));
 
@@ -76,9 +76,9 @@ public class BattleSummonModelArmored extends HierarchicalModel<AbstractCompanio
     PartDefinition arm0 = body.addOrReplaceChild("arm0", CubeListBuilder.create().texOffs(0, 30).addBox(-12.0F, -2.0F, -2.5F, 5.0F, 24.0F, 5.0F, new CubeDeformation(0.0F)),
         PartPose.offset(0.0F, -9.0F, 0.0F));
 
-    // held weapon -- third pass rotated the wrong axis: zRot swings the blade sideways in the X/Y plane, which
+    // held weapon -> third pass rotated the wrong axis: zRot swings the blade sideways in the X/Y plane, which
     // pokes it through the torso edge-on instead of out in front. xRot swings Y (down) toward Z (forward) instead
-    // -- the same fix the Mage rod needed -- so the blade now angles forward away from the body like a held
+    // -> the same fix the Mage rod needed -> so the blade now angles forward away from the body like a held
     // sword, with a slight zRot for a natural off-center grip.
     PartDefinition weapon = arm0.addOrReplaceChild("weapon", CubeListBuilder.create().texOffs(90, 0).addBox(-1.0F, 0.0F, -3.0F, 2.0F, 22.0F, 6.0F, new CubeDeformation(0.0F)),
         PartPose.offsetAndRotation(-9.5F, 19.0F, 0.0F, -1.1F, 0.0F, -0.25F));
@@ -95,7 +95,7 @@ public class BattleSummonModelArmored extends HierarchicalModel<AbstractCompanio
     PartDefinition leg1 = body.addOrReplaceChild("leg1", CubeListBuilder.create().texOffs(64, 30).mirror().addBox(-3.0F, 0.0F, -3.0F, 6.0F, 22.0F, 6.0F, new CubeDeformation(0.0F)).mirror(false),
         PartPose.offset(4.0F, 7.0F, 0.0F));
 
-    // universal Innocent Devil crystal cluster -- second pass had the sign backwards (positive z reads as the
+    // universal Innocent Devil crystal cluster -> second pass had the sign backwards (positive z reads as the
     // *back* on this rig, same as the direction the chunky rig's own crystal offset is negative for) and
     // overshot the surface, so it floated detached behind the character instead of sitting on the chest. Negative
     // and just past the chest's front face (z=-3.5) now, so it actually touches.

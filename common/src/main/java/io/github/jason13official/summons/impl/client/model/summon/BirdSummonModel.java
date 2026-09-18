@@ -45,7 +45,7 @@ public class BirdSummonModel extends HierarchicalModel<AbstractCompanion> {
     MeshDefinition meshdefinition = new MeshDefinition();
     PartDefinition partdefinition = meshdefinition.getRoot();
 
-    // body/wing/tail bumped up from the original tiny nubs (~1.6x) -- still recognizably a bird (Crow, Goldfinch), just no longer sparrow-scale
+    // body/wing/tail bumped up from the original tiny nubs (~1.6x) -> still recognizably a bird (Crow, Goldfinch), just no longer sparrow-scale
     PartDefinition body = partdefinition.addOrReplaceChild("body", CubeListBuilder.create().texOffs(24, 0).addBox(-2.5F, 0.0F, -2.5F, 5.0F, 9.0F, 5.0F, new CubeDeformation(0.0F)),
         PartPose.offsetAndRotation(0.0F, 16.5F, -3.0F, 0.4363F, 0.0F, 0.0F));
 
@@ -55,7 +55,7 @@ public class BirdSummonModel extends HierarchicalModel<AbstractCompanion> {
     PartDefinition wing1 = body.addOrReplaceChild("wing1", CubeListBuilder.create().texOffs(44, 0).addBox(-1.0F, 0.0F, -2.5F, 2.0F, 9.0F, 5.0F, new CubeDeformation(0.0F)),
         PartPose.offsetAndRotation(-2.5F, 0.5F, 0.3F, -0.1745F, 3.1416F, 0.0F));
 
-    // head cluster left untouched -- small/detailed already reads fine at this bucket's still-birdlike scale
+    // head cluster left untouched -> small/detailed already reads fine at this bucket's still-birdlike scale
     PartDefinition head = partdefinition.addOrReplaceChild("head", CubeListBuilder.create().texOffs(2, 2).addBox(-1.0F, -1.5F, -1.0F, 2.0F, 3.0F, 2.0F, new CubeDeformation(0.0F))
         .texOffs(10, 0).addBox(-1.0F, -2.5F, -3.0F, 2.0F, 1.0F, 4.0F, new CubeDeformation(0.0F))
         .texOffs(11, 7).addBox(-0.5F, -1.5F, -1.9F, 1.0F, 2.0F, 1.0F, new CubeDeformation(0.0F))

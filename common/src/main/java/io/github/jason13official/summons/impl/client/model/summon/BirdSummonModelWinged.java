@@ -15,7 +15,7 @@ import net.minecraft.client.model.geom.builders.PartDefinition;
 import net.minecraft.util.Mth;
 
 /// Bigger pterodactyl/dragon-bird rig for the large-winged Bird-Type evolutions (Phoenix, Wingosaurus, Crimson,
-/// Blagsdeath, Gargoyle) -- same body plan as [BirdSummonModel] (body/wings/tail/legs), just scaled up
+/// Blagsdeath, Gargoyle) -> same body plan as [BirdSummonModel] (body/wings/tail/legs), just scaled up
 /// substantially since the base rig's wings read as barely-there nubs at this scale. Part names match
 /// [BirdSummonModel] so both share [BirdSummonAnimations] unchanged.
 public class BirdSummonModelWinged extends HierarchicalModel<AbstractCompanion> {
@@ -69,7 +69,7 @@ public class BirdSummonModelWinged extends HierarchicalModel<AbstractCompanion> 
     PartDefinition leg1 = partdefinition.addOrReplaceChild("leg1", CubeListBuilder.create().texOffs(8, 27).addBox(-1.0F, -0.5F, -1.0F, 2.0F, 5.0F, 2.0F, new CubeDeformation(0.0F)),
         PartPose.offset(-2.0F, 27.0F, -1.0F));
 
-    // universal Innocent Devil crystal cluster -- same pattern/angles as FairySummonModel's, on the chest
+    // universal Innocent Devil crystal cluster -> same pattern/angles as FairySummonModel's, on the chest
     PartDefinition crystal = body.addOrReplaceChild("crystal", CubeListBuilder.create(), PartPose.offset(0.0F, 4.0F, -3.0F));
 
     PartDefinition crystal_r1 = crystal.addOrReplaceChild("crystal_r1", CubeListBuilder.create().texOffs(48, 0).addBox(-1.0F, -1.0F, -1.0F, 2.0F, 2.0F, 2.0F, new CubeDeformation(0.0F)),

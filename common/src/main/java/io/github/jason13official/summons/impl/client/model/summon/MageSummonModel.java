@@ -52,7 +52,7 @@ public class MageSummonModel extends HierarchicalModel<AbstractCompanion> {
     PartDefinition head = root.addOrReplaceChild("head", CubeListBuilder.create().texOffs(0, 0).addBox(-2.5F, -5.01F, -2.5F, 5.0F, 5.0F, 5.0F, new CubeDeformation(0.0F)),
         PartPose.offset(0.0F, -4.0F, 0.0F));
 
-    // generic per-form head ornament slot (horns, crown-point, eye motif, ...) -- same idea as DevilSummonModel's "hat"
+    // generic per-form head ornament slot (horns, crown-point, eye motif, ...) -> same idea as DevilSummonModel's "hat"
     PartDefinition headAccessory = head.addOrReplaceChild("headAccessory", CubeListBuilder.create().texOffs(38, 0).addBox(-2.0F, -1.0F, -2.0F, 4.0F, 2.0F, 4.0F, new CubeDeformation(0.0F)),
         PartPose.offset(0.0F, -5.5F, 0.0F));
 
@@ -62,13 +62,13 @@ public class MageSummonModel extends HierarchicalModel<AbstractCompanion> {
     PartDefinition right_arm = body.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(23, 0).addBox(-0.75F, -0.5F, -1.0F, 1.0F, 4.0F, 2.0F, new CubeDeformation(0.0F)),
         PartPose.offset(-1.75F, 0.5F, 0.0F));
 
-    // Rod prop -- every Mage form is named after this (Wood Rod, ... Twinkle Rod); previously an empty anchor that
+    // Rod prop -> every Mage form is named after this (Wood Rod, ... Twinkle Rod); previously an empty anchor that
     // rendered nothing, and even once given geometry was parented to the body instead of the hand so it floated in
     // front of the entity rather than looking held. Now a child of right_arm, gripped near the hand. -0.7 rad
-    // still pointed the shaft too far downward and clipped the floor while grounded -- rotating around X toward
+    // still pointed the shaft too far downward and clipped the floor while grounded -> rotating around X toward
     // -90 degrees swings the shaft's reach from "downward" to "forward" (cos shrinks the down-component, sin
     // grows the forward one), so -1.25 keeps it angled like a held wand without reaching the ground. A thin shaft
-    // plus a bigger ornament at the tip -- the ornament is where each form's identity actually lives (a plain
+    // plus a bigger ornament at the tip -> the ornament is where each form's identity actually lives (a plain
     // knob for Wood Rod, an eyeball for Eyeball Rod, a crystal for Crystal Rod, ...), same as how the reference
     // art differs almost entirely at the rod's head, not its shaft.
     PartDefinition rightItem = right_arm.addOrReplaceChild("rightItem", CubeListBuilder.create().texOffs(32, 0).addBox(-0.35F, 0.0F, -0.35F, 0.7F, 12.0F, 0.7F, new CubeDeformation(0.0F))
@@ -83,7 +83,7 @@ public class MageSummonModel extends HierarchicalModel<AbstractCompanion> {
     PartDefinition right_wing = body.addOrReplaceChild("right_wing", CubeListBuilder.create().texOffs(16, 14).addBox(0.0F, 0.0F, 0.0F, 0.0F, 5.0F, 8.0F, new CubeDeformation(0.0F)),
         PartPose.offset(-0.5F, 1.0F, 1.0F));
 
-    // universal Innocent Devil crystal cluster -- same pattern/angles as FairySummonModel's, on the chest
+    // universal Innocent Devil crystal cluster -> same pattern/angles as FairySummonModel's, on the chest
     PartDefinition crystal = body.addOrReplaceChild("crystal", CubeListBuilder.create(), PartPose.offset(0.0F, 2.0F, -1.0F));
 
     PartDefinition crystal_r1 = crystal.addOrReplaceChild("crystal_r1", CubeListBuilder.create().texOffs(32, 16).addBox(-1.0F, -1.0F, -1.0F, 2.0F, 2.0F, 2.0F, new CubeDeformation(0.0F)),

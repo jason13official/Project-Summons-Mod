@@ -95,7 +95,7 @@ public class FairySummon extends AbstractFlyingCompanion {
       }),
       // "Play a slot machine to determine how much HP is healed... sometimes it doesn't
       // even work." -> a random amount, sometimes zero
-      CompanionAbility.gated("Lucky Slot", 10, Form.HORNET, 5, "Plays a slot machine to determine how much HP is healed -- sometimes it doesn't work at all.", (companion, owner) -> {
+      CompanionAbility.gated("Lucky Slot", 10, Form.HORNET, 5, "Plays a slot machine to determine how much HP is healed -> sometimes it doesn't work at all.", (companion, owner) -> {
         float healed = companion.getRandom().nextInt(4) * 4.0F; // 0, 4, 8 or 12
         if (healed > 0.0F) {
           owner.heal(healed);
@@ -183,7 +183,7 @@ public class FairySummon extends AbstractFlyingCompanion {
         spawnAbilityParticles(owner, ParticleTypes.SMOKE, 10);
       }),
       // "Comet Star draws stars in the air and shoots them at enemies... ultra-slow."
-      CompanionAbility.gated("Twinkle Star", 20, Form.COMET_STAR, 10, "Draws stars in the air and shoots them at enemies -- ultra slow.", (companion, owner) -> {
+      CompanionAbility.gated("Twinkle Star", 20, Form.COMET_STAR, 10, "Draws stars in the air and shoots them at enemies -> ultra slow.", (companion, owner) -> {
         LivingEntity target = findNearestTarget(companion, owner, 8.0);
         if (target == null) {
           return;

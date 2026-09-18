@@ -63,7 +63,7 @@ public class BattleSummonModel extends HierarchicalModel<AbstractCompanion> {
     PartDefinition leg1 = body.addOrReplaceChild("leg1", CubeListBuilder.create().texOffs(60, 0).mirror().addBox(-3.5F, -3.0F, -3.0F, 6.0F, 16.0F, 5.0F, new CubeDeformation(0.0F)).mirror(false),
         PartPose.offset(5.0F, 18.0F, 0.0F));
 
-    // universal Innocent Devil crystal cluster -- same pattern/angles as FairySummonModel's, on the chest; parked in this canvas's wide-open x[78,128) strip
+    // universal Innocent Devil crystal cluster -> same pattern/angles as FairySummonModel's, on the chest; parked in this canvas's wide-open x[78,128) strip
     PartDefinition crystal = body.addOrReplaceChild("crystal", CubeListBuilder.create(), PartPose.offset(0.0F, 2.0F, -4.0F));
 
     PartDefinition crystal_r1 = crystal.addOrReplaceChild("crystal_r1", CubeListBuilder.create().texOffs(80, 0).addBox(-1.0F, -1.0F, -1.0F, 2.0F, 2.0F, 2.0F, new CubeDeformation(0.0F)),

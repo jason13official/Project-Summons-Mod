@@ -58,7 +58,7 @@ public class PumpkinSummonModel extends HierarchicalModel<AbstractCompanion> {
         PartPose.offset(0.0F, -5.5F, 0.0F));
 
     // generic worn-accessory slot: sits on top of the pumpkin head; textured per form as a crown,
-    // chef hat, halo, mask brim, etc. -- one blocky shape standing in for very different silhouettes
+    // chef hat, halo, mask brim, etc. -> one blocky shape standing in for very different silhouettes
     PartDefinition accessory = head.addOrReplaceChild("accessory", CubeListBuilder.create().texOffs(64, 0).addBox(-4.0F, -4.0F, -4.0F, 8.0F, 4.0F, 8.0F, new CubeDeformation(-0.5F)),
         PartPose.offset(0.0F, -12.0F, 0.0F));
 
@@ -68,7 +68,7 @@ public class PumpkinSummonModel extends HierarchicalModel<AbstractCompanion> {
     PartDefinition arm2 = piece1.addOrReplaceChild("arm2", CubeListBuilder.create().texOffs(32, 0).mirror().addBox(-13.0F, -4.0F, -1.0F, 12.0F, 2.0F, 2.0F, new CubeDeformation(-0.5F)).mirror(false),
         PartPose.offsetAndRotation(0.0F, -7.0F, 0.0F, 0.0F, 0.0F, -1.0001F));
 
-    // universal Innocent Devil crystal cluster -- same pattern/angles as FairySummonModel's, on the chest
+    // universal Innocent Devil crystal cluster -> same pattern/angles as FairySummonModel's, on the chest
     PartDefinition crystal = piece1.addOrReplaceChild("crystal", CubeListBuilder.create(), PartPose.offset(0.0F, -5.0F, 0.0F));
 
     PartDefinition crystal_r1 = crystal.addOrReplaceChild("crystal_r1", CubeListBuilder.create().texOffs(64, 16).addBox(-1.0F, -1.0F, -1.0F, 2.0F, 2.0F, 2.0F, new CubeDeformation(0.0F)),

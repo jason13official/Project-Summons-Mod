@@ -99,7 +99,7 @@ public class MageSummon extends AbstractFlyingCompanion {
       // "This is the skill that allows the Mage ID to kill blood skeletons... affects all
       // undead." No Blood Skeleton equivalent mob exists, so this instakills any vanilla
       // EntityTypeTags.UNDEAD target instead -> the closest real equivalent to "affects all undead"
-      CompanionAbility.gated("Purify", 40, Form.NAUTILUS_ROD, 8, "Deals heavy holy damage -- an instant kill against the undead.", (companion, owner) -> {
+      CompanionAbility.gated("Purify", 40, Form.NAUTILUS_ROD, 8, "Deals heavy holy damage -> an instant kill against the undead.", (companion, owner) -> {
         LivingEntity target = findNearestTarget(companion, owner, SPELL_RADIUS);
         if (target == null) {
           return;
@@ -152,7 +152,7 @@ public class MageSummon extends AbstractFlyingCompanion {
       }),
       // "Boosts Hector's ATK stat for a short time... the only Mage skill that directly
       // enhances Hector's stats."
-      CompanionAbility.gated("Tension Boost", 20, Form.EYEBALL_ROD, 10, "Boosts Hector's attack for a short time -- the only Mage skill that enhances Hector directly.", (companion, owner) -> {
+      CompanionAbility.gated("Tension Boost", 20, Form.EYEBALL_ROD, 10, "Boosts Hector's attack for a short time -> the only Mage skill that enhances Hector directly.", (companion, owner) -> {
         owner.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 200, 1));
         spawnAbilityParticles(owner, ParticleTypes.CRIT, 10);
       }),
